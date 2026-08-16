@@ -9,21 +9,33 @@
 let activeCardContext = null;
 const originalGetElement = document.getElementById.bind(document);
 
-// Fungsi pembantu untuk menetapkan konteks berdasarkan event secara selamat (tanpa window.event)
+// UPGRADE: Global Context Manager (Capture Phase)
+// Ini adalah "mata-mata" yang memastikan setiap kali user menaip, klik, 
+// atau tukar dropdown (onchange), konteks SENTIASA disetkan kepada kad klon  
+// yang sedang disentuh SEBELUM sebarang fungsi dijalankan. Isu ghaib selesai!
+['click', 'input', 'change', 'focusin'].forEach(eventType => {
+    document.addEventListener(eventType, function(e) {
+        if (e && e.target && typeof e.target.closest === 'function') {
+            let card = e.target.closest('.calculator-card');
+            if (card) { activeCardContext = card; }
+        }
+    }, true); // true = capture phase
+});
+
 function setContext(e) {
-    if (e && e.target) {
+    if (e && e.target && typeof e.target.closest === 'function') {
         let card = e.target.closest('.calculator-card');
         if (card) activeCardContext = card;
     }
 }
 
-// Tidak lagi bergantung pada window.event global
 window.getElement = function(id) {
-    let context = activeCardContext;
-    if (context) {
-        let el = context.querySelector(`[data-original-id="${id}"], [id="${id}"]`);
+    // Cari dalam konteks aktif dahulu (Kad Klon)
+    if (activeCardContext) {
+        let el = activeCardContext.querySelector(`[data-original-id="${id}"], [id="${id}"]`);
         if (el) return el;
     }
+    // Fallback kepada pencarian global
     return originalGetElement(id);
 };
 
@@ -40,15 +52,11 @@ function toggleResult(prefix, showData) {
     }
 }
 
-// Fungsi Parse Date untuk selesaikan isu Timezone (UTC)
 function getLocalStartOfDay(dateStr) {
     if (!dateStr) return new Date();
     let parts = dateStr.split('-');
-    if (parts.length === 3) {
-        // new Date(year, monthIndex, day)
-        return new Date(parts[0], parts[1] - 1, parts[2]);
-    }
-    return new Date(dateStr); // Fallback asal
+    if (parts.length === 3) { return new Date(parts[0], parts[1] - 1, parts[2]); }
+    return new Date(dateStr); 
 }
 
 // =====================================================
@@ -71,17 +79,11 @@ function evaluateSmartMath(inputStr) {
     if (!inputStr) return 0;
     let cleanStr = inputStr.toString().toLowerCase().replace(/rm/g, '').replace(/bulan/g, '').replace(/x/g, '*').replace(/\[/g, '(').replace(/\]/g, ')').replace(/[^\d\.\+\-\*\/\(\)]/g, ''); 
     if (cleanStr === "") return 0; 
-    try { 
-        // UPGRADE: new Function berbanding eval
-        return new Function('return ' + cleanStr)() || 0; 
-    } catch (e) { 
-        return 0; 
-    }
+    try { return new Function('return ' + cleanStr)() || 0; } catch (e) { return 0; }
 }
 
 function getInputNumber(id) {
-    let el = getElement(id);
-    return el ? evaluateSmartMath(el.value) : 0;
+    let el = getElement(id); return el ? evaluateSmartMath(el.value) : 0;
 }
 
 function formatSafeRM(val) {
@@ -91,10 +93,8 @@ function formatSafeRM(val) {
 }
 
 function updateSalaryTotal(basicID, allowanceID, totalID) {
-    let basic = getInputNumber(basicID); 
-    let allowance = getInputNumber(allowanceID);
-    let total = basic + allowance; 
-    let tEl = getElement(totalID);
+    let basic = getInputNumber(basicID); let allowance = getInputNumber(allowanceID);
+    let total = basic + allowance; let tEl = getElement(totalID);
     if(tEl) tEl.value = "RM" + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
     return total;
 }
@@ -108,14 +108,11 @@ document.addEventListener("focusin", function(e) {
     if (e.target.tagName !== "INPUT" || e.target.type === "date") return;
     let label = e.target.parentElement.querySelector("label");
     let isCurrency = e.target.classList.contains("salary-input") || e.target.classList.contains("salary-total") || (label && label.innerText.includes("(RM)"));
-    
     if (isCurrency && (e.target.value.includes("RM") || e.target.value.includes(","))) {
-        let oldVal = e.target.value;
-        let cleanVal = evaluateSmartMath(oldVal);
+        let oldVal = e.target.value; let cleanVal = evaluateSmartMath(oldVal);
         let newVal = cleanVal === 0 && !oldVal.includes("0") ? "" : cleanVal;
         if (newVal.toString() !== oldVal.toString()) {
-            e.target.value = newVal;
-            e.target.dispatchEvent(new Event('input', { bubbles: true }));
+            e.target.value = newVal; e.target.dispatchEvent(new Event('input', { bubbles: true }));
         }
     }
 });
@@ -124,33 +121,22 @@ document.addEventListener("focusout", function(e) {
     if (e.target.tagName !== "INPUT" || e.target.type === "date") return;
     let label = e.target.parentElement.querySelector("label");
     let isCurrency = e.target.classList.contains("salary-input") || e.target.classList.contains("salary-total") || (label && label.innerText.includes("(RM)"));
-    
     if (isCurrency && e.target.value.trim() !== "") {
-        let oldVal = e.target.value;
-        let newVal = formatSafeRM(oldVal);
-        if (newVal !== oldVal) {
-            e.target.value = newVal;
-            e.target.dispatchEvent(new Event('input', { bubbles: true }));
-        }
+        let oldVal = e.target.value; let newVal = formatSafeRM(oldVal);
+        if (newVal !== oldVal) { e.target.value = newVal; e.target.dispatchEvent(new Event('input', { bubbles: true })); }
     }
 });
 
 document.addEventListener("change", function(e) {
     if (e.target.tagName !== "INPUT") return;
-    let isMathInput = e.target.classList.contains("salary-input") || 
-                      e.target.classList.contains("number-input") || 
-                      e.target.classList.contains("tbb-monthly-input");
+    let isMathInput = e.target.classList.contains("salary-input") || e.target.classList.contains("number-input") || e.target.classList.contains("tbb-monthly-input");
     if (!isMathInput) return;
-
     try {
         let nilai = e.target.value.trim();
         if (/^\d{1,4}-\d{1,2}-\d{1,4}$/.test(nilai) || /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(nilai)) return; 
         if (/[+\-*/()]/.test(nilai) && !nilai.includes("RM")) {
             let hasil = evaluateSmartMath(nilai);
-            if (hasil !== undefined && !isNaN(hasil)) {
-                e.target.value = hasil; 
-                e.target.dispatchEvent(new Event('input', { bubbles: true }));
-            }
+            if (hasil !== undefined && !isNaN(hasil)) { e.target.value = hasil; e.target.dispatchEvent(new Event('input', { bubbles: true })); }
         }
     } catch (err) {}
 });
@@ -159,168 +145,110 @@ document.addEventListener("input", function(e) {
     if (e.target.tagName !== "INPUT") return;
     let originalId = e.target.getAttribute('data-original-id') || e.target.id;
     activeCardContext = e.target.closest('.calculator-card');
-
     try {
         if (originalId === "orpBasicSalary" || originalId === "orpAllowance") {
             let rawValue = e.target.value; 
             let tempContext = activeCardContext;
             activeCardContext = null; 
-            
             Object.keys(salaryMap).forEach(key => {
                 let bID = key, aID = salaryMap[key][0], tID = salaryMap[key][1];
                 let sasaranB = document.querySelectorAll(`[id="${bID}"], [data-original-id="${bID}"]`);
                 let sasaranA = document.querySelectorAll(`[id="${aID}"], [data-original-id="${aID}"]`);
-                
-                if (originalId === "orpBasicSalary") {
-                    sasaranB.forEach(el => { if (el !== e.target) el.value = rawValue; });
-                }
-                if (originalId === "orpAllowance") {
-                    sasaranA.forEach(el => { if (el !== e.target) el.value = rawValue; });
-                }
-                    
+                if (originalId === "orpBasicSalary") sasaranB.forEach(el => { if (el !== e.target) el.value = rawValue; });
+                if (originalId === "orpAllowance") sasaranA.forEach(el => { if (el !== e.target) el.value = rawValue; });
                 sasaranB.forEach(bEl => {
                     let kad = bEl.closest('.calculator-card');
                     if (kad) {
                         let aEl = kad.querySelector(`[id="${aID}"], [data-original-id="${aID}"]`);
                         let tEl = kad.querySelector(`[id="${tID}"], [data-original-id="${tID}"]`);
-                        let basicVal = evaluateSmartMath(bEl.value);
-                        let allowVal = aEl ? evaluateSmartMath(aEl.value) : 0;
+                        let basicVal = evaluateSmartMath(bEl.value); let allowVal = aEl ? evaluateSmartMath(aEl.value) : 0;
                         if (tEl) tEl.value = "RM" + (basicVal + allowVal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     }
                 });
             });
             activeCardContext = tempContext; 
         }
-
         Object.keys(salaryMap).forEach(key => {
-            let data = salaryMap[key];
-            if (originalId === key || originalId === data[0]) updateSalaryTotal(key, data[0], data[1]);
+            let data = salaryMap[key]; if (originalId === key || originalId === data[0]) updateSalaryTotal(key, data[0], data[1]);
         });
-    } finally {
-        activeCardContext = null; 
-    }
+    } finally { activeCardContext = null; }
 });
 
 // =====================================================
 // 3. KALKULATOR TERAS (FORMULA ASAL DIKEKALKAN)
 // =====================================================
 
-function getORP() { let totalSalary = updateSalaryTotal("orpBasicSalary", "orpAllowance", "orpTotalSalary"); return totalSalary / 26; }
+function getORP() { return updateSalaryTotal("orpBasicSalary", "orpAllowance", "orpTotalSalary") / 26; }
 
 function calculateORP(e) {
-    setContext(e);
-    let totalSalary = updateSalaryTotal("orpBasicSalary", "orpAllowance", "orpTotalSalary"); 
-    let ORP = totalSalary / 26;
-    setText("orpResultTotal", formatRM(totalSalary)); 
-    setText("orpResult", formatRM(ORP)); 
-    getElement("orpPending").style.display = "none";
-    getElement("orpData").style.display = "block";
+    setContext(e); let totalSalary = updateSalaryTotal("orpBasicSalary", "orpAllowance", "orpTotalSalary"); let ORP = totalSalary / 26;
+    setText("orpResultTotal", formatRM(totalSalary)); setText("orpResult", formatRM(ORP)); toggleResult("orp", true);
 }
-
 function resetORP() {
-    ["orpBasicSalary", "orpAllowance"].forEach(id => setValue(id, "")); 
-    setValue("orpTotalSalary", "RM 0.00");
-    ["orpResultTotal", "orpResult"].forEach(id => setText(id, "RM 0.00"));
-    getElement("orpData").style.display = "none";
-    getElement("orpPending").style.display = "block"; 
+    ["orpBasicSalary", "orpAllowance"].forEach(id => setValue(id, "")); setValue("orpTotalSalary", "RM 0.00");
+    ["orpResultTotal", "orpResult"].forEach(id => setText(id, "RM 0.00")); toggleResult("orp", false);
 }
 
 function calculateBakiUpah(e) {
-    setContext(e);
-    let patutTerima = getInputNumber("orpPatutTerima");
-    let telahTerima = getInputNumber("orpTelahTerima");
-    
-    if (patutTerima === 0) return; // Prevent empty execution
-
-    let baki = telahTerima - patutTerima; 
-    let bakiEl = getElement("orpBakiAmount");
+    setContext(e); let patutTerima = getInputNumber("orpPatutTerima"); let telahTerima = getInputNumber("orpTelahTerima");
+    if (patutTerima === 0) return; 
+    let baki = telahTerima - patutTerima; let bakiEl = getElement("orpBakiAmount");
     if(bakiEl) {
-        if (baki < 0) {
-            bakiEl.innerText = "-" + formatRM(Math.abs(baki));
-            bakiEl.style.color = "#d9534f"; 
-        } else if (baki > 0) {
-            bakiEl.innerText = "+" + formatRM(baki);
-            bakiEl.style.color = "#28a745"; 
-        } else {
-            bakiEl.innerText = formatRM(0);
-            bakiEl.style.color = "#1f4e79";
-        }
+        if (baki < 0) { bakiEl.innerText = "-" + formatRM(Math.abs(baki)); bakiEl.style.color = "#d9534f"; } 
+        else if (baki > 0) { bakiEl.innerText = "+" + formatRM(baki); bakiEl.style.color = "#28a745"; } 
+        else { bakiEl.innerText = formatRM(0); bakiEl.style.color = "#1f4e79"; }
     }
-    getElement("bakiPending").style.display = "none"; 
-    getElement("bakiData").style.display = "block";
-    
-    // UPGRADE: Direct Rumusan injection
-    autoMasukRumusan('orpBakiAmount', activeCardContext);
+    toggleResult("baki", true); autoMasukRumusan('orpBakiAmount', activeCardContext);
 }
-
 function resetBakiUpah() {
     ["orpPatutTerima", "orpTelahTerima"].forEach(id => setValue(id, "")); 
-    let el = getElement("orpBakiAmount");
-    if(el) { el.innerText = "RM 0.00"; el.style.color = ""; }
-    getElement("bakiData").style.display = "none";
-    getElement("bakiPending").style.display = "block";
+    let el = getElement("orpBakiAmount"); if(el) { el.innerText = "RM 0.00"; el.style.color = ""; } toggleResult("baki", false);
 }
 
 function calculateOTBiasa(e) {
-    setContext(e);
-    let totalSalary = updateSalaryTotal("otBasicSalary", "otAllowance", "otTotalSalary");
+    setContext(e); let totalSalary = updateSalaryTotal("otBasicSalary", "otAllowance", "otTotalSalary");
     let hours = Number(getElement("otHours").value); let workingHours = Number(getElement("normalWorkingHours").value);
     if (!workingHours) { alert("Sila pilih jam kerja normal sehari."); return; }
     let ORP = totalSalary / 26; let hourly = (ORP / workingHours) * 1.5; let amount = hourly * hours;
     setText("otResultTotal", formatRM(totalSalary)); setText("otORP", formatRM(ORP));
-    setText("otHourly", formatRM(hourly)); setText("otAmount", formatRM(amount)); toggleResult("ot", true);
-    
-    // UPGRADE: Direct Rumusan injection
-    autoMasukRumusan('otAmount', activeCardContext);
+    setText("otHourly", formatRM(hourly)); setText("otAmount", formatRM(amount)); toggleResult("ot", true); autoMasukRumusan('otAmount', activeCardContext);
 }
 function resetOTBiasa() {
-    ["otBasicSalary", "otAllowance", "otHours"].forEach(id => setValue(id, ""));
-    setValue("otTotalSalary", "RM 0.00"); setValue("normalWorkingHours", "");
+    ["otBasicSalary", "otAllowance", "otHours"].forEach(id => setValue(id, "")); setValue("otTotalSalary", "RM 0.00"); setValue("normalWorkingHours", "");
     ["otResultTotal", "otORP", "otHourly", "otAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("ot", false);
 }
 
 function calculateOTRH(e) {
-    setContext(e);
-    let totalSalary = updateSalaryTotal("otRHBasicSalary", "otRHAllowance", "otRHTotalSalary");
+    setContext(e); let totalSalary = updateSalaryTotal("otRHBasicSalary", "otRHAllowance", "otRHTotalSalary");
     let hours = Number(getElement("otRHHours").value); let workingHours = Number(getElement("otRHNormalWorkingHours").value);
     if (!workingHours) { alert("Sila pilih jam kerja normal sehari."); return; }
     let ORP = totalSalary / 26; let hourly = (ORP / workingHours) * 2.0; let amount = hourly * hours;
     setText("otRHResultTotal", formatRM(totalSalary)); setText("otRHORP", formatRM(ORP));
-    setText("otRHHourly", formatRM(hourly)); setText("otRHAmount", formatRM(amount)); toggleResult("otRH", true);
-    
-    autoMasukRumusan('otRHAmount', activeCardContext);
+    setText("otRHHourly", formatRM(hourly)); setText("otRHAmount", formatRM(amount)); toggleResult("otRH", true); autoMasukRumusan('otRHAmount', activeCardContext);
 }
 function resetOTRH() {
-    ["otRHBasicSalary", "otRHAllowance", "otRHHours"].forEach(id => setValue(id, ""));
-    setValue("otRHTotalSalary", "RM 0.00"); setValue("otRHNormalWorkingHours", "");
+    ["otRHBasicSalary", "otRHAllowance", "otRHHours"].forEach(id => setValue(id, "")); setValue("otRHTotalSalary", "RM 0.00"); setValue("otRHNormalWorkingHours", "");
     ["otRHResultTotal", "otRHORP", "otRHHourly", "otRHAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("otRH", false);
 }
 
 function calculateOTPH(e) {
-    setContext(e);
-    let totalSalary = updateSalaryTotal("otPHBasicSalary", "otPHAllowance", "otPHTotalSalary");
+    setContext(e); let totalSalary = updateSalaryTotal("otPHBasicSalary", "otPHAllowance", "otPHTotalSalary");
     let hours = Number(getElement("otPHHours").value); let workingHours = Number(getElement("otPHWorkingHours").value);
     if (!workingHours) { alert("Sila pilih jam kerja normal sehari."); return; }
     let ORP = totalSalary / 26; let hourly = (ORP / workingHours) * 3.0; let amount = hourly * hours;
     setText("otPHResultTotal", formatRM(totalSalary)); setText("otPHORP", formatRM(ORP));
-    setText("otPHHourly", formatRM(hourly)); setText("otPHAmount", formatRM(amount)); toggleResult("otPH", true);
-
-    autoMasukRumusan('otPHAmount', activeCardContext);
+    setText("otPHHourly", formatRM(hourly)); setText("otPHAmount", formatRM(amount)); toggleResult("otPH", true); autoMasukRumusan('otPHAmount', activeCardContext);
 }
 function resetOTPH() {
-    ["otPHBasicSalary", "otPHAllowance", "otPHHours"].forEach(id => setValue(id, ""));
-    setValue("otPHTotalSalary", "RM 0.00"); setValue("otPHWorkingHours", "");
+    ["otPHBasicSalary", "otPHAllowance", "otPHHours"].forEach(id => setValue(id, "")); setValue("otPHTotalSalary", "RM 0.00"); setValue("otPHWorkingHours", "");
     ["otPHResultTotal", "otPHORP", "otPHHourly", "otPHAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("otPH", false);
 }
 
 function calculateHariRehat(e) {
-    setContext(e);
-    let totalSalary = updateSalaryTotal("rhBasicSalary", "rhAllowance", "rhTotalSalary");
+    setContext(e); let totalSalary = updateSalaryTotal("rhBasicSalary", "rhAllowance", "rhTotalSalary");
     let days = Number(getElement("rhDays").value); let ORP = totalSalary / 26; let daily = ORP * 0.5; let amount = daily * days;
     setText("rhResultTotal", formatRM(totalSalary)); setText("rhORP", formatRM(ORP));
-    setText("rhDaily", formatRM(daily)); setText("rhAmount", formatRM(amount)); toggleResult("rh", true);
-    
-    autoMasukRumusan('rhAmount', activeCardContext);
+    setText("rhDaily", formatRM(daily)); setText("rhAmount", formatRM(amount)); toggleResult("rh", true); autoMasukRumusan('rhAmount', activeCardContext);
 }
 function resetHariRehat() {
     ["rhBasicSalary", "rhAllowance", "rhDays"].forEach(id => setValue(id, "")); setValue("rhTotalSalary", "RM 0.00");
@@ -328,13 +256,10 @@ function resetHariRehat() {
 }
 
 function calculateHariRehatLebih(e) {
-    setContext(e);
-    let totalSalary = updateSalaryTotal("rhMoreBasicSalary", "rhMoreAllowance", "rhMoreTotalSalary");
+    setContext(e); let totalSalary = updateSalaryTotal("rhMoreBasicSalary", "rhMoreAllowance", "rhMoreTotalSalary");
     let days = Number(getElement("rhMoreDays").value); let ORP = totalSalary / 26; let daily = ORP; let amount = daily * days;
     setText("rhMoreResultTotal", formatRM(totalSalary)); setText("rhMoreORP", formatRM(ORP));
-    setText("rhMoreDaily", formatRM(daily)); setText("rhMoreAmount", formatRM(amount)); toggleResult("rhMore", true);
-
-    autoMasukRumusan('rhMoreAmount', activeCardContext);
+    setText("rhMoreDaily", formatRM(daily)); setText("rhMoreAmount", formatRM(amount)); toggleResult("rhMore", true); autoMasukRumusan('rhMoreAmount', activeCardContext);
 }
 function resetHariRehatLebih() {
     ["rhMoreBasicSalary", "rhMoreAllowance", "rhMoreDays"].forEach(id => setValue(id, "")); setValue("rhMoreTotalSalary", "RM 0.00");
@@ -342,13 +267,10 @@ function resetHariRehatLebih() {
 }
 
 function calculatePH(e) {
-    setContext(e);
-    let totalSalary = updateSalaryTotal("phBasicSalary", "phAllowance", "phTotalSalary");
+    setContext(e); let totalSalary = updateSalaryTotal("phBasicSalary", "phAllowance", "phTotalSalary");
     let days = Number(getElement("phDays").value); let ORP = totalSalary / 26; let daily = ORP * 2; let amount = daily * days;
     setText("phResultTotal", formatRM(totalSalary)); setText("phORP", formatRM(ORP));
-    setText("phDaily", formatRM(daily)); setText("phAmount", formatRM(amount)); toggleResult("ph", true);
-
-    autoMasukRumusan('phAmount', activeCardContext);
+    setText("phDaily", formatRM(daily)); setText("phAmount", formatRM(amount)); toggleResult("ph", true); autoMasukRumusan('phAmount', activeCardContext);
 }
 function resetPH() {
     ["phBasicSalary", "phAllowance", "phDays"].forEach(id => setValue(id, "")); setValue("phTotalSalary", "RM 0.00");
@@ -360,11 +282,9 @@ function getMonthlyBreakdown(salary, startDate, endDate) {
     let result = []; let current = new Date(startDate);
     while (current <= endDate) {
         let year = current.getFullYear(); let month = current.getMonth();
-        let daysInMonth = getDaysInMonth(year, month);
-        let firstDay = current.getDate(); let lastDay = daysInMonth;
+        let daysInMonth = getDaysInMonth(year, month); let firstDay = current.getDate(); let lastDay = daysInMonth;
         if (year === endDate.getFullYear() && month === endDate.getMonth()) lastDay = endDate.getDate();
-        let days = lastDay - firstDay + 1;
-        let dailyRate = salary / daysInMonth; let amount = dailyRate * days;
+        let days = lastDay - firstDay + 1; let dailyRate = salary / daysInMonth; let amount = dailyRate * days;
         result.push({ year: year, month: month, daysInMonth: daysInMonth, days: days, dailyRate: dailyRate, amount: amount });
         current = new Date(year, month + 1, 1);
     }
@@ -372,17 +292,12 @@ function getMonthlyBreakdown(salary, startDate, endDate) {
 }
 
 function calculate18ANew(e) {
-    setContext(e);
-    let totalSalary = updateSalaryTotal("section18ABasicSalary", "section18AAllowance", "section18ATotalSalary");
+    setContext(e); let totalSalary = updateSalaryTotal("section18ABasicSalary", "section18AAllowance", "section18ATotalSalary");
     let startDate = getElement("section18AStartDate").value; let endDate = getElement("section18AEndDate").value;
     if (!startDate || !endDate) { alert("Sila masukkan tarikh mula dan tarikh akhir."); return; }
-    
-    // UPGRADE: Local time fix
     let start = getLocalStartOfDay(startDate); let end = getLocalStartOfDay(endDate);
     if (end < start) { alert("Tarikh akhir tidak boleh lebih awal daripada tarikh mula."); return; }
-    
-    let breakdown = getMonthlyBreakdown(totalSalary, start, end);
-    let totalAmount = 0; breakdown.forEach(item => { totalAmount += item.amount; });
+    let breakdown = getMonthlyBreakdown(totalSalary, start, end); let totalAmount = 0; breakdown.forEach(item => { totalAmount += item.amount; });
     setText("resultTotalSalary", formatRM(totalSalary));
     if (breakdown.length > 0) {
         let first = breakdown[0]; let firstDate = new Date(first.year, first.month, 1);
@@ -394,23 +309,17 @@ function calculate18ANew(e) {
         setText("month2Title", secondDate.toLocaleString("ms-MY", {month:"long", year:"numeric"}));
         setText("month2Days", second.days + " Hari"); setText("month2Daily", formatRM(second.dailyRate)); setText("month2Amount", formatRM(second.amount));
     } else { setText("month2Title", "-"); setText("month2Days", "-"); setText("month2Daily", "-"); setText("month2Amount", "-"); }
-    setText("amount18A", formatRM(totalAmount)); toggleResult("sec18A", true);
-
-    autoMasukRumusan('amount18A', activeCardContext);
+    setText("amount18A", formatRM(totalAmount)); toggleResult("sec18A", true); autoMasukRumusan('amount18A', activeCardContext);
 }
 function resetSeksyen18A() {
     ["section18ABasicSalary", "section18AAllowance", "section18AStartDate", "section18AEndDate"].forEach(id => setValue(id, ""));
-    setValue("section18ATotalSalary", "RM 0.00");
-    ["resultTotalSalary", "month1Daily", "month2Daily", "month1Amount", "month2Amount", "amount18A"].forEach(id => setText(id, "RM 0.00"));
+    setValue("section18ATotalSalary", "RM 0.00"); ["resultTotalSalary", "month1Daily", "month2Daily", "month1Amount", "month2Amount", "amount18A"].forEach(id => setText(id, "RM 0.00"));
     ["month1Title", "month2Title", "month1Days", "month2Days"].forEach(id => setText(id, "-")); toggleResult("sec18A", false);
 }
 
 function calculateCutiTahunan(e) {
-    setContext(e);
-    let ORP = getORP(); let days = Number(getElement("annualLeaveDays").value); let amount = ORP * days;
-    setText("annualLeaveORP", formatRM(ORP)); setText("annualLeaveAmount", formatRM(amount)); toggleResult("annualLeave", true);
-
-    autoMasukRumusan('annualLeaveAmount', activeCardContext);
+    setContext(e); let ORP = getORP(); let days = Number(getElement("annualLeaveDays").value); let amount = ORP * days;
+    setText("annualLeaveORP", formatRM(ORP)); setText("annualLeaveAmount", formatRM(amount)); toggleResult("annualLeave", true); autoMasukRumusan('annualLeaveAmount', activeCardContext);
 }
 function resetCutiTahunan() {
     setValue("cutiLayak", ""); setValue("cutiGuna", ""); setValue("annualLeaveDays", "");
@@ -420,36 +329,30 @@ function autoKiraBakiCuti() {
     const layakInput = getElement('cutiLayak').value; const gunaInput = getElement('cutiGuna').value;
     if (layakInput === "" && gunaInput === "") { getElement('annualLeaveDays').value = ""; return; }
     let baki = (parseFloat(layakInput) || 0) - (parseFloat(gunaInput) || 0);
-    if (baki < 0) baki = 0; getElement('annualLeaveDays').value = baki;
+    getElement('annualLeaveDays').value = baki < 0 ? 0 : baki;
 }
 
 function calculateCutiSakit(e) {
-    setContext(e);
-    let ORP = getORP(); let days = Number(getElement("sickLeaveDays").value); let amount = ORP * days;
-    setText("sickLeaveORP", formatRM(ORP)); setText("sickLeaveAmount", formatRM(amount)); toggleResult("sickLeave", true);
-
-    autoMasukRumusan('sickLeaveAmount', activeCardContext);
+    setContext(e); let ORP = getORP(); let days = Number(getElement("sickLeaveDays").value); let amount = ORP * days;
+    setText("sickLeaveORP", formatRM(ORP)); setText("sickLeaveAmount", formatRM(amount)); toggleResult("sickLeave", true); autoMasukRumusan('sickLeaveAmount', activeCardContext);
 }
 function resetCutiSakit() {
     setValue("sickLeaveDays", ""); setText("sickLeaveORP", "RM 0.00"); setText("sickLeaveAmount", "RM 0.00"); toggleResult("sickLeave", false);
 }
 
 function calculateKelayakanCuti(e) {
-    setContext(e);
-    const startVal = getElement('kelayakanCutiMula').value; const endVal = getElement('kelayakanCutiAkhir').value;
+    setContext(e); const startVal = getElement('kelayakanCutiMula').value; const endVal = getElement('kelayakanCutiAkhir').value;
     if (!startVal || !endVal) { alert("Sila masukkan Tarikh Mula Kerja dan Tarikh Kiraan / Akhir."); return; }
     const startDate = getLocalStartOfDay(startVal); const endDate = getLocalStartOfDay(endVal);
-    
     if (endDate < startDate) { alert("Tarikh Kiraan tidak boleh lebih awal daripada Tarikh Mula Kerja."); return; }
     let totalMonths = (endDate.getFullYear() - startDate.getFullYear()) * 12 - startDate.getMonth() + endDate.getMonth();
-    if (endDate.getDate() < startDate.getDate()) { totalMonths--; } if (totalMonths < 0) totalMonths = 0;
+    if (endDate.getDate() < startDate.getDate()) totalMonths--; if (totalMonths < 0) totalMonths = 0;
     const yearsCompleted = Math.floor(totalMonths / 12); const remainingMonths = totalMonths % 12;
     let currentTier = (yearsCompleted >= 5) ? 16 : (yearsCompleted >= 2) ? 12 : 8;
     let prorataDays = remainingMonths > 0 ? Math.round((remainingMonths / 12) * currentTier) : 0;
     let totalTerkumpul = 0; for (let i = 1; i <= yearsCompleted; i++) { totalTerkumpul += (i <= 2) ? 8 : (i <= 5) ? 12 : 16; }
     let tempohText = (yearsCompleted > 0 ? `${yearsCompleted} Tahun ` : "") + (remainingMonths > 0 ? `${remainingMonths} Bulan` : "");
     if (totalMonths === 0) tempohText = "Kurang 1 Bulan";
-    
     setText('kelayakanCutiTempoh', tempohText.trim()); setText('kelayakanCutiKategori', yearsCompleted === 0 ? "Tidak Layak (< 12 Bulan)" : `${currentTier} Hari / Tahun`);
     setText('kelayakanCutiTerkumpul', `${totalTerkumpul} Hari`); setText('kelayakanCutiHari', `${prorataDays} Hari`); toggleResult("kelayakanCuti", true);
 }
@@ -460,19 +363,16 @@ function resetKelayakanCuti() {
 }
 
 function calculateKelayakanCutiSakit(e) {
-    setContext(e);
-    const startVal = getElement('kelayakanCutiSakitMula').value; const endVal = getElement('kelayakanCutiSakitAkhir').value;
+    setContext(e); const startVal = getElement('kelayakanCutiSakitMula').value; const endVal = getElement('kelayakanCutiSakitAkhir').value;
     if (!startVal || !endVal) { alert("Sila masukkan Tarikh Mula Kerja dan Tarikh Kiraan / Akhir."); return; }
     const startDate = getLocalStartOfDay(startVal); const endDate = getLocalStartOfDay(endVal);
-    
     if (endDate < startDate) { alert("Tarikh Kiraan tidak boleh lebih awal."); return; }
     let totalMonths = (endDate.getFullYear() - startDate.getFullYear()) * 12 - startDate.getMonth() + endDate.getMonth();
-    if (endDate.getDate() < startDate.getDate()) { totalMonths--; } if (totalMonths < 0) totalMonths = 0;
+    if (endDate.getDate() < startDate.getDate()) totalMonths--; if (totalMonths < 0) totalMonths = 0;
     const yearsCompleted = Math.floor(totalMonths / 12); const remainingMonths = totalMonths % 12;
     let kelayakanBiasa = (yearsCompleted >= 5) ? 22 : (yearsCompleted >= 2) ? 18 : 14;
     let tempohText = (yearsCompleted > 0 ? `${yearsCompleted} Tahun ` : "") + (remainingMonths > 0 ? `${remainingMonths} Bulan` : "");
     if (totalMonths === 0) tempohText = "Kurang 1 Bulan";
-    
     setText('kelayakanCutiSakitTempoh', tempohText.trim()); setText('kelayakanCutiSakitBiasa', `${kelayakanBiasa} Hari`); setText('kelayakanCutiSakitHospital', `60 Hari`);
     setValue('sakitLayak', kelayakanBiasa); setValue('hospLayak', 60); autoKiraBakiSakit(); toggleResult("kelayakanSakit", true);
 }
@@ -489,39 +389,23 @@ function autoKiraBakiSakit() {
 function resetBakiCutiSakit() { ['sakitLayak', 'sakitGuna', 'bakiSakitBiasa', 'hospLayak', 'hospGuna', 'bakiHosp'].forEach(id => setValue(id, "")); }
 
 function toggleNotisStatus() {
-    let statusEl = getElement("ggnStatusNotis");
-    if (!statusEl) return;
-    let status = statusEl.value;
+    let statusEl = getElement("ggnStatusNotis"); if (!statusEl) return; let status = statusEl.value;
     let elsStart = ["ggnUniWeekStart", "ggnUniDayStart"], elsEnd = ["ggnUniWeekEnd", "ggnUniDayEnd"];
     elsStart.forEach(id => {
         let el = getElement(id);
-        if (el && el.parentElement) {
-            let lbl = el.parentElement.querySelector("label");
-            if (lbl) lbl.innerText = (status === "tiada") ? "Tarikh Penamatan (Serta-merta)" : "Tarikh Mula Notis";
-        }
+        if (el && el.parentElement) { let lbl = el.parentElement.querySelector("label"); if (lbl) lbl.innerText = (status === "tiada") ? "Tarikh Penamatan (Serta-merta)" : "Tarikh Mula Notis"; }
     });
-    elsEnd.forEach(id => {
-        let el = getElement(id);
-        if (el && el.parentElement) el.parentElement.style.display = (status === "tiada") ? "none" : "block";
-    });
+    elsEnd.forEach(id => { let el = getElement(id); if (el && el.parentElement) el.parentElement.style.display = (status === "tiada") ? "none" : "block"; });
 }
 
 function toggleGGNMode() {
     let mode = getElement("ggnUniType").value;
-    getElement("ggnGroupBulan").style.display = "none";
-    getElement("ggnGroupMinggu").style.display = "none";
-    getElement("ggnGroupHari").style.display = "none";
-    
-    let statusGroup = getElement("ggnStatusGroup");
-    if (statusGroup) statusGroup.style.display = (mode === "minggu" || mode === "hari") ? "block" : "none";
-
+    getElement("ggnGroupBulan").style.display = "none"; getElement("ggnGroupMinggu").style.display = "none"; getElement("ggnGroupHari").style.display = "none";
+    let statusGroup = getElement("ggnStatusGroup"); if (statusGroup) statusGroup.style.display = (mode === "minggu" || mode === "hari") ? "block" : "none";
     if (mode === "bulan") getElement("ggnGroupBulan").style.display = "block";
     else if (mode === "minggu") { getElement("ggnGroupMinggu").style.display = "block"; toggleNotisStatus(); } 
     else if (mode === "hari") { getElement("ggnGroupHari").style.display = "block"; toggleNotisStatus(); }
-
-    getElement("ggnResBulan").style.display = "none";
-    getElement("ggnRes18A").style.display = "none";
-    getElement("ggnResPending").style.display = "block";
+    getElement("ggnResBulan").style.display = "none"; getElement("ggnRes18A").style.display = "none"; getElement("ggnResPending").style.display = "block";
 }
 
 function formatDateInput(date) {
@@ -535,88 +419,41 @@ function autoGGNEndDate(type) {
     let endId = type === 'minggu' ? 'ggnUniWeekEnd' : 'ggnUniDayEnd';
     let start = getElement(startId); let val = getElement(valId); let end = getElement(endId);
     if (!start || !val || !end) return;
-
     let multiplier = type === 'minggu' ? 7 : 1; let daysToAdd = Number(val.value) * multiplier;
     if (!start.value || daysToAdd <= 0) { end.value = ""; return; }
-
-    let date = getLocalStartOfDay(start.value);
-    date.setDate(date.getDate() + daysToAdd - 1);
-    end.value = formatDateInput(date);
+    let date = getLocalStartOfDay(start.value); date.setDate(date.getDate() + daysToAdd - 1); end.value = formatDateInput(date);
 }
 
 function calculateGGNUnified(e) {
-    setContext(e);
-    let mode = getElement("ggnUniType").value;
-    if (!mode) { alert("Sila pilih Jenis Notis terlebih dahulu."); return; }
-    let totalSalary = updateSalaryTotal("ggnUniBasic", "ggnUniAllowance", "ggnUniTotal");
-    let statusNotisEl = getElement("ggnStatusNotis");
-    let isTanpaNotis = statusNotisEl && statusNotisEl.value === "tiada";
-    
+    setContext(e); let mode = getElement("ggnUniType").value; if (!mode) { alert("Sila pilih Jenis Notis terlebih dahulu."); return; }
+    let totalSalary = updateSalaryTotal("ggnUniBasic", "ggnUniAllowance", "ggnUniTotal"); let statusNotisEl = getElement("ggnStatusNotis"); let isTanpaNotis = statusNotisEl && statusNotisEl.value === "tiada";
     if (mode === "bulan") {
         let months = Number(getElement("ggnUniMonthVal").value);
         if (months <= 0) { alert("Sila masukkan bilangan bulan notis."); return; }
         let amount = totalSalary * months;
         setText("resUniMonthCount", months + " Bulan"); setText("resUniMonthAmount", formatRM(amount));
-        getElement("ggnResPending").style.display = "none";
-        getElement("ggnRes18A").style.display = "none";
-        getElement("ggnResBulan").style.display = "block";
-
+        getElement("ggnResPending").style.display = "none"; getElement("ggnRes18A").style.display = "none"; getElement("ggnResBulan").style.display = "block";
         autoMasukRumusan('resUniMonthAmount', activeCardContext);
     } else {
-        let valId = mode === 'minggu' ? 'ggnUniWeekVal' : 'ggnUniDayVal';
-        let startId = mode === 'minggu' ? 'ggnUniWeekStart' : 'ggnUniDayStart';
-        let endId = mode === 'minggu' ? 'ggnUniWeekEnd' : 'ggnUniDayEnd';
+        let valId = mode === 'minggu' ? 'ggnUniWeekVal' : 'ggnUniDayVal'; let startId = mode === 'minggu' ? 'ggnUniWeekStart' : 'ggnUniDayStart'; let endId = mode === 'minggu' ? 'ggnUniWeekEnd' : 'ggnUniDayEnd';
         let val = Number(getElement(valId).value); let startDate = getElement(startId).value;
-        
-        if (val <= 0 || !startDate) { 
-            let msg = isTanpaNotis ? "Tarikh Penamatan" : "Tarikh Mula Notis";
-            alert(`Sila masukkan bilangan ${mode} dan ${msg}.`); return; 
-        }
-        
+        if (val <= 0 || !startDate) { let msg = isTanpaNotis ? "Tarikh Penamatan" : "Tarikh Mula Notis"; alert(`Sila masukkan bilangan ${mode} dan ${msg}.`); return; }
         let multiplier = mode === 'minggu' ? 7 : 1; let totalDays = val * multiplier;
-        let start = getLocalStartOfDay(startDate); let end = new Date(start);
-        end.setDate(end.getDate() + totalDays - 1);
-        
-        let breakdown = getMonthlyBreakdown(totalSalary, start, end);
-        let totalAmount = 0; breakdown.forEach(item => { totalAmount += item.amount; });
-        setValue(endId, formatDateInput(end)); setText("resUni18ATotal", formatRM(totalSalary));
-        setText("resUni18AEnd", `${end.getDate()}-${end.getMonth() + 1}-${end.getFullYear()}`);
-        
-        let endResultEl = getElement("resUni18AEnd");
-        if(endResultEl && endResultEl.parentElement) {
-            let lbl = endResultEl.parentElement.querySelector("span");
-            if(lbl) lbl.innerText = isTanpaNotis ? "Tamat Tempoh Indemniti" : "Tarikh Akhir Notis";
-        }
-        
-        if (breakdown.length > 0) {
-            let f = breakdown[0]; let fD = new Date(f.year, f.month, 1);
-            setText("resUniM1Title", fD.toLocaleString("ms-MY", {month:"long", year:"numeric"}));
-            setText("resUniM1Days", f.days + " Hari"); setText("resUniM1Daily", formatRM(f.dailyRate)); setText("resUniM1Amount", formatRM(f.amount));
-        }
-        if (breakdown.length > 1) {
-            let s = breakdown[1]; let sD = new Date(s.year, s.month, 1);
-            setText("resUniM2Title", sD.toLocaleString("ms-MY", {month:"long", year:"numeric"}));
-            setText("resUniM2Days", s.days + " Hari"); setText("resUniM2Daily", formatRM(s.dailyRate)); setText("resUniM2Amount", formatRM(s.amount));
-        } else {
-            setText("resUniM2Title", "-"); setText("resUniM2Days", "-"); setText("resUniM2Daily", "-"); setText("resUniM2Amount", "-");
-        }
-        setText("resUni18AAmount", formatRM(totalAmount));
-        getElement("ggnResPending").style.display = "none";
-        getElement("ggnResBulan").style.display = "none";
-        getElement("ggnRes18A").style.display = "block";
-
+        let start = getLocalStartOfDay(startDate); let end = new Date(start); end.setDate(end.getDate() + totalDays - 1);
+        let breakdown = getMonthlyBreakdown(totalSalary, start, end); let totalAmount = 0; breakdown.forEach(item => { totalAmount += item.amount; });
+        setValue(endId, formatDateInput(end)); setText("resUni18ATotal", formatRM(totalSalary)); setText("resUni18AEnd", `${end.getDate()}-${end.getMonth() + 1}-${end.getFullYear()}`);
+        let endResultEl = getElement("resUni18AEnd"); if(endResultEl && endResultEl.parentElement) { let lbl = endResultEl.parentElement.querySelector("span"); if(lbl) lbl.innerText = isTanpaNotis ? "Tamat Tempoh Indemniti" : "Tarikh Akhir Notis"; }
+        if (breakdown.length > 0) { let f = breakdown[0]; let fD = new Date(f.year, f.month, 1); setText("resUniM1Title", fD.toLocaleString("ms-MY", {month:"long", year:"numeric"})); setText("resUniM1Days", f.days + " Hari"); setText("resUniM1Daily", formatRM(f.dailyRate)); setText("resUniM1Amount", formatRM(f.amount)); }
+        if (breakdown.length > 1) { let s = breakdown[1]; let sD = new Date(s.year, s.month, 1); setText("resUniM2Title", sD.toLocaleString("ms-MY", {month:"long", year:"numeric"})); setText("resUniM2Days", s.days + " Hari"); setText("resUniM2Daily", formatRM(s.dailyRate)); setText("resUniM2Amount", formatRM(s.amount)); } 
+        else { setText("resUniM2Title", "-"); setText("resUniM2Days", "-"); setText("resUniM2Daily", "-"); setText("resUniM2Amount", "-"); }
+        setText("resUni18AAmount", formatRM(totalAmount)); getElement("ggnResPending").style.display = "none"; getElement("ggnResBulan").style.display = "none"; getElement("ggnRes18A").style.display = "block";
         autoMasukRumusan('resUni18AAmount', activeCardContext);
     }
 }
 
 function resetGGNUnified() {
-    ["ggnUniBasic", "ggnUniAllowance", "ggnUniType", "ggnUniMonthVal", 
-     "ggnUniWeekVal", "ggnUniWeekStart", "ggnUniWeekEnd",
-     "ggnUniDayVal", "ggnUniDayStart", "ggnUniDayEnd", "ggnStatusNotis"].forEach(id => {
-         if (getElement(id)) setValue(id, "");
-     });
-    if(getElement("ggnStatusNotis")) setValue("ggnStatusNotis", "ada");
-    setValue("ggnUniTotal", "RM 0.00"); toggleGGNMode(); 
+    ["ggnUniBasic", "ggnUniAllowance", "ggnUniType", "ggnUniMonthVal", "ggnUniWeekVal", "ggnUniWeekStart", "ggnUniWeekEnd", "ggnUniDayVal", "ggnUniDayStart", "ggnUniDayEnd", "ggnStatusNotis"].forEach(id => { if (getElement(id)) setValue(id, ""); });
+    if(getElement("ggnStatusNotis")) setValue("ggnStatusNotis", "ada"); setValue("ggnUniTotal", "RM 0.00"); toggleGGNMode(); 
 }
 
 const monthNames = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"];
@@ -630,10 +467,8 @@ function toggleTBBSalaryMode() {
 }
 
 function generate12MonthsTable() {
-    let endDateVal = getElement("tbbEndDate").value;
-    let container = getElement("tbb12MonthsContainer");
+    let endDateVal = getElement("tbbEndDate").value; let container = getElement("tbb12MonthsContainer");
     if (!endDateVal) { container.innerHTML = '<span style="color:#1f4e79; font-weight:bold;">Menunggu Tarikh Penamatan dipilih...</span>'; return; }
-    
     let end = getLocalStartOfDay(endDateVal); let currentMonth = end.getMonth(); let currentYear = end.getFullYear();
     let lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     if (end.getDate() < lastDayOfMonth) { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } }
@@ -651,10 +486,8 @@ function autoKira12Bulan() { setValue("tbb12MonthsTotalReadonly", formatRM(evalu
 function autoKiraKotakBulan(element) { if (element.value.trim() === "") return; let total = evaluateSmartMath(element.value); if (total > 0) element.value = formatRM(total); }
 
 function calculateTBB(e) {
-    setContext(e);
-    let startVal = getElement("tbbStartDate").value; let endVal = getElement("tbbEndDate").value;
+    setContext(e); let startVal = getElement("tbbStartDate").value; let endVal = getElement("tbbEndDate").value;
     if (!startVal || !endVal) { alert("Sila masukkan Tarikh Mula Kerja dan Tarikh Penamatan."); return; }
-    
     let start = getLocalStartOfDay(startVal); let end = getLocalStartOfDay(endVal);
     if (end < start) { alert("Tarikh Penamatan tidak boleh lebih awal daripada Tarikh Mula."); return; }
     let mode = getElement("tbbSalaryMode").value; let total12Months = 0;
@@ -674,72 +507,41 @@ function calculateTBB(e) {
         if (total12Months <= 0) { alert("Sila semak semula format formula anda."); return; }
     }
     
-    let ORP = total12Months / 365;
-    let totalMonths = (end.getFullYear() - start.getFullYear()) * 12 - start.getMonth() + end.getMonth();
+    let ORP = total12Months / 365; let totalMonths = (end.getFullYear() - start.getFullYear()) * 12 - start.getMonth() + end.getMonth();
     let dStart = start.getDate(); let dEnd = end.getDate(); let extraDays = 0;
     if (dEnd >= dStart) { extraDays = dEnd - dStart + 1; } else {
-        totalMonths--; let prevMonth = new Date(end.getFullYear(), end.getMonth(), 0);
-        extraDays = prevMonth.getDate() - dStart + 1 + dEnd;
+        totalMonths--; let prevMonth = new Date(end.getFullYear(), end.getMonth(), 0); extraDays = prevMonth.getDate() - dStart + 1 + dEnd;
     }
     if (extraDays >= 15) { totalMonths++; } if (totalMonths < 0) totalMonths = 0;
     let years = Math.floor(totalMonths / 12); let remMonths = totalMonths % 12;
     let tempohText = (years > 0 ? `${years} Tahun ` : "") + (remMonths > 0 ? `${remMonths} Bulan` : "");
     if (totalMonths === 0) tempohText = "Kurang 1 Bulan";
-    
-    let rate = (totalMonths < 24) ? 10 : (totalMonths < 60) ? 15 : 20;
-    let entitledDays = (totalMonths / 12) * rate; let amount = entitledDays * ORP;
+    let rate = (totalMonths < 24) ? 10 : (totalMonths < 60) ? 15 : 20; let entitledDays = (totalMonths / 12) * rate; let amount = entitledDays * ORP;
     
     setText("tbbTempoh", tempohText.trim()); setText("tbbKadar", `${rate} Hari / Tahun`); setText("tbbHari", `${entitledDays.toFixed(2)} Hari`); 
     setText("tbbTotal12M", formatRM(total12Months)); setText("tbbORP", formatRM(ORP)); setText("tbbAmount", formatRM(amount)); toggleResult("tbb", true);
-
     autoMasukRumusan('tbbAmount', activeCardContext);
 }
 
 function resetTBB() {
     ["tbbStartDate", "tbbEndDate", "tbbMonthlyTotal", "tbb12MonthsTotalReadonly", "tbbFormulaInput"].forEach(id => setValue(id, ""));
-    setValue("tbbSalaryMode", "tetap"); toggleTBBSalaryMode();
-    getElement("tbb12MonthsContainer").innerHTML = '<span style="color:#1f4e79; font-weight:bold;">Menunggu Tarikh Penamatan dipilih...</span>';
-    ["tbbTempoh", "tbbKadar", "tbbHari"].forEach(id => setText(id, "-"));
-    ["tbbTotal12M", "tbbORP", "tbbAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("tbb", false);
+    setValue("tbbSalaryMode", "tetap"); toggleTBBSalaryMode(); getElement("tbb12MonthsContainer").innerHTML = '<span style="color:#1f4e79; font-weight:bold;">Menunggu Tarikh Penamatan dipilih...</span>';
+    ["tbbTempoh", "tbbKadar", "tbbHari"].forEach(id => setText(id, "-")); ["tbbTotal12M", "tbbORP", "tbbAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("tbb", false);
 }
 
 // =====================================================
 // 4. ENJIN KALKULATOR RUMUSAN AKHIR
 // =====================================================
 const senaraiKalkulatorRumusan = [
-    { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" },
-    { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)" },
-    { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)" },
-    { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)" },
-    { nilai: "tbbAmount", teks: "Faedah Penamatan" },
-    { nilai: "otAmount", teks: "OT Hari Biasa" },
-    { nilai: "otRHAmount", teks: "OT Hari Rehat" },
-    { nilai: "otPHAmount", teks: "OT Hari Kelepasan" },
-    { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)" },
-    { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)" },
-    { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan" },
-    { nilai: "amount18A", teks: "Seksyen 18A (Jumlah Bayaran Upah)" },
-    { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan" },
-    { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit" }
+    { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)" }, { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)" }, { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)" }, { nilai: "tbbAmount", teks: "Faedah Penamatan" }, { nilai: "otAmount", teks: "OT Hari Biasa" }, { nilai: "otRHAmount", teks: "OT Hari Rehat" }, { nilai: "otPHAmount", teks: "OT Hari Kelepasan" }, { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)" }, { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)" }, { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan" }, { nilai: "amount18A", teks: "Seksyen 18A (Jumlah Bayaran Upah)" }, { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan" }, { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit" }
 ];
 
-function formatRMRumusan(amount) {
-    if (isNaN(amount) || amount === "") return "RM0.00";
-    return "RM" + parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function unformatRMRumusan(str) {
-    if (!str) return 0;
-    return parseFloat(str.toString().replace(/[^0-9.-]+/g, "")) || 0;
-}
+function formatRMRumusan(amount) { if (isNaN(amount) || amount === "") return "RM0.00"; return "RM" + parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function unformatRMRumusan(str) { if (!str) return 0; return parseFloat(str.toString().replace(/[^0-9.-]+/g, "")) || 0; }
 
 function tambahBarisRumusan() {
-    const tbody = document.getElementById('badanJadualRumusan');
-    const tr = document.createElement('tr');
-    tr.style.borderBottom = "1px dashed #ddd";
-    let pilihanHTML = '';
-    senaraiKalkulatorRumusan.forEach(item => { pilihanHTML += `<option value="${item.nilai}">${item.teks}</option>`; });
-
+    const tbody = document.getElementById('badanJadualRumusan'); const tr = document.createElement('tr'); tr.style.borderBottom = "1px dashed #ddd";
+    let pilihanHTML = ''; senaraiKalkulatorRumusan.forEach(item => { pilihanHTML += `<option value="${item.nilai}">${item.teks}</option>`; });
     tr.innerHTML = `
         <td style="padding: 10px;"><select class="select-input" style="width: 100%; border-color: #1f4e79;" onchange="kemaskiniPatutBayar(this)">${pilihanHTML}</select></td>
         <td style="padding: 10px;"><input type="text" class="number-input patut-bayar" value="RM0.00" readonly style="background: #f4f4f4; font-weight: bold; width: 100%; text-align: right;"></td>
@@ -754,50 +556,29 @@ function unformatTelahBayar(input) { let val = unformatRMRumusan(input.value); i
 function formatTelahBayar(input) { let val = unformatRMRumusan(input.value); input.value = formatRMRumusan(val); kiraBakiBaris(input); }
 
 function kemaskiniPatutBayar(selectElement) {
-    const baris = selectElement.closest('tr');
-    const idSasaran = selectElement.value;
-    const inputPatutBayar = baris.querySelector('.patut-bayar');
-    const inputTelahBayar = baris.querySelector('.telah-bayar'); 
-    let nilaiDiambil = 0;
-    
-    inputTelahBayar.removeAttribute('readonly');
-    inputTelahBayar.style.background = "#fff";
+    const baris = selectElement.closest('tr'); const idSasaran = selectElement.value; const inputPatutBayar = baris.querySelector('.patut-bayar'); const inputTelahBayar = baris.querySelector('.telah-bayar'); let nilaiDiambil = 0;
+    inputTelahBayar.removeAttribute('readonly'); inputTelahBayar.style.background = "#fff";
     
     if (idSasaran !== "") {
         if (idSasaran === "orpBakiAmount") {
-            let orpPatut = document.getElementById("orpPatutTerima");
-            let orpTelah = document.getElementById("orpTelahTerima");
-            nilaiDiambil = unformatRMRumusan(orpPatut ? orpPatut.value : "0");
-            let nilaiTelah = unformatRMRumusan(orpTelah ? orpTelah.value : "0");
-            inputTelahBayar.value = formatRMRumusan(nilaiTelah);
-            inputTelahBayar.setAttribute('readonly', true);
-            inputTelahBayar.style.background = "#f4f4f4";
+            let orpPatut = document.getElementById("orpPatutTerima"); let orpTelah = document.getElementById("orpTelahTerima");
+            nilaiDiambil = unformatRMRumusan(orpPatut ? orpPatut.value : "0"); let nilaiTelah = unformatRMRumusan(orpTelah ? orpTelah.value : "0");
+            inputTelahBayar.value = formatRMRumusan(nilaiTelah); inputTelahBayar.setAttribute('readonly', true); inputTelahBayar.style.background = "#f4f4f4";
         } else {
             let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template)');
             for(let kad of semuaKadAktif) {
                 let elemenKeputusan = kad.querySelector(`[id="${idSasaran}"], [data-original-id="${idSasaran}"]`);
-                if (elemenKeputusan && elemenKeputusan.innerText && unformatRMRumusan(elemenKeputusan.innerText) !== 0) {
-                    nilaiDiambil = unformatRMRumusan(elemenKeputusan.innerText);
-                    break;
-                }
+                if (elemenKeputusan && elemenKeputusan.innerText && unformatRMRumusan(elemenKeputusan.innerText) !== 0) { nilaiDiambil = unformatRMRumusan(elemenKeputusan.innerText); break; }
             }
             inputTelahBayar.value = ""; 
         }
     } else { inputTelahBayar.value = ""; }
-    
-    inputPatutBayar.value = formatRMRumusan(nilaiDiambil);
-    kiraBakiBaris(selectElement);
+    inputPatutBayar.value = formatRMRumusan(nilaiDiambil); kiraBakiBaris(selectElement);
 }
 
 function kiraBakiBaris(elemenDalamBaris) {
-    const baris = elemenDalamBaris.closest('tr');
-    const patutBayar = unformatRMRumusan(baris.querySelector('.patut-bayar').value);
-    const telahBayar = unformatRMRumusan(baris.querySelector('.telah-bayar').value);
-    const inputBaki = baris.querySelector('.baki-baris');
-    
-    const baki = telahBayar - patutBayar; 
-    inputBaki.setAttribute('data-value', baki);
-    
+    const baris = elemenDalamBaris.closest('tr'); const patutBayar = unformatRMRumusan(baris.querySelector('.patut-bayar').value); const telahBayar = unformatRMRumusan(baris.querySelector('.telah-bayar').value);
+    const inputBaki = baris.querySelector('.baki-baris'); const baki = telahBayar - patutBayar; inputBaki.setAttribute('data-value', baki);
     if (baki > 0) { inputBaki.value = formatRMRumusan(baki); inputBaki.style.color = "#28a745"; } 
     else if (baki < 0) { inputBaki.value = formatRMRumusan(Math.abs(baki)); inputBaki.style.color = "#d9534f"; } 
     else { inputBaki.value = formatRMRumusan(0); inputBaki.style.color = "#333"; }
@@ -808,41 +589,22 @@ function buangBarisRumusan(butangPadam) { butangPadam.closest('tr').remove(); ki
 function resetRumusan() { document.getElementById('badanJadualRumusan').innerHTML = ''; kiraJumlahKeseluruhanRumusan(); }
 
 function kiraJumlahKeseluruhanRumusan() {
-    const semuaBaki = document.querySelectorAll('.baki-baris'); 
-    let jumlahBesar = 0;
-    semuaBaki.forEach(input => { 
-        let nilaiSebenar = input.getAttribute('data-value');
-        if (nilaiSebenar !== null) jumlahBesar += parseFloat(nilaiSebenar); 
-        else jumlahBesar += unformatRMRumusan(input.value); 
-    });
-    
+    const semuaBaki = document.querySelectorAll('.baki-baris'); let jumlahBesar = 0;
+    semuaBaki.forEach(input => { let nilaiSebenar = input.getAttribute('data-value'); if (nilaiSebenar !== null) jumlahBesar += parseFloat(nilaiSebenar); else jumlahBesar += unformatRMRumusan(input.value); });
     const teksJumlah = document.getElementById('jumlahKeseluruhanRumusan');
     if (jumlahBesar > 0) { teksJumlah.innerText = formatRMRumusan(jumlahBesar); teksJumlah.style.color = "#28a745"; } 
     else if (jumlahBesar < 0) { teksJumlah.innerText = formatRMRumusan(Math.abs(jumlahBesar)); teksJumlah.style.color = "#d9534f"; } 
     else { teksJumlah.innerText = formatRMRumusan(0); teksJumlah.style.color = "#1f4e79"; }
 }
 
-// UPGRADE: Fungsi autoMasukRumusan tidak lagi dipanggil melalui event listener global yang 
-// menggunakan setTimeout. Ia dipanggil secara teratur dan terus dari dalam fungsi Calculate.
 function autoMasukRumusan(idSasaran, contextCard) {
-    const jadual = document.getElementById('badanJadualRumusan');
-    const senaraiSelect = jadual.querySelectorAll('select');
-    let barisWujud = null;
+    const jadual = document.getElementById('badanJadualRumusan'); const senaraiSelect = jadual.querySelectorAll('select'); let barisWujud = null;
     senaraiSelect.forEach(select => { if (select.value === idSasaran) barisWujud = select; });
-
-    let tempContext = activeCardContext;
-    if (contextCard) activeCardContext = contextCard;
-
-    if (barisWujud) {
-        kemaskiniPatutBayar(barisWujud);
-    } else {
-        tambahBarisRumusan(); 
-        let semuaSelectBaru = jadual.querySelectorAll('select');
-        let selectTerbaru = semuaSelectBaru[semuaSelectBaru.length - 1];
-        selectTerbaru.value = idSasaran;
-        kemaskiniPatutBayar(selectTerbaru);
+    let tempContext = activeCardContext; if (contextCard) activeCardContext = contextCard;
+    if (barisWujud) { kemaskiniPatutBayar(barisWujud); } else {
+        tambahBarisRumusan(); let semuaSelectBaru = jadual.querySelectorAll('select'); let selectTerbaru = semuaSelectBaru[semuaSelectBaru.length - 1];
+        selectTerbaru.value = idSasaran; kemaskiniPatutBayar(selectTerbaru);
     }
-    
     activeCardContext = tempContext;
 }
 
@@ -851,16 +613,12 @@ function autoMasukRumusan(idSasaran, contextCard) {
 // =====================================================
 function formatTitleCase(str) { return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); }
 function formatIC(str) {
-    let val = str.replace(/\D/g, ''); 
-    if (val.length <= 6) return val; 
-    if (val.length <= 8) return val.slice(0,6) + '-' + val.slice(6); 
+    let val = str.replace(/\D/g, ''); if (val.length <= 6) return val; if (val.length <= 8) return val.slice(0,6) + '-' + val.slice(6); 
     return val.slice(0,6) + '-' + val.slice(6,8) + '-' + val.slice(8,12);
 }
 
 function janaLaporanPenuh() {
-    let existingModal = document.getElementById('modalLaporanPenuh');
-    if(existingModal) existingModal.remove();
-
+    let existingModal = document.getElementById('modalLaporanPenuh'); if(existingModal) existingModal.remove();
     let modalHtml = `
     <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
         <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
@@ -883,10 +641,8 @@ function janaLaporanPenuh() {
 }
 
 function teruskanJanaLaporan() {
-    let namaPekerja = document.getElementById('inputNamaLaporan').value.trim();
-    let icPekerja = document.getElementById('inputICLaporan').value.trim();
-    document.getElementById('modalLaporanPenuh').remove();
-    prosesJanaLaporanPenuh(namaPekerja, icPekerja);
+    let namaPekerja = document.getElementById('inputNamaLaporan').value.trim(); let icPekerja = document.getElementById('inputICLaporan').value.trim();
+    document.getElementById('modalLaporanPenuh').remove(); prosesJanaLaporanPenuh(namaPekerja, icPekerja);
 }
 
 function prosesJanaLaporanPenuh(namaPekerja, icPekerja) {
@@ -908,8 +664,7 @@ function prosesJanaLaporanPenuh(namaPekerja, icPekerja) {
         function getDaysInMonthStr(monthYearStr) {
             if (!monthYearStr || monthYearStr === "-") return 30; let parts = monthYearStr.trim().split(/\s+/); if (parts.length < 2) return 30;
             let mNames = ["Januari","Februari","Mac","April","Mei","Jun","Julai","Ogos","September","Oktober","November","Disember"];
-            let m = mNames.findIndex(n => n.toLowerCase() === parts[0].toLowerCase());
-            let y = parseInt(parts[1]); if (m > -1 && y) return new Date(y, m + 1, 0).getDate(); return 30; 
+            let m = mNames.findIndex(n => n.toLowerCase() === parts[0].toLowerCase()); let y = parseInt(parts[1]); if (m > -1 && y) return new Date(y, m + 1, 0).getDate(); return 30; 
         }
         let html = ""; let globalUpah = v("orpTotalSalary") || formatRM((parseFloat(d("annualLeaveORP").replace(/[^0-9.]/g, '')) || 0) * 26) || "RM 0.00";
 
@@ -932,13 +687,10 @@ function prosesJanaLaporanPenuh(namaPekerja, icPekerja) {
                 if (mm2 && mm2 !== "-") html += `<tr><td style="width:70%;">${mm2}: (${upah18} / ${d2}) x Hari Bekerja</td><td style="width:5%; text-align:center;">=</td><td style="font-weight:bold;">${amt2}</td></tr>`;
                 html += `</table>`; break;
             case "ggnRes18A":
-                let gUpah = d("resUni18ATotal"); let gM1 = d("resUniM1Title"); let gM2 = d("resUniM2Title");
-                let gD1 = getDaysInMonthStr(gM1); let gD2 = getDaysInMonthStr(gM2); let gRate1 = d("resUniM1Daily"); let gRate2 = d("resUniM2Daily");
-                let gDays1 = d("resUniM1Days"); let gDays2 = d("resUniM2Days"); let gAmt1 = d("resUniM1Amount"); let gAmt2 = d("resUniM2Amount");
-                let gTotal = d("resUni18AAmount"); html = `Formula:<br>(Jumlah Upah / Bil. Hari Dalam Bulan) x Hari Bekerja<br><br>`;
+                let gUpah = d("resUni18ATotal"); let gM1 = d("resUniM1Title"); let gM2 = d("resUniM2Title"); let gD1 = getDaysInMonthStr(gM1); let gD2 = getDaysInMonthStr(gM2); let gRate1 = d("resUniM1Daily"); let gRate2 = d("resUniM2Daily"); let gDays1 = d("resUniM1Days"); let gDays2 = d("resUniM2Days"); let gAmt1 = d("resUniM1Amount"); let gAmt2 = d("resUniM2Amount"); let gTotal = d("resUni18AAmount");
+                html = `Formula:<br>(Jumlah Upah / Bil. Hari Dalam Bulan) x Hari Bekerja<br><br>`;
                 if (gM1 && gM1 !== "-") html += `(A) ${gM1}:<br>(${gUpah} / ${gD1}) x Hari Bekerja<br>= ${gRate1} x ${gDays1}<br>= <b>${gAmt1}</b><br><br>`;
-                if (gM2 && gM2 !== "-") { html += `(B) ${gM2}:<br>(${gUpah} / ${gD2}) x Hari Bekerja<br>= ${gRate2} x ${gDays2}<br>= <b>${gAmt2}</b><br><br><b>(A) + (B) = ${gTotal}</b>`; } 
-                else { html += `<b>Jumlah = ${gTotal}</b>`; } break;
+                if (gM2 && gM2 !== "-") { html += `(B) ${gM2}:<br>(${gUpah} / ${gD2}) x Hari Bekerja<br>= ${gRate2} x ${gDays2}<br>= <b>${gAmt2}</b><br><br><b>(A) + (B) = ${gTotal}</b>`; } else { html += `<b>Jumlah = ${gTotal}</b>`; } break;
             case "ggnResBulan": html = `Formula:<br>Jumlah Upah x Bil. Bulan Notis<br>${v("ggnUniTotal")} x ${v("ggnUniMonthVal")} bulan<br>= <b>${d("resUniMonthAmount")}</b>`; break;
             case "tbbData":
                 let tempoh = d("tbbTempoh"); let yMatch = tempoh.match(/(\d+)\s*Tahun/i); let mMatch = tempoh.match(/(\d+)\s*Bulan/i);
@@ -1001,14 +753,10 @@ function prosesJanaLaporanPenuh(namaPekerja, icPekerja) {
                     let salinanKeputusan = elemenKeputusan.cloneNode(true);
                     salinanKeputusan.querySelectorAll('button, h4, hr').forEach(b => b.remove()); 
                     
-                    // UPGRADE: Integrasi data-pdf-label secara selamat
                     salinanKeputusan.querySelectorAll('.result-row, .section18a-header, .section18a-row').forEach(row => {
                         if (row.innerHTML.match(/\d{1,2}\/\d{1,2}\/\d{4}/)) row.innerHTML = row.innerHTML.replace(/(\d{1,2})\/(\d{1,2})\/(\d{4})/g, "$1-$2-$3");
-                        
-                        // Menukar teks UI dengan teks PDF yang ditetapkan pada attribute data-pdf-label
-                        row.querySelectorAll('[data-pdf-label]').forEach(el => {
-                            el.innerText = el.getAttribute('data-pdf-label');
-                        });
+                        // UPGRADE: Guna data-pdf-label terus
+                        row.querySelectorAll('[data-pdf-label]').forEach(el => { el.innerText = el.getAttribute('data-pdf-label'); });
 
                         let text = row.innerText || "";
                         if (text.includes("Jumlah Upah") && !text.includes("Jumlah Upah 12 Bulan") && !text.includes("Jumlah Bayaran Upah")) row.remove();
@@ -1022,17 +770,14 @@ function prosesJanaLaporanPenuh(namaPekerja, icPekerja) {
 
                     if (kalkulator.id === "ggnRes18A") {
                         let getD = (el) => { let e = kadAsal.querySelector(`[id="${el}"], [data-original-id="${el}"]`); return e ? e.innerText.trim() : ""; };
-                        let m1 = getD("resUniM1Title"); let m2 = getD("resUniM2Title"); let h1 = getD("resUniM1Days"); let h2 = getD("resUniM2Days");
-                        let r1 = getD("resUniM1Daily"); let r2 = getD("resUniM2Daily"); let a1 = getD("resUniM1Amount"); let a2 = getD("resUniM2Amount");
-                        let stEl = kadAsal.querySelector("#ggnStatusNotis, [data-original-id='ggnStatusNotis']"); 
-                        let lblTamat = (stEl && stEl.value === "tiada") ? "Tamat Tempoh Indemniti" : "Tarikh Akhir Notis";
+                        let m1 = getD("resUniM1Title"); let m2 = getD("resUniM2Title"); let h1 = getD("resUniM1Days"); let h2 = getD("resUniM2Days"); let r1 = getD("resUniM1Daily"); let r2 = getD("resUniM2Daily"); let a1 = getD("resUniM1Amount"); let a2 = getD("resUniM2Amount");
+                        let stEl = kadAsal.querySelector("#ggnStatusNotis, [data-original-id='ggnStatusNotis']"); let lblTamat = (stEl && stEl.value === "tiada") ? "Tamat Tempoh Indemniti" : "Tarikh Akhir Notis";
                         let tDateStr = getD("resUni18AEnd"); let tDate = tDateStr ? tDateStr.replace(/\//g, "-") : "";  let tTotal = getD("resUni18AAmount");
                         salinanKeputusan.innerHTML = `<div class="result-row" style="margin-bottom:8px;"><span>${lblTamat}</span><strong>${tDate}</strong></div><table class="clean-table"><tr><td></td><td style="font-weight:bold;">${m1}</td><td style="font-weight:bold;">${m2}</td></tr><tr><td>Hari Bekerja</td><td>${h1}</td><td>${h2}</td></tr><tr><td>Kadar Sehari</td><td>${r1}</td><td>${r2}</td></tr><tr><td>Bayaran</td><td>${a1}</td><td>${a2}</td></tr></table><div class="result-row highlight-row" style="margin-top:10px;"><span>Bayaran Gaji Ganti Notis</span><strong>${tTotal}</strong></div>`;
                     }
                     if (kalkulator.id === "sec18AData") {
                         let getD = (el) => { let e = kadAsal.querySelector(`[id="${el}"], [data-original-id="${el}"]`); return e ? e.innerText.trim() : ""; };
-                        let m1 = getD("month1Title"); let m2 = getD("month2Title"); let h1 = getD("month1Days"); let h2 = getD("month2Days");
-                        let r1 = getD("month1Daily"); let r2 = getD("month2Daily"); let a1 = getD("month1Amount"); let a2 = getD("month2Amount"); let tTotal = getD("amount18A");
+                        let m1 = getD("month1Title"); let m2 = getD("month2Title"); let h1 = getD("month1Days"); let h2 = getD("month2Days"); let r1 = getD("month1Daily"); let r2 = getD("month2Daily"); let a1 = getD("month1Amount"); let a2 = getD("month2Amount"); let tTotal = getD("amount18A");
                         salinanKeputusan.innerHTML = `<table class="clean-table" style="margin-top:5px;"><tr><td></td><td style="font-weight:bold;">${m1}</td><td style="font-weight:bold;">${m2}</td></tr><tr><td>Hari Bekerja</td><td>${h1}</td><td>${h2}</td></tr><tr><td>Kadar Sehari</td><td>${r1}</td><td>${r2}</td></tr><tr><td>Bayaran</td><td>${a1}</td><td>${a2}</td></tr></table><div class="result-row highlight-row" style="margin-top:10px;"><span>Jumlah Bayaran Upah</span><strong>${tTotal}</strong></div>`;
                     }
                     htmlLaporan += `<div class="report-box"><div class="report-header">${tajukKalkulator}</div><div class="report-section-title">PARAMETER / INPUT:</div>${paramHtml}${jalanKiraHtml}<div class="report-section-title" style="margin-top:10px;">KEPUTUSAN:</div><div class="compact-result">${salinanKeputusan.innerHTML}</div></div>`;
@@ -1059,15 +804,13 @@ function prosesJanaLaporanPenuh(namaPekerja, icPekerja) {
 
     if (!adaData) { alert("Peringatan: Sila buat sekurang-kurangnya satu pengiraan atau isi Jadual Rumusan terlebih dahulu."); return; }
     
-    let tarikhHariIni = new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' });
-    let maklumatPekerjaHTML = "";
+    let tarikhHariIni = new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }); let maklumatPekerjaHTML = "";
     if (namaPekerja !== "" || icPekerja !== "") {
         maklumatPekerjaHTML = `<div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;"><div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT PEKERJA</div><table class="param-table" style="margin-bottom: 0;"><tr><td class="param-label" style="width: 20%; font-weight: bold;">Nama</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${namaPekerja || '-'}</td></tr><tr><td class="param-label" style="width: 20%; font-weight: bold;">No. Kad Pengenalan</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${icPekerja || '-'}</td></tr></table></div>`;
     }
 
     let cssBaru = `.floating-action-bar { position: fixed; top: 25px; right: 25px; display: flex; z-index: 9999; align-items: center; } .kebab-btn { background: #0d6efd; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 24px; cursor: pointer; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: 0.2s; display: flex; justify-content: center; align-items: center; line-height: 1; padding-bottom: 5px; } .kebab-btn:hover { background: #0b5ed7; transform: scale(1.05); } .kebab-dropdown { display: none; position: absolute; right: 0; top: 115%; background-color: white; min-width: 170px; box-shadow: 0px 4px 15px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; border: 1px solid #ddd; text-align: left; } .kebab-dropdown a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; font-weight: bold; transition: 0.2s; } .kebab-dropdown a:hover { background-color: #f4f6f9; } .kebab-dropdown a:first-child { border-bottom: 1px solid #eee; } @media print { .floating-action-bar, .print-btn-container { display: none !important; } }`;
     let cetakHTML = `<!DOCTYPE html><html lang="ms"><head><meta charset="UTF-8"><title>Laporan Pengiraan Akta Kerja 1955</title><style>* { font-family: 'Segoe UI', Arial, sans-serif; box-sizing: border-box; } body { color: #111; line-height: 1.35; padding: 20px; font-size: 11px; background: #fdfdfd; margin-bottom: 80px; } .main-title { text-align: center; margin-bottom: 2px; font-size: 18px; font-weight: bold; border-bottom: 2px solid #222; padding-bottom: 6px; text-transform: uppercase; color: #000; letter-spacing: 1px; } .subtitle { text-align: center; color: #555; margin-top: 5px; margin-bottom: 25px; font-size: 11px; } .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; align-items: start; } .report-box { border: 1px solid #aaa; padding: 12px; border-radius: 6px; page-break-inside: avoid; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); } .report-header { font-size: 13px; font-weight: 800; text-align: center; background: #e8eaed; padding: 8px; border-bottom: 1px solid #aaa; margin: -12px -12px 12px -12px; border-radius: 6px 6px 0 0; text-transform: uppercase; color: #1a1a1a; letter-spacing: 0.5px; } .report-section-title { font-size: 10px; font-weight: bold; color: #1f4e79; letter-spacing: 0.5px; border-bottom: 1px dashed #ccc; padding-bottom: 3px; margin-bottom: 6px; text-transform: uppercase; } .param-table { width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 12px; } .param-label { padding: 3px 0; color: #444; width: 55%; } .param-value { padding: 3px 0; text-align: right; font-weight: 700; color: #000; } .formula-box { background-color: #f4f6f9; border-left: 3px solid #1f4e79; padding: 10px 12px; margin: 12px 0; font-size: 11px; color: #222; border-radius: 0 4px 4px 0; } .formula-title { font-weight: bold; font-size: 10px; color: #1f4e79; margin-bottom: 6px; letter-spacing: 0.5px; } .compact-result .result-row { display: flex; justify-content: space-between; margin-bottom: 5px; align-items: center; flex-wrap: wrap; } .compact-result .result-row span { font-size: 11px; color: #333; } .compact-result .result-row strong, #orpBakiAmount { font-size: 12px; color: #000; white-space: nowrap; } .compact-result hr { display: none !important; } .clean-table { width: 100%; border-collapse: collapse; font-size: 11px; border: none; margin-bottom: 5px; } .clean-table td { padding: 4px 2px; border: none; color: #222; } .highlight-row, .result-row[style*="background"] { background: transparent !important; border: 1.5px solid #1f4e79; padding: 8px !important; border-radius: 4px; margin-top: 10px; } .highlight-row span, .result-row[style*="background"] span { color: #1f4e79 !important; font-weight: bold; } .highlight-row strong, .result-row[style*="background"] strong { color: #1f4e79 !important; font-size: 14px !important; } @media print { body { padding: 0; background: #fff; margin-bottom: 0; } .report-box { border: 1px solid #aaa; box-shadow: none; } .report-header, .formula-box, .highlight-row, .result-row[style*="background"] { -webkit-print-color-adjust: exact; print-color-adjust: exact; } } ${cssBaru} </style></head><body><div class="floating-action-bar"><div style="position: relative;"><button class="kebab-btn" onclick="var d = document.getElementById('kebabDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block';">&#8942;</button><div id="kebabDropdown" class="kebab-dropdown"><a href="#" onclick="window.close(); return false;">✏️ Kemaskini</a><a href="#" onclick="window.print(); window.close(); return false;">🖨️ Cetak Laporan</a></div></div></div><h1 class="main-title">PENGIRAAN DI BAWAH AKTA KERJA 1955</h1><p class="subtitle">Tarikh Janaan: ${tarikhHariIni}</p><div class="grid-container">${maklumatPekerjaHTML}${htmlLaporan}</div><div class="print-btn-container" style="text-align: center; margin-top: 30px; grid-column: 1 / -1;"><p style="font-size: 11px; color:#666; font-style: italic;">*Untuk simpan dalam peranti, sila pilih <b>'Save as PDF'</b> pada tetingkap pencetak (Destination).</p></div><script>window.onafterprint = function() { setTimeout(function() { window.close(); }, 500); };<\\/script></body></html>`;
-    
     let tetingkapCetak = window.open('', '_blank'); 
     if (!tetingkapCetak) { alert("Pop-up disekat oleh pelayar web (browser) anda. Sila benarkan 'Pop-ups and redirects' untuk laman ini bagi melihat laporan."); return; }
     tetingkapCetak.document.write(cetakHTML); tetingkapCetak.document.close(); tetingkapCetak.focus(); 
@@ -1095,7 +838,7 @@ function resetSemua() {
 }
 
 // =====================================================
-// 7. ENGINE 2026: CLONE & MULTI-INSTANCE (TANPA EVAL)
+// 7. ENGINE 2026: CLONE & MULTI-INSTANCE
 // =====================================================
 window.tambahKalkulator = function(templateId) {
     document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
@@ -1131,8 +874,8 @@ window.tambahKalkulator = function(templateId) {
             else if(el.innerText !== 'Kadar Sehari' && el.innerText !== 'Bayaran' && el.innerText !== 'Hari Bekerja') el.innerText = '-';
         }
     });
-
-    // UPGRADE: Tambah logik untuk Name attributes (sebagai persediaan masa depan)
+    
+    // UPGRADE: Atribut name juga akan ditambah suffix supaya input radio/checkbox tidak bertindan
     let allElementsWithName = clone.querySelectorAll('[name]');
     allElementsWithName.forEach(el => {
         el.setAttribute('name', el.getAttribute('name') + uniqueSuffix);
