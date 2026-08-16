@@ -89,15 +89,19 @@
       <button class="menu-btn" onclick="tambahKalkulator('notis')">
         <span class="icon">📜</span> <span style="font-size: 14px; text-transform: uppercase;">Gaji Ganti Notis</span>
       </button>
-      <button class="menu-btn" onclick="tambahKalkulator('faedah')">
+     <button class="menu-btn" onclick="tambahKalkulator('faedah')">
         <span class="icon">💼</span> <span style="font-size: 14px; text-transform: uppercase;">Faedah Penamatan</span>
       </button>
-<!-- BUTANG JANA LAPORAN PENUH (DI BAWAH FAEDAH PENAMATAN) -->
-      <button class="menu-btn" onclick="janaLaporanPenuh()" style="margin-top: 35px; background: linear-gradient(135deg, #868e96, #596164); color: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(89, 97, 100, 0.3); border: none;">
+    </div> <!-- PENUTUP .sidebar-menu (Hanya bahagian atas ini yang boleh scroll) -->
+
+    <!-- KAWASAN BUTANG 'DITANAM' (Kekal di bawah) -->
+    <div style="position: sticky; bottom: 0; background: #ffffff; padding-top: 15px; padding-bottom: 10px; border-top: 1px solid #eeeeee; z-index: 10; margin-top: auto;">
+      <button class="menu-btn" onclick="janaLaporanPenuh()" style="margin: 0; width: 100%; background: linear-gradient(135deg, #868e96, #596164); color: white; border-radius: 8px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); border: none;">
         <span class="icon" style="filter: brightness(2);">📄</span> 
         <span style="font-size: 14px; text-transform: uppercase; font-weight: bold;">Jana Laporan Penuh</span>
       </button>
     </div>
+
   </aside>
 
   <!-- MAIN CONTENT AREA -->
