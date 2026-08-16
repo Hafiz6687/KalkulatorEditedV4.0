@@ -1,0 +1,278 @@
+/* =====================================================
+   KALKULATOR AKTA KERJA 1955 - STYLE.CSS (UI KORPORAT MODEN 2026)
+   AMARAN TEGAS DIPATUHI: HANYA KOSMETIK, FUNGSI JS KEKAL SELAMAT 100%
+===================================================== */
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+
+body {
+    background: #f8fafc; /* Latar kelabu kebiruan lembut (Moden) */
+    height: 100vh;
+    overflow: hidden; 
+}
+
+/* --- 1. LAYOUT UTAMA (SIDEBAR KIRI, KANDUNGAN KANAN) --- */
+.app-layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* --- 2. SIDEBAR (GAYA KORPORAT MODEN) --- */
+.sidebar-2026 {
+    width: 290px;
+    background: #ffffff;
+    border-right: 1px solid #e5e9f0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.02);
+    z-index: 50;
+}
+
+.sidebar-brand {
+    padding: 25px 20px 15px;
+    text-align: center;
+    border-bottom: 1px solid #f0f4f8;
+}
+
+.brand-icon {
+    font-size: 32px;
+    background: linear-gradient(135deg, #1f4e79, #3a7bd5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 2px 4px rgba(31,78,121,0.2));
+}
+
+.sidebar-brand h2 {
+    font-size: 18px;
+    color: #1f4e79;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.sidebar-brand p { font-size: 12px; color: #777; }
+
+.sidebar-menu {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 15px;
+}
+
+.sidebar-menu::-webkit-scrollbar { width: 5px; }
+.sidebar-menu::-webkit-scrollbar-thumb { background: #d0d7de; border-radius: 5px; }
+
+.menu-label {
+    font-size: 11px;
+    font-weight: bold;
+    color: #a0aec0;
+    letter-spacing: 1.5px;
+    margin: 10px 0 15px 10px;
+}
+
+.menu-btn {
+    width: 100%;
+    text-align: left;
+    padding: 12px 15px;
+    background: transparent;
+    border: none;
+    border-radius: 6px; 
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #4a5568;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 4px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.menu-btn .icon {
+    font-size: 15px;
+    width: 20px; 
+    text-align: center;
+    color: #a0aec0; 
+    transition: color 0.2s ease;
+}
+
+.menu-btn:hover {
+    background: #f1f5f9; 
+    color: #1f4e79;
+    transform: translateX(4px); 
+}
+
+.menu-btn:hover .icon { color: #1f4e79; }
+
+.menu-btn.active {
+    background: #e8f0fe; 
+    color: #1f4e79;
+    font-weight: 700;
+    box-shadow: none; 
+    border-left: 4px solid #1f4e79; 
+    border-radius: 2px 6px 6px 2px;
+}
+
+.menu-btn.active .icon { color: #1f4e79; }
+
+/* --- 3. KANDUNGAN UTAMA (KANAN) --- */
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px 30px; /* Dikurangkan sedikit dari 50px supaya ruang tengah lebih luas untuk 2 kad */
+    background: #f8fafc; 
+    position: relative;
+    scroll-behavior: smooth;
+}
+
+.main-header { text-align: center; margin-bottom: 40px; }
+.main-header h1 { font-size: 30px; color: #0f172a; margin-bottom: 8px; font-weight: 800; letter-spacing: -0.5px; }
+.main-header p { font-size: 14px; color: #64748b; font-weight: 500; }
+
+/* --- 4. GRID & KAD KALKULATOR (GAYA MODERN SAAS - DIKEMAS KINI UNTUK 2 LAJUR) --- */
+.calculator-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); /* Menggunakan CSS Grid pintar supaya automatik susun minimum 2 lajur */
+    gap: 25px; 
+    align-items: start; 
+}
+
+.calculator-card {
+    background: #ffffff;
+    border-radius: 16px; 
+    padding: 30px 25px; /* Padding diselaraskan supaya kad muat kemas sebelah menyebelah */
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08); 
+    border: 1px solid #e2e8f0; 
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
+}
+
+.calculator-card:hover { box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12); }
+
+/* Memastikan kad yang besar (contoh: Cuti Tahunan) dan Rumusan mengambil lebar penuh yang betul dalam CSS Grid */
+.calculator-card[style*="span 2"], .rumusan-card { 
+    grid-column: 1 / -1 !important; 
+}
+
+/* Tajuk Dalam Kad */
+.calculator-card h2 { 
+    text-align: center; color: #1e293b; font-size: 20px; font-weight: 800;
+    margin-bottom: 25px; line-height: 1.4; position: relative; padding-bottom: 15px;
+}
+.calculator-card h2::after {
+    content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 40px; height: 4px; background: #3b82f6; border-radius: 4px;
+}
+
+.hidden-template { display: none !important; }
+
+/* Butang Tutup (X) pada kad */
+.close-card-btn {
+    position: absolute; top: 15px; right: 15px; background: #f1f5f9; color: #94a3b8; 
+    border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 12px; font-weight: bold; 
+    cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;
+}
+.close-card-btn:hover { background: #fee2e2; color: #ef4444; transform: rotate(90deg); }
+
+/* --- 5. BENTUK FORM & INPUT (GAYA CLEAN) --- */
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; font-weight: 600; color: #475569; margin-bottom: 8px; font-size: 13px; letter-spacing: 0.3px; }
+
+.salary-input, .salary-total, .number-input, .date-input, .select-input {
+    width: 100%; padding: 12px 16px; border: 1.5px solid #cbd5e1; border-radius: 8px; 
+    font-size: 14px; outline: none; background: #f8fafc; color: #0f172a; font-weight: 500; transition: all 0.2s ease;
+}
+
+.salary-input:focus, .number-input:focus, .date-input:focus, .select-input:focus { 
+    background: #ffffff; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); 
+}
+.salary-total { background: #f1f5f9; font-weight: 700; color: #0f172a; border-color: #e2e8f0; }
+
+/* --- 6. BUTANG KIRA & RESET (GAYA ENTERPRISE) --- */
+.button-group { display: flex; gap: 12px; margin: 25px 0; }
+.btn { 
+    flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 700; 
+    font-size: 13.5px; cursor: pointer; color: white; transition: all 0.2s ease; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.btn-primary { 
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6); 
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4); filter: brightness(1.1); }
+.btn-reset { background: white; color: #ef4444; border: 1.5px solid #fca5a5; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+.btn-reset:hover { background: #fef2f2; border-color: #ef4444; transform: translateY(-2px); }
+
+/* --- 7. KOTAK KEPUTUSAN (LEBIH ELEGAN) --- */
+.result-box { background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #3b82f6; border-radius: 8px; padding: 20px; margin-top: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+.result-box h3 { text-align: left; font-size: 13px; font-weight: 800; color: #64748b; margin-bottom: 15px; margin-top: 0; text-transform: uppercase; letter-spacing: 1px; }
+
+.result-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; gap: 10px; border-bottom: 1px dashed #e2e8f0; }
+.result-row:last-child { border-bottom: none; }
+.result-row span { font-size: 13.5px; font-weight: 500; color: #475569; }
+.result-row strong { font-size: 14.5px; color: #0f172a; text-align: right; font-weight: 700; }
+
+.highlight-row { background: #f0f9ff; border: 1px solid #bae6fd; padding: 15px !important; border-radius: 8px; margin-top: 15px; border-bottom: none !important; }
+.highlight-row span { color: #0369a1 !important; font-size: 14px; font-weight: 700; text-transform: uppercase; }
+.highlight-row strong { font-size: 22px !important; color: #0284c7 !important; }
+
+/* --- 8. BUTANG TERAPUNG (DIKEMAS KINI) --- */
+.btn-floating {
+    position: fixed; z-index: 1000; border: none; font-weight: bold; cursor: pointer; transition: 0.2s;
+}
+.log-keluar { 
+    top: 25px; right: 30px; color: white; padding: 12px 25px; font-size: 15px; 
+    border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease;
+}
+.log-keluar:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+
+/* Pilihan 1: Ghost Red */
+.reset-semua-baru { 
+    bottom: 30px; right: 30px; 
+    background: #ffffff; 
+    color: #ef4444; 
+    border: 1.5px solid #fca5a5;
+    padding: 12px 25px; font-size: 15px; border-radius: 30px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+.reset-semua-baru:hover { 
+    background: #fef2f2; 
+    border-color: #ef4444; 
+    transform: translateY(-3px); 
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2); 
+}
+
+/* --- 9. TABLE SEKSYEN 18A & RUMUSAN --- */
+.section18a-header { display: flex; background: #1e293b; color: white; font-weight: bold; padding: 12px; border-radius: 6px 6px 0 0; }
+.section18a-row { display: flex; background: white; border-bottom: 1px solid #e2e8f0; padding: 12px; }
+.section18a-header span, .section18a-row span { flex: 1; text-align: center; font-size: 13.5px; }
+.section18a-header span:first-child, .section18a-row span:first-child { text-align: left; }
+
+#jadualRumusan th { font-size: 13.5px; background: #f1f5f9; border-bottom: 2px solid #cbd5e1; padding: 15px 12px; }
+#jadualRumusan td { font-size: 13.5px; border-bottom: 1px dashed #e2e8f0; padding: 12px; }
+
+/* --- 10. WARNING BOX --- */
+.warning-box { background: #fffbeb; border-left: 5px solid #fbbf24; padding: 25px 30px; border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
+
+/* --- 11. RESPONSIVE UNTUK SKRIN KECIL / TELEFON BIMBIT --- */
+@media screen and (max-width: 900px) {
+    .app-layout { flex-direction: column; overflow-y: auto; }
+    .sidebar-2026 { width: 100%; height: auto; border-right: none; border-bottom: 1px solid #e2e8f0; }
+    .sidebar-menu { display: flex; overflow-x: auto; padding: 10px; white-space: nowrap; gap: 10px; }
+    .menu-label { display: none; }
+    .menu-btn { width: auto; padding: 8px 15px; margin: 0; flex-shrink: 0; }
+    .main-content { overflow-y: visible; padding: 15px; }
+    body { overflow: auto; }
+    .calculator-card { flex: 1 1 100%; max-width: 100%; padding: 20px; }
+    .btn-floating.log-keluar, .btn-floating.reset-semua-baru { position: absolute; }
+}
+
+/* Memastikan cetakan PDF kekal kemas */
+@media print {
+    .sidebar-2026, .btn-floating, .button-group, .close-card-btn { display: none !important; }
+    .main-content { padding: 0; background: white; overflow: visible; }
+    .calculator-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+   #previewActionBar, #modalPengaduOverlay { display: none !important; }
+    #cetakMaklumatPengadu { box-shadow: none !important; border: 1px solid #cbd5e1 !important; break-inside: avoid; }
+}
