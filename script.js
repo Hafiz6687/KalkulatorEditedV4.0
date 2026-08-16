@@ -617,6 +617,11 @@ function formatIC(str) {
     return val.slice(0,6) + '-' + val.slice(6,8) + '-' + val.slice(8,12);
 }
 
+function janaPenyataGaji() {
+    // Buat masa ini, ia memanggil fungsi yang sama dengan Laporan Penuh
+    janaLaporanPenuh();
+}
+
 function janaLaporanPenuh() {
     let existingModal = document.getElementById('modalLaporanPenuh'); if(existingModal) existingModal.remove();
     let modalHtml = `
