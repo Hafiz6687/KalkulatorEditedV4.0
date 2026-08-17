@@ -640,9 +640,13 @@ function paparModalLaporan(jenis) {
             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Majikan/Syarikat/Organisasi:</label>
             <input type="text" id="inputNamaMajikan" placeholder="Contoh: Syarikat ABC Sdn Bhd" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
         </div>
-        <div style="margin-bottom: 25px;">
+        <div style="margin-bottom: 15px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Pendaftaran:</label>
             <input type="text" id="inputNoDaftarMajikan" placeholder="Contoh: 202301234567" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
+        </div>
+        <div style="margin-bottom: 25px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Tempoh Upah:</label>
+            <input type="text" id="inputTempohUpah" placeholder="Contoh: Mei 2026 / 1 Mei - 31 Mei 2026" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
         </div>`;
     }
 
@@ -675,21 +679,23 @@ function paparModalLaporan(jenis) {
 function teruskanJanaLaporan(jenis) {
     let namaMajikan = "";
     let noDaftarMajikan = "";
+    let tempohUpah = ""; // Pembolehubah baharu
     
     // Tarik nilai majikan HANYA jika ia wujud (jenis = penyata)
     if (jenis === 'penyata') {
         namaMajikan = document.getElementById('inputNamaMajikan') ? document.getElementById('inputNamaMajikan').value.trim() : "";
         noDaftarMajikan = document.getElementById('inputNoDaftarMajikan') ? document.getElementById('inputNoDaftarMajikan').value.trim() : "";
+        tempohUpah = document.getElementById('inputTempohUpah') ? document.getElementById('inputTempohUpah').value.trim() : ""; // Tangkap nilai Tempoh Upah
     }
 
     let namaPekerja = document.getElementById('inputNamaLaporan') ? document.getElementById('inputNamaLaporan').value.trim() : ""; 
     let icPekerja = document.getElementById('inputICLaporan') ? document.getElementById('inputICLaporan').value.trim() : "";
     
     document.getElementById('modalLaporanPenuh').remove(); 
-    prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, namaPekerja, icPekerja);
+    prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja); // Hantar ke enjin cetak
 }
 
-function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, namaPekerja, icPekerja) {
+function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja) { // Terima parameter baharu
     const senaraiKalkulator = [
         { id: "orpData", tajuk: "Kadar Upah Biasa (ORP)" }, { id: "bakiData", tajuk: "Baki Upah / Gaji" }, 
         { id: "otData", tajuk: "OT Hari Biasa" }, { id: "rhData", tajuk: "Kerja Hari Rehat (½ Hari @ Kurang)" }, 
@@ -799,7 +805,6 @@ function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, namaPekerja, icPek
                     
                     salinanKeputusan.querySelectorAll('.result-row, .section18a-header, .section18a-row').forEach(row => {
                         if (row.innerHTML.match(/\d{1,2}\/\d{1,2}\/\d{4}/)) row.innerHTML = row.innerHTML.replace(/(\d{1,2})\/(\d{1,2})\/(\d{4})/g, "$1-$2-$3");
-                        // UPGRADE: Guna data-pdf-label terus
                         row.querySelectorAll('[data-pdf-label]').forEach(el => { el.innerText = el.getAttribute('data-pdf-label'); });
 
                         let text = row.innerText || "";
@@ -848,21 +853,22 @@ function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, namaPekerja, icPek
 
     if (!adaData) { alert("Peringatan: Sila buat sekurang-kurangnya satu pengiraan atau isi Jadual Rumusan terlebih dahulu."); return; }
     
-let tarikhHariIni = new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }); 
+    let tarikhHariIni = new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }); 
     
-    // --- MULA KOD MAKLUMAT MAJIKAN (PDF) ---
+    // --- MULA KOD MAKLUMAT MAJIKAN & PEKERJA (PDF) ---
     let maklumatSyarikatPekerjaHTML = "";
-    if (namaMajikan !== "" || noDaftarMajikan !== "" || namaPekerja !== "" || icPekerja !== "") {
+    if (namaMajikan !== "" || noDaftarMajikan !== "" || tempohUpah !== "" || namaPekerja !== "" || icPekerja !== "") {
         maklumatSyarikatPekerjaHTML = `<div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;">
             <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT MAJIKAN & PEKERJA</div>
             <table class="param-table" style="margin-bottom: 0;">`;
         
-        if (namaMajikan !== "" || noDaftarMajikan !== "") {
+        if (namaMajikan !== "" || noDaftarMajikan !== "" || tempohUpah !== "") {
             maklumatSyarikatPekerjaHTML += `<tr><td class="param-label" style="width: 25%; font-weight: bold;">Nama Majikan/Syarikat</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${namaMajikan || '-'}</td></tr>
-            <tr><td class="param-label" style="width: 25%; font-weight: bold;">No. Pendaftaran</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${noDaftarMajikan || '-'}</td></tr>`;
+            <tr><td class="param-label" style="width: 25%; font-weight: bold;">No. Pendaftaran</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${noDaftarMajikan || '-'}</td></tr>
+            <tr><td class="param-label" style="width: 25%; font-weight: bold;">Tempoh Upah</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${tempohUpah || '-'}</td></tr>`;
         }
 
-        if ((namaMajikan !== "" || noDaftarMajikan !== "") && (namaPekerja !== "" || icPekerja !== "")) {
+        if ((namaMajikan !== "" || noDaftarMajikan !== "" || tempohUpah !== "") && (namaPekerja !== "" || icPekerja !== "")) {
              maklumatSyarikatPekerjaHTML += `<tr><td colspan="2"><hr style="border-top: 1px dashed #ccc; margin: 8px 0;"></td></tr>`;
         }
 
