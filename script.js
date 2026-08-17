@@ -631,14 +631,14 @@ function janaPenyataGaji() {
 function paparModalLaporan(jenis) {
     let existingModal = document.getElementById('modalLaporanPenuh'); if(existingModal) existingModal.remove();
     
-    let htmlMajikan = "";
+let htmlMajikan = "";
     // HANYA PAPARKAN JIKA JENIS ADALAH 'penyata'
     if (jenis === 'penyata') {
         htmlMajikan = `
         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Majikan / Syarikat / Organisasi</h3>
         <div style="margin-bottom: 15px; margin-top: 15px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Majikan/Syarikat/Organisasi:</label>
-            <input type="text" id="inputNamaMajikan" placeholder="Contoh: Syarikat ABC Sdn Bhd" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
+            <input type="text" id="inputNamaMajikan" placeholder="Contoh: SYARIKAT ABC SDN BHD" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
         </div>
         <div style="margin-bottom: 15px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Pendaftaran:</label>
