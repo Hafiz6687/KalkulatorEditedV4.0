@@ -975,10 +975,23 @@ window.tambahKalkulator = function(templateId) {
     clone.id = clone.id + uniqueSuffix;
     clone.style.position = "relative";
 
-    let closeBtn = document.createElement('button');
+let closeBtn = document.createElement('button');
     closeBtn.className = "close-card-btn";
     closeBtn.innerHTML = "X";
-    closeBtn.onclick = function() { clone.remove(); };
+    closeBtn.onclick = function() { 
+        clone.remove(); // 1. Padam kad yang dipangkah
+        
+        // 2. Semak jika masih ada kad kalkulator lain yang aktif di skrin
+        let kadTinggal = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+        
+        // 3. Jika sudah tiada langsung kad kalkulator, sembunyikan Rumusan
+        if (kadTinggal.length === 0) {
+            let kadRumusan = document.querySelector('.rumusan-card');
+            if (kadRumusan) {
+                kadRumusan.style.display = "none";
+            }
+        }
+    };
     clone.appendChild(closeBtn);
 
     let allElementsWithId = clone.querySelectorAll('[id]');
