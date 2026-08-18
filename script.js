@@ -905,7 +905,16 @@ function logKeluar() { let btn = document.getElementById("butangAuth"); if (btn)
 function resetSemua() {
     let sah = confirm("Adakah anda pasti mahu memadam KESEMUA data pengiraan? Tindakan ini tidak boleh diundur.");
     if (sah) {
-        resetORP(); resetBakiUpah(); resetOTBiasa(); resetHariRehat(); resetHariRehatLebih(); resetSeksyen18A(); resetOTRH(); resetPH(); resetOTPH(); resetKelayakanCuti(); resetCutiTahunan(); resetKelayakanCutiSakit(); resetCutiSakit(); resetGGNUnified(); resetTBB(); resetRumusan();
+        // 1. Cari semua kad kalkulator di atas grid (kecuali kad template asal)
+        let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+        
+        // 2. Padam semua kad klon tersebut
+        semuaKadAktif.forEach(kad => kad.remove());
+        
+        // 3. Reset jadual rumusan di bawah
+        resetRumusan();
+        
+        // 4. Scroll kembali ke atas
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
