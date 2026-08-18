@@ -556,24 +556,55 @@ function unformatTelahBayar(input) { let val = unformatRMRumusan(input.value); i
 function formatTelahBayar(input) { let val = unformatRMRumusan(input.value); input.value = formatRMRumusan(val); kiraBakiBaris(input); }
 
 function kemaskiniPatutBayar(selectElement) {
-    const baris = selectElement.closest('tr'); const idSasaran = selectElement.value; const inputPatutBayar = baris.querySelector('.patut-bayar'); const inputTelahBayar = baris.querySelector('.telah-bayar'); let nilaiDiambil = 0;
-    inputTelahBayar.removeAttribute('readonly'); inputTelahBayar.style.background = "#fff";
+    const baris = selectElement.closest('tr');
+    const idSasaran = selectElement.value;
+    const inputPatutBayar = baris.querySelector('.patut-bayar');
+    const inputTelahBayar = baris.querySelector('.telah-bayar');
+    let nilaiDiambil = 0;
+
+    inputTelahBayar.removeAttribute('readonly');
+    inputTelahBayar.style.background = "#fff";
     
     if (idSasaran !== "") {
+        // Ambil SEMUA kad yang aktif di atas skrin
+        let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template)');
+        
         if (idSasaran === "orpBakiAmount") {
-            let orpPatut = document.getElementById("orpPatutTerima"); let orpTelah = document.getElementById("orpTelahTerima");
-            nilaiDiambil = unformatRMRumusan(orpPatut ? orpPatut.value : "0"); let nilaiTelah = unformatRMRumusan(orpTelah ? orpTelah.value : "0");
-            inputTelahBayar.value = formatRMRumusan(nilaiTelah); inputTelahBayar.setAttribute('readonly', true); inputTelahBayar.style.background = "#f4f4f4";
+            let jumlahPatut = 0;
+            let jumlahTelah = 0;
+            
+            // Cari dan campurkan semua nilai dari kad klon Baki Gaji
+            for(let kad of semuaKadAktif) {
+                let patutEl = kad.querySelector('[id="orpPatutTerima"], [data-original-id="orpPatutTerima"]');
+                let telahEl = kad.querySelector('[id="orpTelahTerima"], [data-original-id="orpTelahTerima"]');
+                
+                if (patutEl || telahEl) { 
+                    jumlahPatut += unformatRMRumusan(patutEl ? patutEl.value : "0");
+                    jumlahTelah += unformatRMRumusan(telahEl ? telahEl.value : "0");
+                }
+            }
+            nilaiDiambil = jumlahPatut;
+            inputTelahBayar.value = formatRMRumusan(jumlahTelah);
+            inputTelahBayar.setAttribute('readonly', true);
+            inputTelahBayar.style.background = "#f4f4f4";
+            
         } else {
-            let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template)');
+            // Untuk kalkulator lain, campurkan semua nilai keputusan dari kad klon
             for(let kad of semuaKadAktif) {
                 let elemenKeputusan = kad.querySelector(`[id="${idSasaran}"], [data-original-id="${idSasaran}"]`);
-                if (elemenKeputusan && elemenKeputusan.innerText && unformatRMRumusan(elemenKeputusan.innerText) !== 0) { nilaiDiambil = unformatRMRumusan(elemenKeputusan.innerText); break; }
+                if (elemenKeputusan && elemenKeputusan.innerText && unformatRMRumusan(elemenKeputusan.innerText) !== 0) {
+                    nilaiDiambil += unformatRMRumusan(elemenKeputusan.innerText); // += bermaksud TAMBAH SEMUA
+                    // Arahan 'break;' telah dibuang supaya sistem terus mencari semua klon
+                }
             }
             inputTelahBayar.value = ""; 
         }
-    } else { inputTelahBayar.value = ""; }
-    inputPatutBayar.value = formatRMRumusan(nilaiDiambil); kiraBakiBaris(selectElement);
+    } else { 
+        inputTelahBayar.value = ""; 
+    }
+    
+    inputPatutBayar.value = formatRMRumusan(nilaiDiambil);
+    kiraBakiBaris(selectElement);
 }
 
 function kiraBakiBaris(elemenDalamBaris) {
