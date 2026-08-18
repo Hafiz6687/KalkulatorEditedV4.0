@@ -905,14 +905,18 @@ function logKeluar() { let btn = document.getElementById("butangAuth"); if (btn)
 function resetSemua() {
     let sah = confirm("Adakah anda pasti mahu memadam KESEMUA data pengiraan? Tindakan ini tidak boleh diundur.");
     if (sah) {
-        // 1. Cari semua kad kalkulator di atas grid (kecuali kad template asal)
+        // 1. Buang semua kad klon
         let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
-        
-        // 2. Padam semua kad klon tersebut
         semuaKadAktif.forEach(kad => kad.remove());
         
-        // 3. Reset jadual rumusan di bawah
+        // 2. Kosongkan jadual rumusan
         resetRumusan();
+        
+        // 3. SEMBUNYIKAN SEMULA kad rumusan (Fungsi Baharu)
+        let kadRumusan = document.querySelector('.rumusan-card');
+        if (kadRumusan) {
+            kadRumusan.style.display = "none";
+        }
         
         // 4. Scroll kembali ke atas
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -957,7 +961,6 @@ window.tambahKalkulator = function(templateId) {
         }
     });
     
-    // UPGRADE: Atribut name juga akan ditambah suffix supaya input radio/checkbox tidak bertindan
     let allElementsWithName = clone.querySelectorAll('[name]');
     allElementsWithName.forEach(el => {
         el.setAttribute('name', el.getAttribute('name') + uniqueSuffix);
@@ -978,5 +981,12 @@ window.tambahKalkulator = function(templateId) {
     });
 
     if (rumusanCard) grid.insertBefore(clone, rumusanCard); else grid.appendChild(clone);
+    
+    // --- MUNCULKAN KAD RUMUSAN APABILA KALKULATOR DIPILIH (Fungsi Baharu) ---
+    if (rumusanCard) {
+        rumusanCard.style.display = "block";
+    }
+    // ------------------------------------------------------------------------
+
     clone.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
