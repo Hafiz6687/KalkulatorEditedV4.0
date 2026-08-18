@@ -136,6 +136,7 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); /* Menggunakan CSS Grid pintar supaya automatik susun minimum 2 lajur */
     gap: 25px; 
     align-items: start; 
+grid-auto-flow: dense; /* Tambah kod ini */
 }
 
 .calculator-card {
