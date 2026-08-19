@@ -738,23 +738,38 @@ let htmlMajikan = "";
 }
 
 // Tindakan Selepas Butang 'Jana Cetakan' (dalam pop-up) Ditekan
+// Tindakan Selepas Butang 'Jana Cetakan' (dalam pop-up) Ditekan
 function teruskanJanaLaporan(jenis) {
     let namaMajikan = "";
     let noDaftarMajikan = "";
-    let tempohUpah = ""; // Pembolehubah baharu
+    let tempohUpah = ""; 
     
     // Tarik nilai majikan HANYA jika ia wujud (jenis = penyata)
     if (jenis === 'penyata') {
         namaMajikan = document.getElementById('inputNamaMajikan') ? document.getElementById('inputNamaMajikan').value.trim() : "";
         noDaftarMajikan = document.getElementById('inputNoDaftarMajikan') ? document.getElementById('inputNoDaftarMajikan').value.trim() : "";
-        tempohUpah = document.getElementById('inputTempohUpah') ? document.getElementById('inputTempohUpah').value.trim() : ""; // Tangkap nilai Tempoh Upah
+        tempohUpah = document.getElementById('inputTempohUpah') ? document.getElementById('inputTempohUpah').value.trim() : ""; 
     }
 
     let namaPekerja = document.getElementById('inputNamaLaporan') ? document.getElementById('inputNamaLaporan').value.trim() : ""; 
     let icPekerja = document.getElementById('inputICLaporan') ? document.getElementById('inputICLaporan').value.trim() : "";
     
     document.getElementById('modalLaporanPenuh').remove(); 
-    prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja); // Hantar ke enjin cetak
+    
+    // --- KOD BAHARU: SAMBUNG KE PENYATA.HTML ---
+    if (jenis === 'penyata') {
+        // Simpan data ke memori browser untuk dibaca oleh penyata.html
+        localStorage.setItem('penyata_namaMajikan', namaMajikan);
+        localStorage.setItem('penyata_bulanTahun', tempohUpah); // Guna tempoh upah untuk tarikh penyata
+        localStorage.setItem('penyata_namaPekerja', namaPekerja);
+        localStorage.setItem('penyata_noKP', icPekerja);
+        
+        // Buka tab penyata
+        window.open('penyata.html', '_blank');
+    } else {
+        // Jika butang Jana Laporan Penuh ditekan, jalan macam biasa
+        prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja);
+    }
 }
 
 function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja) { // Terima parameter baharu
@@ -1138,31 +1153,3 @@ window.tambahKalkulator = function(templateId) {
 
     clone.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
-// --- FUNGSI POP-UP PENYATA GAJI ---
-function bukaPopupPenyata() {
-    document.getElementById('popupPenyata').style.display = 'flex';
-}
-
-function tutupPopupPenyata() {
-    document.getElementById('popupPenyata').style.display = 'none';
-}
-
-function bawaKePenyata() {
-    // 1. Ambil data yang ditaip dari pop-up
-    const syarikat = document.getElementById('inputSyarikatPenyata').value;
-    const bulan = document.getElementById('inputBulanPenyata').value;
-    const nama = document.getElementById('inputNamaPenyata').value;
-    const kp = document.getElementById('inputKPPenyata').value;
-
-    // 2. Simpan dalam memori browser (localStorage)
-    localStorage.setItem('penyata_namaMajikan', syarikat);
-    localStorage.setItem('penyata_bulanTahun', bulan);
-    localStorage.setItem('penyata_namaPekerja', nama);
-    localStorage.setItem('penyata_noKP', kp);
-
-    // 3. Buka tab baru penyata gaji (Pastikan nama fail ini betul dengan apa yang awak save di Github)
-    window.open('penyata.html', '_blank');
-
-    // 4. Tutup pop-up
-    tutupPopupPenyata();
-}
