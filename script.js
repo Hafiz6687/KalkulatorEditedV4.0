@@ -89,13 +89,13 @@ function getInputNumber(id) {
 function formatSafeRM(val) {
     let num = evaluateSmartMath(val);
     if (num === 0 && !val.toString().includes("0")) return "";
-    return "RM" + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return "RM " + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function updateSalaryTotal(basicID, allowanceID, totalID) {
     let basic = getInputNumber(basicID); let allowance = getInputNumber(allowanceID);
     let total = basic + allowance; let tEl = getElement(totalID);
-    if(tEl) tEl.value = "RM" + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
+    if(tEl) tEl.value = "RM " + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
     return total;
 }
 
@@ -162,7 +162,7 @@ document.addEventListener("input", function(e) {
                         let aEl = kad.querySelector(`[id="${aID}"], [data-original-id="${aID}"]`);
                         let tEl = kad.querySelector(`[id="${tID}"], [data-original-id="${tID}"]`);
                         let basicVal = evaluateSmartMath(bEl.value); let allowVal = aEl ? evaluateSmartMath(aEl.value) : 0;
-                        if (tEl) tEl.value = "RM" + (basicVal + allowVal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        if (tEl) tEl.value = "RM " + (basicVal + allowVal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     }
                 });
             });
@@ -536,7 +536,7 @@ const senaraiKalkulatorRumusan = [
     { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)" }, { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)" }, { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)" }, { nilai: "tbbAmount", teks: "Faedah Penamatan" }, { nilai: "otAmount", teks: "OT Hari Biasa" }, { nilai: "otRHAmount", teks: "OT Hari Rehat" }, { nilai: "otPHAmount", teks: "OT Hari Kelepasan" }, { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)" }, { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)" }, { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan" }, { nilai: "amount18A", teks: "Seksyen 18A (Jumlah Bayaran Upah)" }, { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan" }, { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit" }
 ];
 
-function formatRMRumusan(amount) { if (isNaN(amount) || amount === "") return "RM0.00"; return "RM" + parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function formatRMRumusan(amount) { if (isNaN(amount) || amount === "") return "RM0.00"; return "RM " + parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function unformatRMRumusan(str) { if (!str) return 0; return parseFloat(str.toString().replace(/[^0-9.-]+/g, "")) || 0; }
 
 function tambahBarisRumusan() {
