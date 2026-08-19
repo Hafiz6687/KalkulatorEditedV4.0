@@ -975,7 +975,7 @@ window.tambahKalkulator = function(templateId) {
     clone.id = clone.id + uniqueSuffix;
     clone.style.position = "relative";
 
-let closeBtn = document.createElement('button');
+    let closeBtn = document.createElement('button');
     closeBtn.className = "close-card-btn";
     closeBtn.innerHTML = "X";
     closeBtn.onclick = function() { 
@@ -998,6 +998,7 @@ let closeBtn = document.createElement('button');
     allElementsWithId.forEach(el => {
         el.setAttribute('data-original-id', el.id);
         el.id = el.id + uniqueSuffix;
+        // Kosongkan semua input untuk kad baharu pada peringkat awal
         if(el.tagName === 'INPUT' && el.type !== 'button') el.value = "";
         if(el.tagName === 'STRONG' || el.tagName === 'SPAN') {
             if(el.innerText.includes('RM')) el.innerText = 'RM 0.00';
@@ -1009,6 +1010,57 @@ let closeBtn = document.createElement('button');
     allElementsWithName.forEach(el => {
         el.setAttribute('name', el.getAttribute('name') + uniqueSuffix);
     });
+
+    // ==============================================================
+    // PENAMBAHBAIKAN UX: WARISI GAJI & ELAUN DARI KALKULATOR SEDIA ADA
+    // ==============================================================
+    let currentBasic = "";
+    let currentAllowance = "";
+    let kadAktifLain = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+    
+    // 1. Cari jika ada mana-mana kalkulator sedia ada di skrin yang dah diisi Gaji & Elaun
+    if (kadAktifLain.length > 0) {
+        for (let kad of kadAktifLain) {
+            let jumpa = false;
+            for (let bID of Object.keys(salaryMap)) {
+                let bInput = kad.querySelector(`[data-original-id="${bID}"]`);
+                if (bInput && bInput.value) {
+                    currentBasic = bInput.value;
+                    let aID = salaryMap[bID][0];
+                    let aInput = kad.querySelector(`[data-original-id="${aID}"]`);
+                    if (aInput) currentAllowance = aInput.value;
+                    jumpa = true; 
+                    break;
+                }
+            }
+            if (jumpa) break;
+        }
+    }
+
+    // 2. Jika jumpa (ada Gaji Pokok dijumpai), salin ia masuk ke dalam kalkulator klon baharu ini
+    if (currentBasic !== "") {
+        for (let bID of Object.keys(salaryMap)) {
+            let bInput = clone.querySelector(`[data-original-id="${bID}"]`);
+            let aID = salaryMap[bID][0];
+            let aInput = clone.querySelector(`[data-original-id="${aID}"]`);
+            let tID = salaryMap[bID][1];
+            let tInput = clone.querySelector(`[data-original-id="${tID}"]`);
+
+            if (bInput) {
+                bInput.value = currentBasic;
+                if (aInput && currentAllowance !== "") {
+                    aInput.value = currentAllowance;
+                }
+                if (tInput) {
+                    // Kira dan papar Jumlah Upah terus untuk kad baharu ini
+                    let basicVal = evaluateSmartMath(currentBasic);
+                    let allowVal = currentAllowance !== "" ? evaluateSmartMath(currentAllowance) : 0;
+                    tInput.value = "RM" + (basicVal + allowVal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+            }
+        }
+    }
+    // ==============================================================
 
     let allButtons = clone.querySelectorAll('button');
     allButtons.forEach(btn => {
@@ -1026,7 +1078,7 @@ let closeBtn = document.createElement('button');
 
     if (rumusanCard) grid.insertBefore(clone, rumusanCard); else grid.appendChild(clone);
     
-    // --- MUNCULKAN KAD RUMUSAN APABILA KALKULATOR DIPILIH (Fungsi Baharu) ---
+    // Munculkan kad rumusan apabila kalkulator dipilih
     if (rumusanCard) {
         rumusanCard.style.display = "block";
     }
