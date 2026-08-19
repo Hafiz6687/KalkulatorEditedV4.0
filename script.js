@@ -738,38 +738,23 @@ let htmlMajikan = "";
 }
 
 // Tindakan Selepas Butang 'Jana Cetakan' (dalam pop-up) Ditekan
-// Tindakan Selepas Butang 'Jana Cetakan' (dalam pop-up) Ditekan
 function teruskanJanaLaporan(jenis) {
     let namaMajikan = "";
     let noDaftarMajikan = "";
-    let tempohUpah = ""; 
+    let tempohUpah = ""; // Pembolehubah baharu
     
     // Tarik nilai majikan HANYA jika ia wujud (jenis = penyata)
     if (jenis === 'penyata') {
         namaMajikan = document.getElementById('inputNamaMajikan') ? document.getElementById('inputNamaMajikan').value.trim() : "";
         noDaftarMajikan = document.getElementById('inputNoDaftarMajikan') ? document.getElementById('inputNoDaftarMajikan').value.trim() : "";
-        tempohUpah = document.getElementById('inputTempohUpah') ? document.getElementById('inputTempohUpah').value.trim() : ""; 
+        tempohUpah = document.getElementById('inputTempohUpah') ? document.getElementById('inputTempohUpah').value.trim() : ""; // Tangkap nilai Tempoh Upah
     }
 
     let namaPekerja = document.getElementById('inputNamaLaporan') ? document.getElementById('inputNamaLaporan').value.trim() : ""; 
     let icPekerja = document.getElementById('inputICLaporan') ? document.getElementById('inputICLaporan').value.trim() : "";
     
     document.getElementById('modalLaporanPenuh').remove(); 
-    
-    // --- KOD BAHARU: SAMBUNG KE PENYATA.HTML ---
-    if (jenis === 'penyata') {
-        // Simpan data ke memori browser untuk dibaca oleh penyata.html
-        localStorage.setItem('penyata_namaMajikan', namaMajikan);
-        localStorage.setItem('penyata_bulanTahun', tempohUpah); // Guna tempoh upah untuk tarikh penyata
-        localStorage.setItem('penyata_namaPekerja', namaPekerja);
-        localStorage.setItem('penyata_noKP', icPekerja);
-        
-        // Buka tab penyata
-        window.open('penyata.html', '_blank');
-    } else {
-        // Jika butang Jana Laporan Penuh ditekan, jalan macam biasa
-        prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja);
-    }
+    prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja); // Hantar ke enjin cetak
 }
 
 function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja) { // Terima parameter baharu
