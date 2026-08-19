@@ -1138,3 +1138,31 @@ window.tambahKalkulator = function(templateId) {
 
     clone.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
+// --- FUNGSI POP-UP PENYATA GAJI ---
+function bukaPopupPenyata() {
+    document.getElementById('popupPenyata').style.display = 'flex';
+}
+
+function tutupPopupPenyata() {
+    document.getElementById('popupPenyata').style.display = 'none';
+}
+
+function bawaKePenyata() {
+    // 1. Ambil data yang ditaip dari pop-up
+    const syarikat = document.getElementById('inputSyarikatPenyata').value;
+    const bulan = document.getElementById('inputBulanPenyata').value;
+    const nama = document.getElementById('inputNamaPenyata').value;
+    const kp = document.getElementById('inputKPPenyata').value;
+
+    // 2. Simpan dalam memori browser (localStorage)
+    localStorage.setItem('penyata_namaMajikan', syarikat);
+    localStorage.setItem('penyata_bulanTahun', bulan);
+    localStorage.setItem('penyata_namaPekerja', nama);
+    localStorage.setItem('penyata_noKP', kp);
+
+    // 3. Buka tab baru penyata gaji (Pastikan nama fail ini betul dengan apa yang awak save di Github)
+    window.open('penyata.html', '_blank');
+
+    // 4. Tutup pop-up
+    tutupPopupPenyata();
+}
