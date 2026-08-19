@@ -994,11 +994,11 @@ window.tambahKalkulator = function(templateId) {
     };
     clone.appendChild(closeBtn);
 
+    // KOSONGKAN KAD BAHARU SEBELUM DISUNTIK NILAI
     let allElementsWithId = clone.querySelectorAll('[id]');
     allElementsWithId.forEach(el => {
         el.setAttribute('data-original-id', el.id);
         el.id = el.id + uniqueSuffix;
-        // Kosongkan semua input untuk kad baharu pada peringkat awal
         if(el.tagName === 'INPUT' && el.type !== 'button') el.value = "";
         if(el.tagName === 'STRONG' || el.tagName === 'SPAN') {
             if(el.innerText.includes('RM')) el.innerText = 'RM 0.00';
@@ -1018,44 +1018,47 @@ window.tambahKalkulator = function(templateId) {
     let currentAllowance = "";
     let kadAktifLain = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
     
-    // 1. Cari jika ada mana-mana kalkulator sedia ada di skrin yang dah diisi Gaji & Elaun
+    // 1. Cari nilai Gaji & Elaun dari kad yang dah diisi
     if (kadAktifLain.length > 0) {
         for (let kad of kadAktifLain) {
             let jumpa = false;
-            for (let bID of Object.keys(salaryMap)) {
-                let bInput = kad.querySelector(`[data-original-id="${bID}"]`);
-                if (bInput && bInput.value) {
-                    currentBasic = bInput.value;
-                    let aID = salaryMap[bID][0];
-                    let aInput = kad.querySelector(`[data-original-id="${aID}"]`);
-                    if (aInput) currentAllowance = aInput.value;
-                    jumpa = true; 
-                    break;
+            for (let mapKey of Object.keys(salaryMap)) {
+                let sourceBasic = kad.querySelector(`[data-original-id="${mapKey}"]`);
+                if (sourceBasic && sourceBasic.value) {
+                    // Pastikan gaji lebih besar dari 0 sebelum disalin
+                    let semakNilai = evaluateSmartMath(sourceBasic.value);
+                    if (semakNilai > 0) {
+                        currentBasic = sourceBasic.value;
+                        let sourceAllowId = salaryMap[mapKey][0];
+                        let sourceAllow = kad.querySelector(`[data-original-id="${sourceAllowId}"]`);
+                        if (sourceAllow) currentAllowance = sourceAllow.value;
+                        jumpa = true;
+                        break; // Berhenti cari dalam kad ini
+                    }
                 }
             }
-            if (jumpa) break;
+            if (jumpa) break; // Berhenti cari dalam kad lain
         }
     }
 
-    // 2. Jika jumpa (ada Gaji Pokok dijumpai), salin ia masuk ke dalam kalkulator klon baharu ini
+    // 2. Jika jumpa (ada Gaji Pokok dikesan), suntik masuk ke kalkulator baharu
     if (currentBasic !== "") {
-        for (let bID of Object.keys(salaryMap)) {
-            let bInput = clone.querySelector(`[data-original-id="${bID}"]`);
-            let aID = salaryMap[bID][0];
-            let aInput = clone.querySelector(`[data-original-id="${aID}"]`);
-            let tID = salaryMap[bID][1];
-            let tInput = clone.querySelector(`[data-original-id="${tID}"]`);
+        for (let targetKey of Object.keys(salaryMap)) {
+            let targetBasic = clone.querySelector(`[data-original-id="${targetKey}"]`);
+            let targetAllowId = salaryMap[targetKey][0];
+            let targetAllow = clone.querySelector(`[data-original-id="${targetAllowId}"]`);
+            let targetTotalId = salaryMap[targetKey][1];
+            let targetTotal = clone.querySelector(`[data-original-id="${targetTotalId}"]`);
 
-            if (bInput) {
-                bInput.value = currentBasic;
-                if (aInput && currentAllowance !== "") {
-                    aInput.value = currentAllowance;
+            if (targetBasic) {
+                targetBasic.value = currentBasic;
+                if (targetAllow && currentAllowance !== "") {
+                    targetAllow.value = currentAllowance;
                 }
-                if (tInput) {
-                    // Kira dan papar Jumlah Upah terus untuk kad baharu ini
-                    let basicVal = evaluateSmartMath(currentBasic);
-                    let allowVal = currentAllowance !== "" ? evaluateSmartMath(currentAllowance) : 0;
-                    tInput.value = "RM" + (basicVal + allowVal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                if (targetTotal) {
+                    let calcBasic = evaluateSmartMath(currentBasic);
+                    let calcAllow = currentAllowance !== "" ? evaluateSmartMath(currentAllowance) : 0;
+                    targetTotal.value = "RM " + (calcBasic + calcAllow).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 }
             }
         }
@@ -1082,6 +1085,7 @@ window.tambahKalkulator = function(templateId) {
     if (rumusanCard) {
         rumusanCard.style.display = "block";
     }
+
     // ------------------------------------------------------------------------
 
     clone.scrollIntoView({ behavior: 'smooth', block: 'center' });
