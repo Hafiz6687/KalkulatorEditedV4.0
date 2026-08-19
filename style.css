@@ -152,8 +152,8 @@ grid-auto-flow: dense; /* Tambah kod ini */
 
 .calculator-card:hover { box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12); }
 
-/* Memastikan kad yang besar (contoh: Cuti Tahunan) dan Rumusan mengambil lebar penuh yang betul dalam CSS Grid */
-.calculator-card[style*="span 2"], .rumusan-card { 
+/* Pastikan HANYA Rumusan mengambil lebar penuh dari kiri ke kanan dalam CSS Grid */
+.rumusan-card { 
     grid-column: 1 / -1 !important; 
 }
 
