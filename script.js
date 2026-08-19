@@ -545,9 +545,9 @@ function tambahBarisRumusan() {
     tr.innerHTML = `
         <td style="padding: 10px;"><select class="select-input" style="width: 100%; border-color: #1f4e79;" onchange="kemaskiniPatutBayar(this)">${pilihanHTML}</select></td>
         <td style="padding: 10px;"><input type="text" class="number-input keterangan-baris" placeholder="-" readonly style="background: #f4f4f4; text-align: center; width: 100%;"></td>
-        <td style="padding: 10px;"><input type="text" class="number-input patut-bayar" value="RM 0.00" readonly style="background: #f4f4f4; font-weight: bold; width: 100%; text-align: right;"></td>
-        <td style="padding: 10px;"><input type="text" class="number-input telah-bayar" placeholder="Contoh: 599.00" style="width: 100%; text-align: right;" onblur="formatTelahBayar(this)" onfocus="unformatTelahBayar(this)"></td>
-        <td style="padding: 10px;"><input type="text" class="number-input baki-baris" value="RM 0.00" readonly style="background: #fff; font-weight: bold; width: 100%; border: none; text-align: right;"></td>
+        <td style="padding: 10px;"><input type="text" class="number-input patut-bayar" value="RM 0.00" readonly style="background: #f4f4f4; font-weight: bold; width: 100%; text-align: center;"></td>
+        <td style="padding: 10px;"><input type="text" class="number-input telah-bayar" placeholder="Contoh: 599.00" style="width: 100%; text-align: center;" onblur="formatTelahBayar(this)" onfocus="unformatTelahBayar(this)"></td>
+        <td style="padding: 10px;"><input type="text" class="number-input baki-baris" value="RM 0.00" readonly style="background: #fff; font-weight: bold; width: 100%; border: none; text-align: center;"></td>
         <td style="padding: 10px; text-align: center;"><button onclick="buangBarisRumusan(this)" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">X</button></td>
     `;
     tbody.appendChild(tr);
