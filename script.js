@@ -544,7 +544,7 @@ function tambahBarisRumusan() {
     let pilihanHTML = ''; senaraiKalkulatorRumusan.forEach(item => { pilihanHTML += `<option value="${item.nilai}">${item.teks}</option>`; });
     tr.innerHTML = `
         <td style="padding: 10px;"><select class="select-input" style="width: 100%; border-color: #1f4e79;" onchange="kemaskiniPatutBayar(this)">${pilihanHTML}</select></td>
-        <td style="padding: 10px;"><input type="text" class="keterangan-baris" placeholder="-" readonly style="background: #f8fafc; color: #475569; font-size: 13px; text-align: center; width: 100%; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 6px; outline: none;"></td>
+        <td style="padding: 10px;"><input type="text" class="number-input keterangan-baris" placeholder="-" readonly style="background: #f4f4f4; text-align: center; width: 100%;"></td>
         <td style="padding: 10px;"><input type="text" class="number-input patut-bayar" value="RM 0.00" readonly style="background: #f4f4f4; font-weight: bold; width: 100%; text-align: right;"></td>
         <td style="padding: 10px;"><input type="text" class="number-input telah-bayar" placeholder="Contoh: 599.00" style="width: 100%; text-align: right;" onblur="formatTelahBayar(this)" onfocus="unformatTelahBayar(this)"></td>
         <td style="padding: 10px;"><input type="text" class="number-input baki-baris" value="RM 0.00" readonly style="background: #fff; font-weight: bold; width: 100%; border: none; text-align: right;"></td>
