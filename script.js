@@ -544,9 +544,10 @@ function tambahBarisRumusan() {
     let pilihanHTML = ''; senaraiKalkulatorRumusan.forEach(item => { pilihanHTML += `<option value="${item.nilai}">${item.teks}</option>`; });
     tr.innerHTML = `
         <td style="padding: 10px;"><select class="select-input" style="width: 100%; border-color: #1f4e79;" onchange="kemaskiniPatutBayar(this)">${pilihanHTML}</select></td>
-        <td style="padding: 10px;"><input type="text" class="number-input patut-bayar" value="RM0.00" readonly style="background: #f4f4f4; font-weight: bold; width: 100%; text-align: right;"></td>
+        <td style="padding: 10px;"><input type="text" class="keterangan-baris" placeholder="-" readonly style="background: #f8fafc; color: #475569; font-size: 13px; text-align: center; width: 100%; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 6px; outline: none;"></td>
+        <td style="padding: 10px;"><input type="text" class="number-input patut-bayar" value="RM 0.00" readonly style="background: #f4f4f4; font-weight: bold; width: 100%; text-align: right;"></td>
         <td style="padding: 10px;"><input type="text" class="number-input telah-bayar" placeholder="Contoh: 599.00" style="width: 100%; text-align: right;" onblur="formatTelahBayar(this)" onfocus="unformatTelahBayar(this)"></td>
-        <td style="padding: 10px;"><input type="text" class="number-input baki-baris" value="RM0.00" readonly style="background: #fff; font-weight: bold; width: 100%; border: none; text-align: right;"></td>
+        <td style="padding: 10px;"><input type="text" class="number-input baki-baris" value="RM 0.00" readonly style="background: #fff; font-weight: bold; width: 100%; border: none; text-align: right;"></td>
         <td style="padding: 10px; text-align: center;"><button onclick="buangBarisRumusan(this)" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">X</button></td>
     `;
     tbody.appendChild(tr);
@@ -558,26 +559,24 @@ function formatTelahBayar(input) { let val = unformatRMRumusan(input.value); inp
 function kemaskiniPatutBayar(selectElement) {
     const baris = selectElement.closest('tr');
     const idSasaran = selectElement.value;
+    const inputKeterangan = baris.querySelector('.keterangan-baris');
     const inputPatutBayar = baris.querySelector('.patut-bayar');
     const inputTelahBayar = baris.querySelector('.telah-bayar');
+    
     let nilaiDiambil = 0;
+    let senaraiKeterangan = []; // Array untuk simpan keterangan (contoh: 4 jam, 2 jam)
 
     inputTelahBayar.removeAttribute('readonly');
     inputTelahBayar.style.background = "#fff";
     
     if (idSasaran !== "") {
-        // Ambil SEMUA kad yang aktif di atas skrin
         let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template)');
         
         if (idSasaran === "orpBakiAmount") {
-            let jumlahPatut = 0;
-            let jumlahTelah = 0;
-            
-            // Cari dan campurkan semua nilai dari kad klon Baki Gaji
+            let jumlahPatut = 0, jumlahTelah = 0;
             for(let kad of semuaKadAktif) {
                 let patutEl = kad.querySelector('[id="orpPatutTerima"], [data-original-id="orpPatutTerima"]');
                 let telahEl = kad.querySelector('[id="orpTelahTerima"], [data-original-id="orpTelahTerima"]');
-                
                 if (patutEl || telahEl) { 
                     jumlahPatut += unformatRMRumusan(patutEl ? patutEl.value : "0");
                     jumlahTelah += unformatRMRumusan(telahEl ? telahEl.value : "0");
@@ -587,14 +586,37 @@ function kemaskiniPatutBayar(selectElement) {
             inputTelahBayar.value = formatRMRumusan(jumlahTelah);
             inputTelahBayar.setAttribute('readonly', true);
             inputTelahBayar.style.background = "#f4f4f4";
+            senaraiKeterangan.push("Dari Kalkulator ORP");
             
         } else {
-            // Untuk kalkulator lain, campurkan semua nilai keputusan dari kad klon
+            // Untuk kalkulator lain
             for(let kad of semuaKadAktif) {
                 let elemenKeputusan = kad.querySelector(`[id="${idSasaran}"], [data-original-id="${idSasaran}"]`);
                 if (elemenKeputusan && elemenKeputusan.innerText && unformatRMRumusan(elemenKeputusan.innerText) !== 0) {
-                    nilaiDiambil += unformatRMRumusan(elemenKeputusan.innerText); // += bermaksud TAMBAH SEMUA
-                    // Arahan 'break;' telah dibuang supaya sistem terus mencari semua klon
+                    nilaiDiambil += unformatRMRumusan(elemenKeputusan.innerText);
+                    
+                    // --- LOGIK EKSTRAK KETERANGAN ---
+                    let detail = "";
+                    let getVal = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.value : ""; };
+                    let getTxt = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.innerText : ""; };
+
+                    if (idSasaran.includes("otAmount")) { let jam = getVal("otHours"); if(jam) detail = `${jam} jam`; }
+                    else if (idSasaran.includes("otRHAmount")) { let jam = getVal("otRHHours"); if(jam) detail = `${jam} jam`; }
+                    else if (idSasaran.includes("otPHAmount")) { let jam = getVal("otPHHours"); if(jam) detail = `${jam} jam`; }
+                    else if (idSasaran.includes("rhAmount") && !idSasaran.includes("rhMoreAmount")) { let hari = getVal("rhDays"); if(hari) detail = `${hari} hari`; }
+                    else if (idSasaran.includes("rhMoreAmount")) { let hari = getVal("rhMoreDays"); if(hari) detail = `${hari} hari`; }
+                    else if (idSasaran.includes("phAmount")) { let hari = getVal("phDays"); if(hari) detail = `${hari} hari`; }
+                    else if (idSasaran.includes("annualLeaveAmount")) { let hari = getVal("annualLeaveDays"); if(hari) detail = `${hari} hari`; }
+                    else if (idSasaran.includes("sickLeaveAmount")) { let hari = getVal("sickLeaveDays"); if(hari) detail = `${hari} hari`; }
+                    else if (idSasaran.includes("resUniMonthAmount")) { let bulan = getVal("ggnUniMonthVal"); if(bulan) detail = `${bulan} bulan`; }
+                    else if (idSasaran.includes("resUni18AAmount")) { 
+                        let m = getVal("ggnUniWeekVal"), h = getVal("ggnUniDayVal"); 
+                        if(m) detail = `${m} minggu`; else if(h) detail = `${h} hari`;
+                    }
+                    else if (idSasaran.includes("tbbAmount")) { let hari = getTxt("tbbHari"); if(hari && hari !== "-") detail = hari; }
+                    else if (idSasaran.includes("amount18A")) { detail = "Kiraan Berjadual"; }
+
+                    if (detail) senaraiKeterangan.push(detail);
                 }
             }
             inputTelahBayar.value = ""; 
@@ -603,6 +625,10 @@ function kemaskiniPatutBayar(selectElement) {
         inputTelahBayar.value = ""; 
     }
     
+    // Paparkan keterangan di jadual rumusan (gabungkan jika ada lebih dari 1)
+    if (inputKeterangan) {
+        inputKeterangan.value = senaraiKeterangan.length > 0 ? senaraiKeterangan.join(" + ") : "-";
+    }
     inputPatutBayar.value = formatRMRumusan(nilaiDiambil);
     kiraBakiBaris(selectElement);
 }
@@ -866,16 +892,17 @@ function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPe
         });
     });
 
-    let rumusanTbody = document.getElementById('badanJadualRumusan');
+let rumusanTbody = document.getElementById('badanJadualRumusan');
     if (rumusanTbody && rumusanTbody.children.length > 0) {
         adaData = true; 
-        let rumusanHTML = `<table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 12px; border: 1px solid #ccc;"><thead><tr style="background: #1f4e79; color: white;"><th style="padding: 8px; text-align: left; border: 1px solid #ccc;">Jenis Bayaran</th><th style="padding: 8px; text-align: right; border: 1px solid #ccc;">Patut Bayar</th><th style="padding: 8px; text-align: right; border: 1px solid #ccc;">Telah Bayar</th><th style="padding: 8px; text-align: right; border: 1px solid #ccc;">Baki (+/-)</th></tr></thead><tbody>`;
+        let rumusanHTML = `<table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 12px; border: 1px solid #ccc;"><thead><tr style="background: #1f4e79; color: white;"><th style="padding: 8px; text-align: left; border: 1px solid #ccc; width:28%;">Jenis Bayaran</th><th style="padding: 8px; text-align: center; border: 1px solid #ccc; width:17%;">Keterangan</th><th style="padding: 8px; text-align: right; border: 1px solid #ccc; width:16%;">Patut Bayar</th><th style="padding: 8px; text-align: right; border: 1px solid #ccc; width:16%;">Telah Bayar</th><th style="padding: 8px; text-align: right; border: 1px solid #ccc; width:16%;">Baki (+/-)</th></tr></thead><tbody>`;
         let barisRumusan = rumusanTbody.querySelectorAll('tr');
         barisRumusan.forEach(tr => {
             let select = tr.querySelector('select'); let jenis = select.options[select.selectedIndex].text;
+            let inputKeterangan = tr.querySelector('.keterangan-baris'); let ket = inputKeterangan ? inputKeterangan.value : "-";
             let patut = tr.querySelector('.patut-bayar').value; let telah = tr.querySelector('.telah-bayar').value;
             let bakiInput = tr.querySelector('.baki-baris'); let baki = bakiInput.value; let bakiWarna = bakiInput.style.color;
-            rumusanHTML += `<tr><td style="padding: 8px; border: 1px solid #ccc;">${jenis}</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc; font-weight: bold;">${patut}</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${telah || "RM0.00"}</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc; color: ${bakiWarna}; font-weight: bold;">${baki}</td></tr>`;
+            rumusanHTML += `<tr><td style="padding: 8px; border: 1px solid #ccc;">${jenis}</td><td style="padding: 8px; text-align: center; border: 1px solid #ccc;">${ket}</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc; font-weight: bold;">${patut}</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${telah || "RM 0.00"}</td><td style="padding: 8px; text-align: right; border: 1px solid #ccc; color: ${bakiWarna}; font-weight: bold;">${baki}</td></tr>`;
         });
         let jumlahTeks = document.getElementById('jumlahKeseluruhanRumusan');
         rumusanHTML += `</tbody></table><div style="text-align: right; margin-top: 10px; padding: 12px; background: #f4f6f9; border-radius: 6px; border: 1px solid #ccc;"><span style="font-size: 12px; font-weight: bold; color: #333;">Jumlah Keseluruhan Terlebih / Terkurang Bayar: </span><strong style="font-size: 16px; color: ${jumlahTeks.style.color}; margin-left: 10px;">${jumlahTeks.innerText}</strong></div>`;
@@ -994,11 +1021,11 @@ window.tambahKalkulator = function(templateId) {
     };
     clone.appendChild(closeBtn);
 
-    // KOSONGKAN KAD BAHARU SEBELUM DISUNTIK NILAI
     let allElementsWithId = clone.querySelectorAll('[id]');
     allElementsWithId.forEach(el => {
         el.setAttribute('data-original-id', el.id);
         el.id = el.id + uniqueSuffix;
+        // Kosongkan semua input untuk kad baharu pada peringkat awal
         if(el.tagName === 'INPUT' && el.type !== 'button') el.value = "";
         if(el.tagName === 'STRONG' || el.tagName === 'SPAN') {
             if(el.innerText.includes('RM')) el.innerText = 'RM 0.00';
@@ -1012,36 +1039,52 @@ window.tambahKalkulator = function(templateId) {
     });
 
     // ==============================================================
-    // PENAMBAHBAIKAN UX: WARISI GAJI & ELAUN DARI KALKULATOR SEDIA ADA
+    // PENAMBAHBAIKAN UX: WARISI GAJI & ELAUN DARI KALKULATOR TERDAHULU
     // ==============================================================
     let currentBasic = "";
     let currentAllowance = "";
-    let kadAktifLain = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
     
-    // 1. Cari nilai Gaji & Elaun dari kad yang dah diisi
-    if (kadAktifLain.length > 0) {
-        for (let kad of kadAktifLain) {
-            let jumpa = false;
-            for (let mapKey of Object.keys(salaryMap)) {
-                let sourceBasic = kad.querySelector(`[data-original-id="${mapKey}"]`);
-                if (sourceBasic && sourceBasic.value) {
-                    // Pastikan gaji lebih besar dari 0 sebelum disalin
-                    let semakNilai = evaluateSmartMath(sourceBasic.value);
-                    if (semakNilai > 0) {
-                        currentBasic = sourceBasic.value;
-                        let sourceAllowId = salaryMap[mapKey][0];
-                        let sourceAllow = kad.querySelector(`[data-original-id="${sourceAllowId}"]`);
-                        if (sourceAllow) currentAllowance = sourceAllow.value;
-                        jumpa = true;
-                        break; // Berhenti cari dalam kad ini
-                    }
+    // Fungsi kecil (helper) untuk ekstrak gaji dari mana-mana kad
+    function extractSalaryFromCard(kad) {
+        for (let mapKey of Object.keys(salaryMap)) {
+            let sourceBasic = kad.querySelector(`[data-original-id="${mapKey}"]`);
+            if (sourceBasic && sourceBasic.value) {
+                let semakNilai = evaluateSmartMath(sourceBasic.value);
+                if (semakNilai > 0) {
+                    let allowVal = "";
+                    let sourceAllowId = salaryMap[mapKey][0];
+                    let sourceAllow = kad.querySelector(`[data-original-id="${sourceAllowId}"]`);
+                    if (sourceAllow) allowVal = sourceAllow.value;
+                    return { basic: sourceBasic.value, allow: allowVal };
                 }
             }
-            if (jumpa) break; // Berhenti cari dalam kad lain
+        }
+        return null;
+    }
+
+    // 1. SASARAN UTAMA: Cari dari kad yang paling akhir disentuh/ditaip oleh user (activeCardContext)
+    if (activeCardContext && !activeCardContext.classList.contains('hidden-template') && !activeCardContext.classList.contains('rumusan-card')) {
+        let extracted = extractSalaryFromCard(activeCardContext);
+        if (extracted) {
+            currentBasic = extracted.basic;
+            currentAllowance = extracted.allow;
         }
     }
 
-    // 2. Jika jumpa (ada Gaji Pokok dikesan), suntik masuk ke kalkulator baharu
+    // 2. SANDARAN: Jika tak jumpa di kad terakhir, cari dari semua kad aktif (dari Bawah ke Atas / Terkini ke Lama)
+    if (currentBasic === "") {
+        let kadAktifLain = Array.from(document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)'));
+        for (let i = kadAktifLain.length - 1; i >= 0; i--) {
+            let extracted = extractSalaryFromCard(kadAktifLain[i]);
+            if (extracted) {
+                currentBasic = extracted.basic;
+                currentAllowance = extracted.allow;
+                break; // Berhenti mencari sebaik sahaja jumpa
+            }
+        }
+    }
+
+    // 3. Jika gaji berjaya ditemui, suntik terus ke dalam kalkulator klon baharu
     if (currentBasic !== "") {
         for (let targetKey of Object.keys(salaryMap)) {
             let targetBasic = clone.querySelector(`[data-original-id="${targetKey}"]`);
