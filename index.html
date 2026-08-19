@@ -992,16 +992,21 @@
           <button class="btn btn-primary" style="flex: none; width: 260px; padding: 10px 0; font-size: 14px; text-align: center;" onclick="tambahBarisRumusan()">+ Tambah Maklumat Bayaran</button>
         </div>
         <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; min-width: 800px; margin-bottom: 20px;" id="jadualRumusan">
-            <thead>
-              <tr style="background-color: #f4f6f9; border-bottom: 2px solid #ccc;">
-                <th style="padding: 12px; width: 35%; color: #1f4e79; text-align: left;">Jenis Bayaran</th>
-                <th style="padding: 12px; width: 20%; color: #1f4e79; text-align: right;">Patut Bayar (RM)</th>
-                <th style="padding: 12px; width: 20%; color: #1f4e79; text-align: right;">Telah Bayar (RM)</th>
-                <th style="padding: 12px; width: 20%; color: #1f4e79; text-align: right;">Baki (+/-) (RM)</th>
-                <th style="padding: 12px; width: 5%; text-align: center;">Tindakan</th>
-              </tr>
-            </thead>
+<table id="jadualRumusan" style="width: 100%; border-collapse: collapse; margin-top: 15px; border: 1px solid #cbd5e1;">
+    <thead>
+        <tr style="background: #1e293b; color: white;">
+            <th style="padding: 12px; text-align: left; width: 28%;">Jenis Bayaran</th>
+            <th style="padding: 12px; text-align: center; width: 17%;">Keterangan</th>
+            <th style="padding: 12px; text-align: right; width: 16%;">Patut Bayar (RM)</th>
+            <th style="padding: 12px; text-align: right; width: 16%;">Telah Bayar (RM)</th>
+            <th style="padding: 12px; text-align: right; width: 16%;">Baki (+/-) (RM)</th>
+            <th style="padding: 12px; text-align: center; width: 7%;">Tindakan</th>
+        </tr>
+    </thead>
+    <tbody id="badanJadualRumusan">
+        <!-- Baris dinamis -->
+    </tbody>
+</table>
             <tbody id="badanJadualRumusan">
               <!-- Baris data dijana JavaScript -->
             </tbody>
