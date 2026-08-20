@@ -933,8 +933,87 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
             <p class="subtitle">Tarikh Janaan: ${tarikhHariIni} &nbsp;|&nbsp; Tempoh Upah: ${tempohUpah || '-'}</p>
         `;
         
-        // PADAM SEMUA DATA DI BAWAH MAKLUMAT PEKERJA KHAS UNTUK PENYATA GAJI SAHAJA
-        contentSeterusnya = ""; 
+        // ====================================================================
+        // LUKIS JADUAL PENYATA GAJI (BUTIRAN UPAH 3-GRID & POTONGAN 2-GRID)
+        // ====================================================================
+        let v_basic = "", v_elaun = "";
+        let r_otb = "", h_otb = "";
+        let r_rh05 = "", h_rh05 = "";
+        let r_rh1 = "", h_rh1 = "";
+        let r_otrh = "", h_otrh = "";
+        let r_ph = "", h_ph = "";
+        let r_otph = "", h_otph = "";
+        let r_cs = "", h_cs = "";
+        let r_ct = "", h_ct = "";
+
+        // Gelung ekstrak data dari kad aktif dengan selamat
+        semuaKadAktif.forEach(kad => {
+            let v = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.value.trim() : ""; };
+            let t = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.innerText.trim() : ""; };
+
+            if (!v_basic) { ["orpBasicSalary", "otBasicSalary", "rhBasicSalary", "rhMoreBasicSalary", "section18ABasicSalary", "otRHBasicSalary", "phBasicSalary", "otPHBasicSalary", "ggnUniBasic"].forEach(id => { let val = v(id); if (val) v_basic = val; }); }
+            if (!v_elaun) { ["orpAllowance", "otAllowance", "rhAllowance", "rhMoreAllowance", "section18AAllowance", "otRHAllowance", "phAllowance", "otPHAllowance", "ggnUniAllowance"].forEach(id => { let val = v(id); if (val) v_elaun = val; }); }
+
+            if(t("otAmount") && t("otAmount") !== "RM 0.00") { r_otb = t("otAmount"); h_otb = v("otHours"); }
+            if(t("rhAmount") && t("rhAmount") !== "RM 0.00") { r_rh05 = t("rhAmount"); h_rh05 = v("rhDays"); }
+            if(t("rhMoreAmount") && t("rhMoreAmount") !== "RM 0.00") { r_rh1 = t("rhMoreAmount"); h_rh1 = v("rhMoreDays"); }
+            if(t("otRHAmount") && t("otRHAmount") !== "RM 0.00") { r_otrh = t("otRHAmount"); h_otrh = v("otRHHours"); }
+            if(t("phAmount") && t("phAmount") !== "RM 0.00") { r_ph = t("phAmount"); h_ph = v("phDays"); }
+            if(t("otPHAmount") && t("otPHAmount") !== "RM 0.00") { r_otph = t("otPHAmount"); h_otph = v("otPHHours"); }
+            if(t("sickLeaveAmount") && t("sickLeaveAmount") !== "RM 0.00") { r_cs = t("sickLeaveAmount"); h_cs = v("sickLeaveDays"); }
+            if(t("annualLeaveAmount") && t("annualLeaveAmount") !== "RM 0.00") { r_ct = t("annualLeaveAmount"); h_ct = v("annualLeaveDays"); }
+        });
+
+        // Format nombor (supaya formula cth: 1500+200 menjadi RM 1700.00)
+        let parseRMStr = (val) => {
+            if (!val) return "";
+            try { let clean = val.toString().replace(/[^\d\.\+\-\*\/\(\)]/g, ''); let calc = new Function('return ' + clean)(); if (calc > 0) return "RM " + calc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } catch(e) {}
+            return val;
+        };
+
+        // Reka HTML Baris (Row)
+        let trU = (label, detail, amt) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #eee; width: 45%; text-align: left;">${label}</td><td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: center; width: 25%; color: #555; font-size: 10px;">${detail}</td><td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right; width: 30%; font-weight: bold;">${amt}</td></tr>`;
+        let trP = (label) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #eee; width: 60%; text-align: left;">${label}</td><td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right; width: 40%; font-weight: bold;"></td></tr>`;
+        let trKosong = `<tr><td colspan="2" style="padding: 8px 12px; border-bottom: 1px solid #eee; height: 32px;"></td></tr>`;
+
+        // Bina Jadual Kiri (3 Nisbah)
+        let upahHTML = `<table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            ${trU("Gaji Pokok", "", parseRMStr(v_basic))}
+            ${trU("Elaun", "", parseRMStr(v_elaun))}
+            ${trU("OT Normal (1.5)", h_otb ? h_otb + " jam" : "", r_otb)}
+            ${trU("Kerja Hari Rehat (0.5)", h_rh05 ? h_rh05 + " hari" : "", r_rh05)}
+            ${trU("Kerja Hari Rehat (1.0)", h_rh1 ? h_rh1 + " hari" : "", r_rh1)}
+            ${trU("OT Hari Rehat (2.0)", h_otrh ? h_otrh + " jam" : "", r_otrh)}
+            ${trU("Kerja Hari Kelepasan (2.0)", h_ph ? h_ph + " hari" : "", r_ph)}
+            ${trU("OT Hari Kelepasan (3.0)", h_otph ? h_otph + " jam" : "", r_otph)}
+            ${trU("Cuti Sakit", h_cs ? h_cs + " hari" : "", r_cs)}
+            ${trU("Cuti Tahunan", h_ct ? h_ct + " hari" : "", r_ct)}
+        </table>`;
+
+        // Bina Jadual Kanan (2 Nisbah)
+        let potongHTML = `<table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            ${trP("Pendahuluan")}
+            ${trP("KWSP")}
+            ${trP("PERKESO")}
+            ${trP("SIP/EIS")}
+            ${trKosong}${trKosong}${trKosong}${trKosong}${trKosong}${trKosong}
+        </table>`;
+
+        // Gabung menggunakan CSS Grid 3fr 2fr (bersamaan 60% : 40% nisbah keluasan)
+        let penyataGajiHTML = `
+        <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 15px; margin-bottom: 15px; grid-column: 1 / -1; align-items: start;">
+            <div class="report-box" style="padding: 0; overflow: hidden; border: 1px solid #1f4e79;">
+                <div style="background: #1f4e79; color: white; font-weight: bold; padding: 10px 12px; font-size: 12px; text-align: left; text-transform: uppercase;">BUTIRAN UPAH</div>
+                ${upahHTML}
+            </div>
+            <div class="report-box" style="padding: 0; overflow: hidden; border: 1px solid #d9534f;">
+                <div style="background: #d9534f; color: white; font-weight: bold; padding: 10px 12px; font-size: 12px; text-align: left; text-transform: uppercase;">BUTIRAN POTONGAN</div>
+                ${potongHTML}
+            </div>
+        </div>
+        `;
+
+        contentSeterusnya = penyataGajiHTML; 
 
     } else {
         // Jika butang Laporan Penuh biasa (Tanpa Majikan) ditekan, KEKALKAN FORMAT ASAL
