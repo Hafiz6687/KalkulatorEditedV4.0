@@ -761,7 +761,7 @@
         </div>
       </section>
 
-      <!-- KAD 11: GAJI GANTI NOTIS -->
+<!-- KAD 11: GAJI GANTI NOTIS -->
       <section class="calculator-card hidden-template" id="card-notis" data-template-id="notis" style="grid-column: span 2;">
         <h2>Kalkulator<br>Gaji Ganti Notis</h2>
         <div style="display: flex; flex-wrap: wrap; gap: 30px;">
@@ -786,10 +786,6 @@
                 <option value="minggu">Minggu</option>
                 <option value="hari">Hari</option>
               </select>
-            </div>
-            <div class="form-group">
-              <label>Baki Gaji RM (Jika ada)</label>
-              <input type="text" id="ggnBakiGaji" class="number-input salary-input" placeholder="Contoh: 500">
             </div>
             <div class="form-group" id="ggnStatusGroup" style="display: none;">
                 <label>Status Notis</label>
@@ -832,6 +828,13 @@
                 <input type="date" id="ggnUniDayEnd" class="date-input">
               </div>
             </div>
+            
+            <!-- KOTAK BAKI GAJI KINI DIALIHKAN KE BAHAGIAN BAWAH -->
+            <div class="form-group">
+              <label>Baki Gaji RM (Jika ada)</label>
+              <input type="text" id="ggnBakiGaji" class="number-input salary-input" placeholder="Contoh: 500">
+            </div>
+
             <div class="button-group">
               <button class="btn btn-primary" onclick="calculateGGNUnified(event)">Kira</button>
               <button class="btn btn-reset" onclick="resetGGNUnified()">Reset</button>
@@ -993,46 +996,42 @@
         </div>
       </section>
 
-      <!-- RUMUSAN KESELURUHAN -->
-      <section class="calculator-card rumusan-card" style="display: none; grid-column: 1 / -1; margin-top: 10px;">
-<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1f4e79; padding-bottom: 10px; margin-bottom: 20px;">
-          <h2 style="margin: 0; text-align: left; font-size: 22px;">Rumusan</h2>
-          <button class="btn btn-primary" style="flex: none; width: 260px; padding: 10px 0; font-size: 14px; text-align: center;" onclick="tambahBarisRumusan()">+ Tambah Maklumat Bayaran</button>
-        </div>
-        <div style="overflow-x: auto;">
-<table id="jadualRumusan" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-    <thead>
-        <tr>
-            <th style="padding: 12px; text-align: left; width: 25%;">Jenis Bayaran</th>
-            <th style="padding: 12px; text-align: center; width: 20%;">Keterangan</th>
-            <th style="padding: 12px; text-align: center; width: 12.5%;">Patut Bayar (RM)</th>
-            <th style="padding: 12px; text-align: center; width: 12.5%;">Telah Bayar (RM)</th>
-            <th style="padding: 12px; text-align: center; width: 12.5%;">Baki (+/-) (RM)</th>
-            <th style="padding: 12px; text-align: center; width: 7%;">Tindakan</th>
-        </tr>
-    </thead>
-    <tbody id="badanJadualRumusan">
-        <!-- Baris dinamis -->
-    </tbody>
-</table>
+<!-- RUMUSAN KESELURUHAN -->
+<section class="calculator-card rumusan-card" style="display: none; grid-column: 1 / -1; margin-top: 10px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1f4e79; padding-bottom: 10px; margin-bottom: 20px;">
+        <h2 style="margin: 0; text-align: left; font-size: 22px;">Rumusan</h2>
+        <button class="btn btn-primary" style="flex: none; width: 260px; padding: 10px 0; font-size: 14px; text-align: center;" onclick="tambahBarisRumusan()">+ Tambah Maklumat Bayaran</button>
+    </div>
+    <div style="overflow-x: auto;">
+        <table id="jadualRumusan" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+            <thead>
+                <tr>
+                    <th style="padding: 12px; text-align: left; width: 25%;">Jenis Bayaran</th>
+                    <th style="padding: 12px; text-align: center; width: 20%;">Keterangan</th>
+                    <th style="padding: 12px; text-align: center; width: 12.5%;">Patut Bayar (RM)</th>
+                    <th style="padding: 12px; text-align: center; width: 12.5%;">Telah Bayar (RM)</th>
+                    <th style="padding: 12px; text-align: center; width: 12.5%;">Baki (+/-) (RM)</th>
+                    <th style="padding: 12px; text-align: center; width: 7%;">Tindakan</th>
+                </tr>
+            </thead>
             <tbody id="badanJadualRumusan">
-              <!-- Baris data dijana JavaScript -->
+                <!-- Baris data dijana JavaScript -->
             </tbody>
-          </table>
-        </div>
-        <div style="display: flex; justify-content: flex-end; align-items: center; background: #e8f0fe; padding: 18px 25px; border-radius: 8px; border: 1px solid #c6d8f9; margin-bottom: 15px;">
-          <div style="text-align: right;">
+        </table>
+    </div>
+    <div style="display: flex; justify-content: flex-end; align-items: center; background: #e8f0fe; padding: 18px 25px; border-radius: 8px; border: 1px solid #c6d8f9; margin-bottom: 15px;">
+        <div style="text-align: right;">
             <span style="font-size: 15px; font-weight: bold; color: #333; display: block; margin-bottom: 5px;">Jumlah Keseluruhan Terlebih/Terkurang Bayar:</span>
             <strong id="jumlahKeseluruhanRumusan" style="font-size: 26px; color: #1f4e79;">RM 0.00</strong>
-          </div>
         </div>
-<div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-           <div style="display: flex; width: 260px; gap: 10px;">
-               <button class="btn btn-primary" style="flex: 1; padding: 10px 0; font-size: 14px; width: 100%; text-align: center;" onclick="janaLaporanPenuh()">Jana</button>
-               <button class="btn btn-reset" style="flex: 1; padding: 10px 0; font-size: 14px; width: 100%; text-align: center;" onclick="resetRumusan()">Reset</button>
-           </div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+        <div style="display: flex; width: 260px; gap: 10px;">
+            <button class="btn btn-primary" style="flex: 1; padding: 10px 0; font-size: 14px; width: 100%; text-align: center;" onclick="janaLaporanPenuh()">Jana</button>
+            <button class="btn btn-reset" style="flex: 1; padding: 10px 0; font-size: 14px; width: 100%; text-align: center;" onclick="resetRumusan()">Reset</button>
         </div>
-      </section>
+    </div>
+</section>
 
       <!-- PERINGATAN PENTING -->
       <section class="warning-box" style="grid-column: 1 / -1; width: 100%; box-sizing: border-box; margin: 40px 0 0 0; background-color: #ffffff; border-left: 6px solid #1f4e79; border-radius: 8px; padding: 25px 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
