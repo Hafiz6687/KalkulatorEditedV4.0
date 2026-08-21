@@ -427,10 +427,17 @@ function autoGGNEndDate(type) {
 function calculateGGNUnified(e) {
     setContext(e); let mode = getElement("ggnUniType").value; if (!mode) { alert("Sila pilih Jenis Notis terlebih dahulu."); return; }
     let totalSalary = updateSalaryTotal("ggnUniBasic", "ggnUniAllowance", "ggnUniTotal"); let statusNotisEl = getElement("ggnStatusNotis"); let isTanpaNotis = statusNotisEl && statusNotisEl.value === "tiada";
+    
+    // Dapatkan nilai Baki Gaji (jika ada)
+    let bakiGaji = getInputNumber("ggnBakiGaji") || 0;
+
     if (mode === "bulan") {
         let months = Number(getElement("ggnUniMonthVal").value);
         if (months <= 0) { alert("Sila masukkan bilangan bulan notis."); return; }
-        let amount = totalSalary * months;
+        
+        // Tolak baki gaji di sini
+        let amount = (totalSalary * months) - bakiGaji;
+        
         setText("resUniMonthCount", months + " Bulan"); setText("resUniMonthAmount", formatRM(amount));
         getElement("ggnResPending").style.display = "none"; getElement("ggnRes18A").style.display = "none"; getElement("ggnResBulan").style.display = "block";
         autoMasukRumusan('resUniMonthAmount', activeCardContext);
@@ -441,6 +448,10 @@ function calculateGGNUnified(e) {
         let multiplier = mode === 'minggu' ? 7 : 1; let totalDays = val * multiplier;
         let start = getLocalStartOfDay(startDate); let end = new Date(start); end.setDate(end.getDate() + totalDays - 1);
         let breakdown = getMonthlyBreakdown(totalSalary, start, end); let totalAmount = 0; breakdown.forEach(item => { totalAmount += item.amount; });
+        
+        // Tolak baki gaji di sini
+        totalAmount = totalAmount - bakiGaji;
+
         setValue(endId, formatDateInput(end)); setText("resUni18ATotal", formatRM(totalSalary)); setText("resUni18AEnd", `${end.getDate()}-${end.getMonth() + 1}-${end.getFullYear()}`);
         let endResultEl = getElement("resUni18AEnd"); if(endResultEl && endResultEl.parentElement) { let lbl = endResultEl.parentElement.querySelector("span"); if(lbl) lbl.innerText = isTanpaNotis ? "Tamat Tempoh Indemniti" : "Tarikh Akhir Notis"; }
         if (breakdown.length > 0) { let f = breakdown[0]; let fD = new Date(f.year, f.month, 1); setText("resUniM1Title", fD.toLocaleString("ms-MY", {month:"long", year:"numeric"})); setText("resUniM1Days", f.days + " Hari"); setText("resUniM1Daily", formatRM(f.dailyRate)); setText("resUniM1Amount", formatRM(f.amount)); }
@@ -452,7 +463,8 @@ function calculateGGNUnified(e) {
 }
 
 function resetGGNUnified() {
-    ["ggnUniBasic", "ggnUniAllowance", "ggnUniType", "ggnUniMonthVal", "ggnUniWeekVal", "ggnUniWeekStart", "ggnUniWeekEnd", "ggnUniDayVal", "ggnUniDayStart", "ggnUniDayEnd", "ggnStatusNotis"].forEach(id => { if (getElement(id)) setValue(id, ""); });
+    // Tambah "ggnBakiGaji" ke dalam senarai reset
+    ["ggnUniBasic", "ggnUniAllowance", "ggnBakiGaji", "ggnUniType", "ggnUniMonthVal", "ggnUniWeekVal", "ggnUniWeekStart", "ggnUniWeekEnd", "ggnUniDayVal", "ggnUniDayStart", "ggnUniDayEnd", "ggnStatusNotis"].forEach(id => { if (getElement(id)) setValue(id, ""); });
     if(getElement("ggnStatusNotis")) setValue("ggnStatusNotis", "ada"); setValue("ggnUniTotal", "RM 0.00"); toggleGGNMode(); 
 }
 
