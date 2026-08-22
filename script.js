@@ -688,8 +688,8 @@ function autoMasukRumusan(idSasaran, contextCard) {
 // =====================================================
 function formatTitleCase(str) { return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); }
 
-// FUNGSI INI DIKEMBALIKAN 100% SEPERTI ASAL
 function formatIC(str) {
+    if (/[a-zA-Z]/.test(str)) return str.toUpperCase();
     let val = str.replace(/\D/g, ''); if (val.length <= 6) return val; if (val.length <= 8) return val.slice(0,6) + '-' + val.slice(6); 
     return val.slice(0,6) + '-' + val.slice(6,8) + '-' + val.slice(8,12);
 }
@@ -703,8 +703,8 @@ function tambahBarisElaunModal() {
     let div = document.createElement('div');
     div.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px;";
     div.innerHTML = `
-        <div style="flex: 2;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
-        <div style="flex: 1;"><input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+        <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+        <div style="flex: 2;"><input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
         <button type="button" onclick="this.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
     `;
     document.getElementById('containerElaunModal').appendChild(div);
@@ -714,9 +714,9 @@ function tambahBarisPotonganModal() {
     let div = document.createElement('div');
     div.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px;";
     div.innerHTML = `
-        <div style="flex: 2;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
-        <div style="flex: 1;"><input type="text" class="potong-pct" placeholder="%" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
-        <div style="flex: 1.5;"><input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+        <div style="flex: 3;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+        <div style="flex: 1;"><input type="text" class="potong-pct" placeholder="%" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;"></div>
+        <div style="flex: 2;"><input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
         <button type="button" onclick="this.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
     `;
     document.getElementById('containerPotonganModal').appendChild(div);
@@ -729,11 +729,11 @@ function paparModalLaporan(jenis) {
     if (jenis === 'penyata') {
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
-            <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
+            <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 850px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                     
-                    <!-- LAJUR KIRI: MAJIKAN SAHAJA -->
+                    <!-- LAJUR KIRI: MAJIKAN & ELAUN -->
                     <div>
                         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Majikan / Syarikat</h3>
                         <div style="margin-bottom: 15px; margin-top: 15px;">
@@ -748,9 +748,22 @@ function paparModalLaporan(jenis) {
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Tempoh Upah:</label>
                             <input type="text" id="inputTempohUpah" placeholder="Contoh: Mei 2026 / 1 Mei - 31 Mei 2026" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
                         </div>
+
+                        <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Elaun</h3>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                            <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Senarai Elaun</p>
+                            <button type="button" onclick="tambahBarisElaunModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
+                        </div>
+                        <div id="containerElaunModal">
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                                <div style="flex: 2;"><input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
+                                <button type="button" style="visibility:hidden; padding:8px 12px;">X</button>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- LAJUR KANAN: PEKERJA & MAKLUMAT TAMBAHAN -->
+                    <!-- LAJUR KANAN: PEKERJA & POTONGAN -->
                     <div>
                         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pekerja</h3>
                         <div style="margin-bottom: 15px; margin-top: 15px;">
@@ -766,35 +779,23 @@ function paparModalLaporan(jenis) {
                             <input type="text" id="inputNoPekerjaLaporan" placeholder="Contoh: EMP001" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                         </div>
 
-                        <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Tambahan (Untuk Cetakan)</h3>
+                        <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Potongan</h3>
                         
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-                            <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Maklumat Elaun</p>
-                            <button type="button" onclick="tambahBarisElaunModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
-                        </div>
-                        <div id="containerElaunModal">
-                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                <div style="flex: 2;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
-                                <div style="flex: 1;"><input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
-                                <button type="button" style="visibility:hidden; padding:8px 12px;">X</button>
-                            </div>
-                        </div>
-
-                        <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; margin-top: 15px;">Potongan Berkanun</p>
+                        <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px;">Potongan Berkanun</p>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">KWSP</label>
-                            <input type="text" id="inputKWSPPeratus" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;">
-                            <input type="text" id="inputKWSPNilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;">
+                            <input type="text" id="inputKWSPPeratus" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <input type="text" id="inputKWSPNilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">PERKESO</label>
-                            <input type="text" id="inputPERKESOPeratus" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;">
-                            <input type="text" id="inputPERKESONilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;">
+                            <input type="text" id="inputPERKESOPeratus" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <input type="text" id="inputPERKESONilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">SIP / EIS</label>
-                            <input type="text" id="inputSIPPeratus" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;">
-                            <input type="text" id="inputSIPNilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;">
+                            <input type="text" id="inputSIPPeratus" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <input type="text" id="inputSIPNilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
 
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
@@ -803,24 +804,26 @@ function paparModalLaporan(jenis) {
                         </div>
                         <div id="containerPotonganModal" style="margin-bottom: 25px;">
                             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                <div style="flex: 2;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
-                                <div style="flex: 1;"><input type="text" class="potong-pct" placeholder="%" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
-                                <div style="flex: 1.5;"><input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                                <div style="flex: 3;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                                <div style="flex: 1;"><input type="text" class="potong-pct" placeholder="%" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;"></div>
+                                <div style="flex: 2;"><input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
                                 <button type="button" style="visibility:hidden; padding:8px 12px;">X</button>
                             </div>
                         </div>
                     </div>
-                </div>
+                    
+                    <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                        <button onclick="document.getElementById('modalLaporanPenuh').remove()" style="background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Batal</button>
+                        <button onclick="teruskanJanaLaporan('${jenis}')" style="background: #1f4e79; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Jana Cetakan</button>
+                    </div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                    <button onclick="document.getElementById('modalLaporanPenuh').remove()" style="background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Batal</button>
-                    <button onclick="teruskanJanaLaporan('${jenis}')" style="background: #1f4e79; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Jana Cetakan</button>
                 </div>
             </div>
         </div>`;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         
     } else {
+        // PAPARAN 100% KEKAL ASAL (UNTUK JANA LAPORAN PENUH)
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
             <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
@@ -1194,6 +1197,7 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
     if (!tetingkapCetak) { alert("Pop-up disekat oleh pelayar web (browser) anda. Sila benarkan 'Pop-ups and redirects' untuk laman ini bagi melihat laporan."); return; }
     tetingkapCetak.document.write(cetakHTML); tetingkapCetak.document.close(); tetingkapCetak.focus(); 
 }
+
 // =====================================================
 // 6. SISTEM LOGIN & RESET 
 // =====================================================
