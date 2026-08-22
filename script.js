@@ -1509,29 +1509,34 @@ window.updateGlobalElaunSum = function(el) {
         if (n > 0) total += n;
     });
 
-    let formattedTotal = total > 0 ? total : "";
+    // ---------------------------------------------------------
+    // PENYELESAIAN BUG: FORMAT JADI RM SEBELUM HANTAR!
+    // ---------------------------------------------------------
+    let formattedTotal = total > 0 ? "RM " + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "";
 
     // Ghaibkan suntikan ke dalam sistem teras TANPA merosakkan enjin sedia ada
     Object.keys(salaryMap).forEach(key => {
         let aID = salaryMap[key][0];
         document.querySelectorAll(`[id="${aID}"], [data-original-id="${aID}"]`).forEach(aEl => {
-            aEl.value = formattedTotal;
-            aEl.dispatchEvent(new Event('input', {bubbles:true})); 
+            if(aEl.value !== formattedTotal) {
+                aEl.value = formattedTotal;
+                aEl.dispatchEvent(new Event('input', {bubbles:true})); 
+            }
         });
     });
 };
 
-// PEMANTAU AUTOMATIK (MUTATION OBSERVER) - Trigger serta merta bila user tambah kalkulator baru
+// PEMANTAU AUTOMATIK (MUTATION OBSERVER)
 const observerKalkulator = new MutationObserver((mutations) => {
     mutations.forEach(mutation => {
         mutation.addedNodes.forEach(node => {
             if (node.nodeType === 1 && node.classList && node.classList.contains('calculator-card')) {
-                setTimeout(() => semakDanTukarElaun(node), 50); // Laksana segera
+                setTimeout(() => semakDanTukarElaun(node), 50); 
             }
         });
         mutation.removedNodes.forEach(node => {
             if (node.nodeType === 1 && node.querySelector('.dynamic-allowance-wrapper')) {
-                allowanceCardTransformed = false; // Reset memori jika kalkulator pertama dibuang
+                allowanceCardTransformed = false; 
             }
         });
     });
@@ -1542,7 +1547,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let gridNode = document.getElementById('active-calculators-grid');
     if (gridNode) observerKalkulator.observe(gridNode, { childList: true });
     
-    // Semak sekali untuk mana-mana kad yang mungkin sedia wujud waktu loading
     document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)').forEach(card => {
         semakDanTukarElaun(card);
     });
