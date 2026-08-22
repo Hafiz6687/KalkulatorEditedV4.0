@@ -704,8 +704,10 @@ function tambahBarisElaunModal() {
     div.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px;";
     div.innerHTML = `
         <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
-        <div style="flex: 2;"><input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
-        <button type="button" onclick="this.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+        <div style="flex: 2; display: flex; gap: 5px;">
+            <input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+            <button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+        </div>
     `;
     document.getElementById('containerElaunModal').appendChild(div);
 }
@@ -714,10 +716,12 @@ function tambahBarisPotonganModal() {
     let div = document.createElement('div');
     div.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px;";
     div.innerHTML = `
-        <div style="flex: 3;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+        <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
         <div style="flex: 1;"><input type="text" class="potong-pct" placeholder="%" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;"></div>
-        <div style="flex: 2;"><input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
-        <button type="button" onclick="this.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+        <div style="flex: 3; display: flex; gap: 5px;">
+            <input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+            <button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+        </div>
     `;
     document.getElementById('containerPotonganModal').appendChild(div);
 }
@@ -733,7 +737,7 @@ function paparModalLaporan(jenis) {
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                     
-                    <!-- LAJUR KIRI: MAJIKAN & ELAUN -->
+                    <!-- LAJUR KIRI: MAJIKAN & ELAUN & PENDAHULUAN -->
                     <div>
                         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Majikan / Syarikat</h3>
                         <div style="margin-bottom: 15px; margin-top: 15px;">
@@ -750,7 +754,7 @@ function paparModalLaporan(jenis) {
                         </div>
 
                         <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Elaun</h3>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">
                             <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Senarai Elaun</p>
                             <button type="button" onclick="tambahBarisElaunModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
                         </div>
@@ -758,7 +762,15 @@ function paparModalLaporan(jenis) {
                             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                                 <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
                                 <div style="flex: 2;"><input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
-                                <button type="button" style="visibility:hidden; padding:8px 12px;">X</button>
+                            </div>
+                        </div>
+
+                        <!-- MAKLUMAT PENDAHULUAN DI BAWAH ELAUN -->
+                        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #ccc;">
+                            <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; margin-top:0;">Maklumat Pendahuluan</p>
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <div style="flex: 3;"><input type="text" value="Pendahuluan" readonly style="width: 100%; padding: 8px; border: 1px solid #eee; border-radius: 5px; font-size: 13px; background: #f9f9f9; color: #777;"></div>
+                                <div style="flex: 2;"><input type="text" id="inputPendahuluanNilai" class="number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
                             </div>
                         </div>
                     </div>
@@ -781,7 +793,7 @@ function paparModalLaporan(jenis) {
 
                         <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Potongan</h3>
                         
-                        <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px;">Potongan Berkanun</p>
+                        <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">Potongan Berkanun</p>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">KWSP</label>
                             <input type="text" id="inputKWSPPeratus" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
@@ -798,16 +810,15 @@ function paparModalLaporan(jenis) {
                             <input type="text" id="inputSIPNilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
 
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">
                             <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Lain-lain Potongan</p>
                             <button type="button" onclick="tambahBarisPotonganModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
                         </div>
                         <div id="containerPotonganModal" style="margin-bottom: 25px;">
                             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                <div style="flex: 3;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                                <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
                                 <div style="flex: 1;"><input type="text" class="potong-pct" placeholder="%" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;"></div>
-                                <div style="flex: 2;"><input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
-                                <button type="button" style="visibility:hidden; padding:8px 12px;">X</button>
+                                <div style="flex: 3;"><input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
                             </div>
                         </div>
                     </div>
@@ -823,7 +834,7 @@ function paparModalLaporan(jenis) {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         
     } else {
-        // [BETULKAN DI SINI: TIADA KOTAK "NO PEKERJA" UNTUK LAPORAN PENUH]
+        // PAPARAN 100% KEKAL ASAL (UNTUK JANA LAPORAN PENUH)
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
             <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
@@ -833,12 +844,12 @@ function paparModalLaporan(jenis) {
                     <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Pekerja:</label>
                     <input type="text" id="inputNamaLaporan" placeholder="Contoh: Ahmad Bin Abu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
                 </div>
-                <div style="margin-bottom: 25px;">
+                <div style="margin-bottom: 15px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Kad Pengenalan / No. Passport:</label>
                     <input type="text" id="inputICLaporan" placeholder="Contoh: 900101-01-1234 atau A1234567" maxlength="14" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
                     <button onclick="document.getElementById('modalLaporanPenuh').remove()" style="background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Batal</button>
                     <button onclick="teruskanJanaLaporan('${jenis}')" style="background: #1f4e79; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Jana Cetakan</button>
                 </div>
@@ -851,7 +862,7 @@ function paparModalLaporan(jenis) {
 // Tindakan Selepas Butang 'Jana Cetakan' (dalam pop-up) Ditekan
 function teruskanJanaLaporan(jenis) {
     let namaMajikan = ""; let noDaftarMajikan = ""; let tempohUpah = "";
-    let kwspP="", kwspN="", perkesoP="", perkesoN="", sipP="", sipN="";
+    let kwspP="", kwspN="", perkesoP="", perkesoN="", sipP="", sipN="", pendahuluanN="";
     let senaraiElaun = []; let senaraiPotongan = [];
 
     if (jenis === 'penyata') {
@@ -862,6 +873,7 @@ function teruskanJanaLaporan(jenis) {
         kwspP = getV('inputKWSPPeratus'); kwspN = getV('inputKWSPNilai');
         perkesoP = getV('inputPERKESOPeratus'); perkesoN = getV('inputPERKESONilai');
         sipP = getV('inputSIPPeratus'); sipN = getV('inputSIPNilai');
+        pendahuluanN = getV('inputPendahuluanNilai');
 
         document.querySelectorAll('#containerElaunModal > div').forEach(row => {
             let j = row.querySelector('.elaun-jenis').value.trim();
@@ -882,7 +894,7 @@ function teruskanJanaLaporan(jenis) {
     let noPekerja = document.getElementById('inputNoPekerjaLaporan') ? document.getElementById('inputNoPekerjaLaporan').value.trim() : "";
     document.getElementById('modalLaporanPenuh').remove(); 
     
-    prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenis, { senaraiElaun, senaraiPotongan, kwspP, kwspN, perkesoP, perkesoN, sipP, sipN });
+    prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenis, { senaraiElaun, senaraiPotongan, kwspP, kwspN, perkesoP, perkesoN, sipP, sipN, pendahuluanN });
 }
 
 function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenisCetak, xtra) { 
@@ -1122,8 +1134,9 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
 
         let htmlPotonganDalaman = "";
         if (xtra) {
+            // TERIMA BACAAN PENDAHULUAN
             htmlPotonganDalaman = `
-                ${trP("Pendahuluan", "")}
+                ${trP("Pendahuluan", xtra.pendahuluanN)}
                 ${trP(labelWithPct("KWSP", xtra.kwspP), xtra.kwspN)}
                 ${trP(labelWithPct("PERKESO", xtra.perkesoP), xtra.perkesoN)}
                 ${trP(labelWithPct("SIP/EIS", xtra.sipP), xtra.sipN)}
@@ -1174,8 +1187,6 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
     }
 
     let maklumatSyarikatPekerjaHTML = "";
-    
-    // PENYELESAIAN MASALAH PDF (LAPORAN PENUH TAK KELUAR NO PEKERJA)
     if (namaPekerja !== "" || icPekerja !== "" || noPekerja !== "") {
         maklumatSyarikatPekerjaHTML = `<div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;">
             <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT PEKERJA</div>
