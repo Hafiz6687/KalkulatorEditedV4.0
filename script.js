@@ -703,7 +703,7 @@ function tambahBarisElaunModal() {
     let div = document.createElement('div');
     div.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px;";
     div.innerHTML = `
-        <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+        <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
         <div style="flex: 2; display: flex; gap: 5px;">
             <input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
             <button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
@@ -716,7 +716,7 @@ function tambahBarisPotonganModal() {
     let div = document.createElement('div');
     div.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px; align-items: center;";
     div.innerHTML = `
-        <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+        <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
         <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
             <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
             <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
@@ -742,7 +742,7 @@ function paparModalLaporan(jenis) {
                 let btnX = index === 0 ? `<button type="button" style="visibility:hidden; padding:0 10px;">X</button>` : `<button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
                 elaunModalHtml += `
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" value="${elaun.jenis || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                    <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" value="${elaun.jenis || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
                     <div style="flex: 2; display: flex; gap: 5px;">
                         <input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" value="${elaun.nilai || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         ${btnX}
@@ -752,7 +752,7 @@ function paparModalLaporan(jenis) {
         } else {
             elaunModalHtml = `
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
                 <div style="flex: 2; display: flex; gap: 5px;">
                     <input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                     <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
@@ -841,7 +841,7 @@ function paparModalLaporan(jenis) {
                         </div>
                         <div id="containerPotonganModal" style="margin-bottom: 25px;">
                             <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-                                <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                                <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
                                 <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
                                     <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
                                     <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
