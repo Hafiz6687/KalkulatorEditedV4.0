@@ -1021,8 +1021,10 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
     // Fungsi untuk tambah peratusan pada label potongan
     let labelWithPct = (label, pct) => pct ? `${label} (${pct}%)` : label;
 
-    // Semak jika ada input Majikan (Bermaksud butang Jana Penyata Gaji ditekan)
-    if (jenisCetak === 'penyata' || namaMajikan !== "" || tempohUpah !== "") {
+    // SANGAT PENTING: PENGASINGAN FUNGSI CETAKAN BERLAKU DI SINI
+    if (jenisCetak === 'penyata') {
+        
+        // HANYA JIKA BUTANG 'JANA PENYATA GAJI' DITEKAN
         tajukHeaderHTML = `
             <div style="text-align: center; margin-bottom: 2px;">
                 <div style="font-size: 27px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; color: #000; letter-spacing: 1px;">PENYATA GAJI</div>
@@ -1032,15 +1034,11 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
             <p class="subtitle">Tarikh Janaan: ${tarikhHariIni} &nbsp;|&nbsp; Tempoh Upah: ${tempohUpah || '-'}</p>
         `;
         
-        // ====================================================================
-        // LUKIS JADUAL PENYATA GAJI (BUTIRAN UPAH 3-GRID & POTONGAN 2-GRID)
-        // ====================================================================
         let v_basic = "", v_elaun = "";
         let r_otb = "", h_otb = ""; let r_rh05 = "", h_rh05 = ""; let r_rh1 = "", h_rh1 = "";
         let r_otrh = "", h_otrh = ""; let r_ph = "", h_ph = ""; let r_otph = "", h_otph = "";
         let r_cs = "", h_cs = ""; let r_ct = "", h_ct = "";
 
-        // Gelung ekstrak data dari kad aktif dengan selamat
         semuaKadAktif.forEach(kad => {
             let v = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.value.trim() : ""; };
             let t = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.innerText.trim() : ""; };
@@ -1058,18 +1056,15 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
             if(t("annualLeaveAmount") && t("annualLeaveAmount") !== "RM 0.00") { r_ct = t("annualLeaveAmount"); h_ct = v("annualLeaveDays"); }
         });
 
-        // Reka HTML Baris (Row)
         let trU = (label, detail, amt) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #eee; width: 45%; text-align: left;">${label}</td><td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: center; width: 25%; color: #555; font-size: 10px;">${detail}</td><td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right; width: 30%; font-weight: bold;">${amt}</td></tr>`;
         let trP = (label, amt) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #eee; width: 60%; text-align: left;">${label}</td><td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right; width: 40%; font-weight: bold; color: #d9534f;">${amt ? parseRMStr(amt) : ''}</td></tr>`;
         let trKosong = `<tr><td colspan="2" style="padding: 8px 12px; border-bottom: 1px solid #eee; height: 32px;"></td></tr>`;
 
-        // Bina Jadual Upah (Kiri)
         let htmlUpahDalaman = `
             ${trU("Gaji Pokok", "", parseRMStr(v_basic))}
             ${trU("Elaun", "", parseRMStr(v_elaun))}
         `;
-        // Masukkan Elaun Tambahan jika ada
-        if (xtra.jElaun || xtra.nElaun) { htmlUpahDalaman += trU(xtra.jElaun || "Elaun Tambahan", "", parseRMStr(xtra.nElaun)); }
+        if (xtra && (xtra.jElaun || xtra.nElaun)) { htmlUpahDalaman += trU(xtra.jElaun || "Elaun Tambahan", "", parseRMStr(xtra.nElaun)); }
         
         htmlUpahDalaman += `
             ${trU("OT Normal (1.5)", h_otb ? h_otb + " jam" : "", r_otb)}
@@ -1084,21 +1079,28 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
 
         let upahHTML = `<table style="width: 100%; border-collapse: collapse; font-size: 11px;">${htmlUpahDalaman}</table>`;
 
-        // Bina Jadual Potongan (Kanan)
-        let htmlPotonganDalaman = `
-            ${trP("Pendahuluan", "")}
-            ${trP(labelWithPct("KWSP", xtra.kwspP), xtra.kwspN)}
-            ${trP(labelWithPct("PERKESO", xtra.perkesoP), xtra.perkesoN)}
-            ${trP(labelWithPct("SIP/EIS", xtra.sipP), xtra.sipN)}
-        `;
-        // Masukkan Potongan Tambahan jika ada
-        if (xtra.jPotongL || xtra.pPotongL || xtra.nPotongL) { htmlPotonganDalaman += trP(labelWithPct(xtra.jPotongL || "Lain-lain", xtra.pPotongL), xtra.nPotongL); }
+        let htmlPotonganDalaman = "";
+        if (xtra) {
+            htmlPotonganDalaman = `
+                ${trP("Pendahuluan", "")}
+                ${trP(labelWithPct("KWSP", xtra.kwspP), xtra.kwspN)}
+                ${trP(labelWithPct("PERKESO", xtra.perkesoP), xtra.perkesoN)}
+                ${trP(labelWithPct("SIP/EIS", xtra.sipP), xtra.sipN)}
+            `;
+            if (xtra.jPotongL || xtra.pPotongL || xtra.nPotongL) { htmlPotonganDalaman += trP(labelWithPct(xtra.jPotongL || "Lain-lain", xtra.pPotongL), xtra.nPotongL); }
+        } else {
+             htmlPotonganDalaman = `
+                ${trP("Pendahuluan", "")}
+                ${trP("KWSP", "")}
+                ${trP("PERKESO", "")}
+                ${trP("SIP/EIS", "")}
+            `;
+        }
 
         htmlPotonganDalaman += `${trKosong}${trKosong}${trKosong}${trKosong}${trKosong}${trKosong}`;
         
         let potongHTML = `<table style="width: 100%; border-collapse: collapse; font-size: 11px;">${htmlPotonganDalaman}</table>`;
 
-        // Gabung menggunakan CSS Grid 3fr 2fr
         let penyataGajiHTML = `
         <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 15px; margin-bottom: 15px; grid-column: 1 / -1; align-items: start;">
             <div class="report-box" style="padding: 0; overflow: hidden; border: 1px solid #1f4e79;">
@@ -1115,11 +1117,12 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
         contentSeterusnya = penyataGajiHTML; 
 
     } else {
-        // Jika butang Laporan Penuh biasa (Tanpa Majikan) ditekan, KEKALKAN FORMAT ASAL
+        // JIKA BUTANG 'JANA LAPORAN PENUH' DITEKAN, KEKALKAN 100% RUPA LAMA (TIADA JADUAL UPAH/POTONGAN)
         tajukHeaderHTML = `
             <h1 class="main-title">PENGIRAAN DI BAWAH AKTA KERJA 1955</h1>
             <p class="subtitle">Tarikh Janaan: ${tarikhHariIni}</p>
         `;
+        contentSeterusnya = htmlLaporan; // Kekalkan laporan formula kotak-kotak asal
     }
 
     let maklumatSyarikatPekerjaHTML = "";
