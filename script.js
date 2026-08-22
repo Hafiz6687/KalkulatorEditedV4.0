@@ -1147,7 +1147,6 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
     if (!tetingkapCetak) { alert("Pop-up disekat oleh pelayar web (browser) anda. Sila benarkan 'Pop-ups and redirects' untuk laman ini bagi melihat laporan."); return; }
     tetingkapCetak.document.write(cetakHTML); tetingkapCetak.document.close(); tetingkapCetak.focus(); 
 }
-
 // =====================================================
 // 6. SISTEM LOGIN & RESET 
 // =====================================================
