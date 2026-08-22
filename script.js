@@ -1391,50 +1391,45 @@ window.tambahKalkulator = function(templateId) {
     clone.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
 // =====================================================
-// 8. ENJIN ELAUN DINAMIK GLOBAL
+// 8. ENJIN ELAUN DINAMIK GLOBAL (AUTO-TRIGGER)
 // =====================================================
 let senaraiElaunGlobal = [];
 let allowanceCardTransformed = false;
 
-document.addEventListener('focusin', function(e) {
-    if (allowanceCardTransformed) {
-        // Keselamatan jika user buang kad pertama, kita reset balik fungsi ni
-        if (!document.querySelector('.dynamic-allowance-wrapper')) {
-            allowanceCardTransformed = false; 
-        } else {
-            return;
-        }
-    }
-    
-    let card = e.target.closest('.calculator-card:not(.hidden-template):not(.rumusan-card)');
-    if (!card) return;
-
-    // Cari field elaun dalam kad yang diklik
-    let allowInput = null;
-    for(let k of Object.keys(salaryMap)) {
-        let aid = salaryMap[k][0];
-        let found = card.querySelector(`[id="${aid}"], [data-original-id="${aid}"]`);
-        if(found) { allowInput = found; break; }
-    }
-
-    // Jika jumpa, tukar menjadi borang dinamik
-    if (allowInput) {
-        allowanceCardTransformed = true;
-        transformAllowanceField(allowInput);
-    }
-});
-
+// Fungsi ini menukar kotak elaun asal menjadi borang dinamik
 function transformAllowanceField(allowInput) {
-    let fg = allowInput.closest('.form-group');
-    if(!fg) fg = allowInput.parentElement;
+    allowInput.style.display = 'none'; // Sorok kotak asal (TIDAK DIPADAM, Enjin asal tak terganggu)
 
-    allowInput.style.display = 'none'; // Sembunyikan field elaun asal (tapi jangan buang)
-    let lbl = fg.querySelector('label');
-    if(lbl) lbl.style.display = 'none';
+    // Sorok label "Elaun (RM)" asal
+    let prev = allowInput.previousElementSibling;
+    if (prev && prev.tagName === 'LABEL') prev.style.display = 'none';
 
     let container = document.createElement('div');
     container.className = 'dynamic-allowance-wrapper';
     container.style.cssText = 'width: 100%; margin-bottom: 15px; background: #f4f6f9; padding: 12px; border: 1px dashed #1f4e79; border-radius: 6px;';
+
+    // Bina senarai baris jika dah ada memori elaun sebelum ni
+    let htmlRows = '';
+    if (senaraiElaunGlobal && senaraiElaunGlobal.length > 0) {
+        senaraiElaunGlobal.forEach((elaun, i) => {
+            let btnX = i === 0 ? `<button type="button" style="visibility:hidden; padding:0 10px;">X</button>` : `<button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
+            htmlRows += `
+                <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
+                    <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" value="${elaun.jenis || ''}" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="updateGlobalElaunSum(this)">
+                    <input type="text" class="global-elaun-nilai number-input" placeholder="Nilai (RM)" value="${elaun.nilai || ''}" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+                    ${btnX}
+                </div>
+            `;
+        });
+    } else {
+        htmlRows = `
+            <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
+                <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="updateGlobalElaunSum(this)">
+                <input type="text" class="global-elaun-nilai number-input" placeholder="Nilai (RM)" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+                <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
+            </div>
+        `;
+    }
 
     container.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
@@ -1442,16 +1437,37 @@ function transformAllowanceField(allowInput) {
             <button type="button" onclick="tambahBarisElaunGlobalKalkulator(this)" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah Elaun</button>
         </div>
         <div class="dynamic-elaun-list-kalkulator">
-            <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
-                <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="updateGlobalElaunSum(this)">
-                <input type="text" class="global-elaun-nilai number-input" placeholder="Nilai (RM)" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
-                <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
-            </div>
+            ${htmlRows}
         </div>
     `;
-    fg.appendChild(container);
+    allowInput.parentNode.insertBefore(container, allowInput.nextSibling);
+    
+    // Paksa update sekiranya memori ada data
+    if (senaraiElaunGlobal.length > 0) { updateGlobalElaunSum(container); }
 }
 
+// Fungsi semak kad untuk ditukar jadi dinamik
+function semakDanTukarElaun(card) {
+    if (allowanceCardTransformed) {
+        if (!document.querySelector('.dynamic-allowance-wrapper')) {
+            allowanceCardTransformed = false; 
+        } else {
+            return; 
+        }
+    }
+    let allowInput = null;
+    for(let k of Object.keys(salaryMap)) {
+        let aid = salaryMap[k][0];
+        let found = card.querySelector(`[id="${aid}"], [data-original-id="${aid}"]`);
+        if(found) { allowInput = found; break; }
+    }
+    if (allowInput) {
+        allowanceCardTransformed = true;
+        transformAllowanceField(allowInput);
+    }
+}
+
+// Butang + Tambah Baris
 window.tambahBarisElaunGlobalKalkulator = function(btn) {
     let list = btn.parentElement.nextElementSibling;
     let row = document.createElement('div');
@@ -1472,8 +1488,10 @@ window.buangBarisElaunGlobalKalkulator = function(btn) {
     updateGlobalElaunSum(container);
 };
 
+// Enjin kumpul jumlah elaun dan serapkan ke semua kalkulator lain
 window.updateGlobalElaunSum = function(el) {
     let wrapper = el.closest('.dynamic-allowance-wrapper');
+    if (!wrapper) return;
     let rows = wrapper.querySelectorAll('.elaun-row-kalkulator');
     let total = 0;
     senaraiElaunGlobal = []; // Reset memori global
@@ -1490,12 +1508,39 @@ window.updateGlobalElaunSum = function(el) {
 
     let formattedTotal = total > 0 ? total : "";
 
-    // SUNTIK JUMLAH TERKUMPUL KE SEMUA KALKULATOR LAIN (FUNGSI SEDIA ADA TERPELIHARA)
+    // Ghaibkan suntikan ke dalam sistem teras TANPA merosakkan enjin sedia ada
     Object.keys(salaryMap).forEach(key => {
         let aID = salaryMap[key][0];
         document.querySelectorAll(`[id="${aID}"], [data-original-id="${aID}"]`).forEach(aEl => {
             aEl.value = formattedTotal;
-            aEl.dispatchEvent(new Event('input', {bubbles:true})); // Trigger pengiraan enjin sedia ada
+            aEl.dispatchEvent(new Event('input', {bubbles:true})); 
         });
     });
 };
+
+// PEMANTAU AUTOMATIK (MUTATION OBSERVER) - Trigger serta merta bila user tambah kalkulator baru
+const observerKalkulator = new MutationObserver((mutations) => {
+    mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+            if (node.nodeType === 1 && node.classList && node.classList.contains('calculator-card')) {
+                setTimeout(() => semakDanTukarElaun(node), 50); // Laksana segera
+            }
+        });
+        mutation.removedNodes.forEach(node => {
+            if (node.nodeType === 1 && node.querySelector('.dynamic-allowance-wrapper')) {
+                allowanceCardTransformed = false; // Reset memori jika kalkulator pertama dibuang
+            }
+        });
+    });
+});
+
+// Hidupkan pemantau automatik pada grid utama
+document.addEventListener('DOMContentLoaded', () => {
+    let gridNode = document.getElementById('active-calculators-grid');
+    if (gridNode) observerKalkulator.observe(gridNode, { childList: true });
+    
+    // Semak sekali untuk mana-mana kad yang mungkin sedia wujud waktu loading
+    document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)').forEach(card => {
+        semakDanTukarElaun(card);
+    });
+});
