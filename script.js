@@ -734,13 +734,37 @@ function paparModalLaporan(jenis) {
     let existingModal = document.getElementById('modalLaporanPenuh'); if(existingModal) existingModal.remove();
 
     if (jenis === 'penyata') {
+        
+        // AUTO-GENERATE ELAUN DARI ENJIN DINAMIK GLOBAL KE DALAM POP-UP
+        let elaunModalHtml = '';
+        if (typeof senaraiElaunGlobal !== 'undefined' && senaraiElaunGlobal.length > 0) {
+            senaraiElaunGlobal.forEach((elaun, index) => {
+                let btnX = index === 0 ? `<button type="button" style="visibility:hidden; padding:0 10px;">X</button>` : `<button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
+                elaunModalHtml += `
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" value="${elaun.jenis || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                    <div style="flex: 2; display: flex; gap: 5px;">
+                        <input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" value="${elaun.nilai || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                        ${btnX}
+                    </div>
+                </div>`;
+            });
+        } else {
+            elaunModalHtml = `
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                <div style="flex: 2; display: flex; gap: 5px;">
+                    <input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                    <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
+                </div>
+            </div>`;
+        }
+
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
             <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 850px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
-                
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                     
-                    <!-- LAJUR KIRI: MAJIKAN & ELAUN & PENDAHULUAN -->
                     <div>
                         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Majikan / Syarikat</h3>
                         <div style="margin-bottom: 15px; margin-top: 15px;">
@@ -762,13 +786,9 @@ function paparModalLaporan(jenis) {
                             <button type="button" onclick="tambahBarisElaunModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
                         </div>
                         <div id="containerElaunModal">
-                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
-                                <div style="flex: 2;"><input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
-                            </div>
+                            ${elaunModalHtml}
                         </div>
 
-                        <!-- MAKLUMAT PENDAHULUAN DI BAWAH ELAUN -->
                         <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #ccc;">
                             <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; margin-top:0;">Maklumat Pendahuluan</p>
                             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
@@ -778,7 +798,6 @@ function paparModalLaporan(jenis) {
                         </div>
                     </div>
 
-                    <!-- LAJUR KANAN: PEKERJA & POTONGAN -->
                     <div>
                         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pekerja</h3>
                         <div style="margin-bottom: 15px; margin-top: 15px;">
@@ -829,6 +848,7 @@ function paparModalLaporan(jenis) {
                                 </div>
                                 <div style="flex: 3; display: flex; gap: 5px;">
                                     <input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                                    <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
                                 </div>
                             </div>
                         </div>
@@ -845,7 +865,6 @@ function paparModalLaporan(jenis) {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         
     } else {
-        // PAPARAN 100% KEKAL ASAL (UNTUK JANA LAPORAN PENUH)
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
             <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
@@ -1119,15 +1138,20 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
 
         let htmlUpahDalaman = `
             ${trU("Gaji Pokok", "", parseRMStr(v_basic))}
-            ${trU("Elaun Tetap", "", parseRMStr(v_elaun))}
         `;
         
-        if (xtra && xtra.senaraiElaun) {
+        // ELAUN AUTO-EXTRACT
+        let jumlahElaunPopUp = 0;
+        if (xtra && xtra.senaraiElaun && xtra.senaraiElaun.length > 0) {
             xtra.senaraiElaun.forEach(elaun => {
                 if (elaun.jenis || elaun.nilai) {
                     htmlUpahDalaman += trU(elaun.jenis || "Elaun Tambahan", "", parseRMStr(elaun.nilai));
+                    jumlahElaunPopUp++;
                 }
             });
+        }
+        if (jumlahElaunPopUp === 0 && v_elaun) {
+            htmlUpahDalaman += trU("Elaun Tetap", "", parseRMStr(v_elaun));
         }
         
         htmlUpahDalaman += `
@@ -1145,7 +1169,6 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
 
         let htmlPotonganDalaman = "";
         if (xtra) {
-            // TERIMA BACAAN PENDAHULUAN
             htmlPotonganDalaman = `
                 ${trP("Pendahuluan", xtra.pendahuluanN)}
                 ${trP(labelWithPct("KWSP", xtra.kwspP), xtra.kwspN)}
@@ -1199,7 +1222,6 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
 
     let maklumatSyarikatPekerjaHTML = "";
     
-    // PENYELESAIAN MASALAH PDF (LAPORAN PENUH TAK KELUAR NO PEKERJA)
     if (namaPekerja !== "" || icPekerja !== "" || noPekerja !== "") {
         maklumatSyarikatPekerjaHTML = `<div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;">
             <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT PEKERJA</div>
@@ -1367,4 +1389,113 @@ window.tambahKalkulator = function(templateId) {
     if (rumusanCard) grid.insertBefore(clone, rumusanCard); else grid.appendChild(clone);
     if (rumusanCard) { rumusanCard.style.display = "block"; }
     clone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+// =====================================================
+// 8. ENJIN ELAUN DINAMIK GLOBAL
+// =====================================================
+let senaraiElaunGlobal = [];
+let allowanceCardTransformed = false;
+
+document.addEventListener('focusin', function(e) {
+    if (allowanceCardTransformed) {
+        // Keselamatan jika user buang kad pertama, kita reset balik fungsi ni
+        if (!document.querySelector('.dynamic-allowance-wrapper')) {
+            allowanceCardTransformed = false; 
+        } else {
+            return;
+        }
+    }
+    
+    let card = e.target.closest('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+    if (!card) return;
+
+    // Cari field elaun dalam kad yang diklik
+    let allowInput = null;
+    for(let k of Object.keys(salaryMap)) {
+        let aid = salaryMap[k][0];
+        let found = card.querySelector(`[id="${aid}"], [data-original-id="${aid}"]`);
+        if(found) { allowInput = found; break; }
+    }
+
+    // Jika jumpa, tukar menjadi borang dinamik
+    if (allowInput) {
+        allowanceCardTransformed = true;
+        transformAllowanceField(allowInput);
+    }
+});
+
+function transformAllowanceField(allowInput) {
+    let fg = allowInput.closest('.form-group');
+    if(!fg) fg = allowInput.parentElement;
+
+    allowInput.style.display = 'none'; // Sembunyikan field elaun asal (tapi jangan buang)
+    let lbl = fg.querySelector('label');
+    if(lbl) lbl.style.display = 'none';
+
+    let container = document.createElement('div');
+    container.className = 'dynamic-allowance-wrapper';
+    container.style.cssText = 'width: 100%; margin-bottom: 15px; background: #f4f6f9; padding: 12px; border: 1px dashed #1f4e79; border-radius: 6px;';
+
+    container.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+            <label style="font-weight:bold; color:#1f4e79; margin:0; font-size:12px;">Maklumat Elaun</label>
+            <button type="button" onclick="tambahBarisElaunGlobalKalkulator(this)" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah Elaun</button>
+        </div>
+        <div class="dynamic-elaun-list-kalkulator">
+            <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
+                <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="updateGlobalElaunSum(this)">
+                <input type="text" class="global-elaun-nilai number-input" placeholder="Nilai (RM)" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+                <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
+            </div>
+        </div>
+    `;
+    fg.appendChild(container);
+}
+
+window.tambahBarisElaunGlobalKalkulator = function(btn) {
+    let list = btn.parentElement.nextElementSibling;
+    let row = document.createElement('div');
+    row.className = 'elaun-row-kalkulator';
+    row.style.cssText = "display:flex; gap:5px; margin-bottom:5px;";
+    row.innerHTML = `
+        <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="updateGlobalElaunSum(this)">
+        <input type="text" class="global-elaun-nilai number-input" placeholder="Nilai (RM)" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+        <button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+    `;
+    list.appendChild(row);
+};
+
+window.buangBarisElaunGlobalKalkulator = function(btn) {
+    let row = btn.parentElement;
+    let container = row.closest('.dynamic-allowance-wrapper');
+    row.remove();
+    updateGlobalElaunSum(container);
+};
+
+window.updateGlobalElaunSum = function(el) {
+    let wrapper = el.closest('.dynamic-allowance-wrapper');
+    let rows = wrapper.querySelectorAll('.elaun-row-kalkulator');
+    let total = 0;
+    senaraiElaunGlobal = []; // Reset memori global
+    
+    rows.forEach(r => {
+        let j = r.querySelector('.global-elaun-jenis').value.trim();
+        let nStr = r.querySelector('.global-elaun-nilai').value;
+        let n = evaluateSmartMath(nStr);
+        if (j || nStr) {
+            senaraiElaunGlobal.push({jenis: j, nilai: n > 0 ? n : nStr});
+        }
+        if (n > 0) total += n;
+    });
+
+    let formattedTotal = total > 0 ? total : "";
+
+    // SUNTIK JUMLAH TERKUMPUL KE SEMUA KALKULATOR LAIN (FUNGSI SEDIA ADA TERPELIHARA)
+    Object.keys(salaryMap).forEach(key => {
+        let aID = salaryMap[key][0];
+        document.querySelectorAll(`[id="${aID}"], [data-original-id="${aID}"]`).forEach(aEl => {
+            aEl.value = formattedTotal;
+            aEl.dispatchEvent(new Event('input', {bubbles:true})); // Trigger pengiraan enjin sedia ada
+        });
+    });
 };
