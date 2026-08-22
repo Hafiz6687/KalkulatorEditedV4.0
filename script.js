@@ -545,7 +545,7 @@ function resetTBB() {
 // 4. ENJIN KALKULATOR RUMUSAN AKHIR
 // =====================================================
 const senaraiKalkulatorRumusan = [
-    { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)" }, { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)" }, { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)" }, { nilai: "tbbAmount", teks: "Faedah Penamatan" }, { nilai: "otAmount", teks: "OT Hari Biasa" }, { nilai: "otRHAmount", teks: "OT Hari Rehat" }, { nilai: "otPHAmount", teks: "OT Hari Kelepasan" }, { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)" }, { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)" }, { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan" }, { nilai: "amount18A", teks: "Seksyen 18A (Jumlah Bayaran Upah)" }, { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan" }, { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit" }
+    { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)" }, { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)" }, { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)" }, { nilai: "tbbAmount", teks: "Faedah Penamatan" }, { nilai: "otAmount", teks: "OT Hari Biasa" }, { nilai: "otRHAmount", teks: "OT Hari Rehat" }, { nilai: "otPHAmount", teks: "OT Hari Kelepasan" }, { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)" }, { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)" }, { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan" }, { nilai: "amount18A", teks: "Seksyen 18A (Bulan Tidak Lengkap)" }, { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan" }, { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit" }
 ];
 
 function formatRMRumusan(amount) { if (isNaN(amount) || amount === "") return "RM0.00"; return "RM " + parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -603,7 +603,14 @@ function kemaskiniPatutBayar(selectElement) {
             inputTelahBayar.value = formatRMRumusan(jumlahTelah);
             inputTelahBayar.setAttribute('readonly', true);
             inputTelahBayar.style.background = "#f4f4f4";
-            senaraiKeterangan.push("Dari Kalkulator ORP");
+            // Dinamik: Tentukan sama ada Terkurang atau Terlebih bayar
+            if (jumlahPatut > jumlahTelah) {
+                senaraiKeterangan.push("Terkurang Bayar");
+            } else if (jumlahTelah > jumlahPatut) {
+                senaraiKeterangan.push("Terlebih Bayar");
+            } else {
+                senaraiKeterangan.push("Terkurang Bayar"); // Default
+            }
             
         } else {
             // Untuk kalkulator lain
@@ -631,7 +638,16 @@ function kemaskiniPatutBayar(selectElement) {
                         if(m) detail = `${m} minggu`; else if(h) detail = `${h} hari`;
                     }
                     else if (idSasaran.includes("tbbAmount")) { let hari = getTxt("tbbHari"); if(hari && hari !== "-") detail = hari; }
-                    else if (idSasaran.includes("amount18A")) { detail = "Kiraan Berjadual"; }
+                    else if (idSasaran.includes("amount18A")) { 
+                        let mula = getVal("section18AStartDate"); 
+                        let akhir = getVal("section18AEndDate"); 
+                        if (mula && akhir) {
+                            let fmt = (d) => d.split('-').reverse().join('/');
+                            detail = `Dari ${fmt(mula)} hingga ${fmt(akhir)}`;
+                        } else {
+                            detail = "Bulan Tidak Lengkap";
+                        }
+                    }
 
                     if (detail) senaraiKeterangan.push(detail);
                 }
