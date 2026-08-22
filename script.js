@@ -714,10 +714,13 @@ function tambahBarisElaunModal() {
 
 function tambahBarisPotonganModal() {
     let div = document.createElement('div');
-    div.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px;";
+    div.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px; align-items: center;";
     div.innerHTML = `
         <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
-        <div style="flex: 1;"><input type="text" class="potong-pct" placeholder="%" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;"></div>
+        <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
+            <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+            <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
+        </div>
         <div style="flex: 3; display: flex; gap: 5px;">
             <input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
             <button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
@@ -796,17 +799,20 @@ function paparModalLaporan(jenis) {
                         <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">Potongan Berkanun</p>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">KWSP</label>
-                            <input type="text" id="inputKWSPPeratus" value="11" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <input type="text" id="inputKWSPPeratus" value="11" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
                             <input type="text" id="inputKWSPNilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">PERKESO</label>
-                            <input type="text" id="inputPERKESOPeratus" value="0.5" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <input type="text" id="inputPERKESOPeratus" value="0.5" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
                             <input type="text" id="inputPERKESONilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">SIP / EIS</label>
-                            <input type="text" id="inputSIPPeratus" value="0.5" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <input type="text" id="inputSIPPeratus" value="0.5" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
                             <input type="text" id="inputSIPNilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
 
@@ -815,9 +821,12 @@ function paparModalLaporan(jenis) {
                             <button type="button" onclick="tambahBarisPotonganModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
                         </div>
                         <div id="containerPotonganModal" style="margin-bottom: 25px;">
-                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                                 <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
-                                <div style="flex: 1;"><input type="text" class="potong-pct" placeholder="%" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;"></div>
+                                <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
+                                    <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                                    <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
+                                </div>
                                 <div style="flex: 3; display: flex; gap: 5px;">
                                     <input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                                 </div>
