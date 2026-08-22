@@ -1415,6 +1415,7 @@ function transformAllowanceField(allowInput) {
     if (senaraiElaunGlobal && senaraiElaunGlobal.length > 0) {
         senaraiElaunGlobal.forEach((elaun, i) => {
             let btnX = i === 0 ? `<button type="button" style="visibility:hidden; padding:0 10px;">X</button>` : `<button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
+            // GUNA FUNGSI SEDIA ADA UNTUK FORMAT
             let nFormatted = elaun.nilai ? formatSafeRM(elaun.nilai) : '';
             htmlRows += `
                 <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
@@ -1509,12 +1510,10 @@ window.updateGlobalElaunSum = function(el) {
         if (n > 0) total += n;
     });
 
-    // ---------------------------------------------------------
-    // PENYELESAIAN BUG: FORMAT JADI RM SEBELUM HANTAR!
-    // ---------------------------------------------------------
-    let formattedTotal = total > 0 ? "RM " + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "";
+    // MEMATUHI AMARAN: GUNA FUNGSI FORMAT SEDIA ADA!
+    let formattedTotal = total > 0 ? formatRM(total) : "";
 
-    // Ghaibkan suntikan ke dalam sistem teras TANPA merosakkan enjin sedia ada
+    // Ghaibkan suntikan ke dalam sistem teras TANPA merosakkan format/enjin sedia ada
     Object.keys(salaryMap).forEach(key => {
         let aID = salaryMap[key][0];
         document.querySelectorAll(`[id="${aID}"], [data-original-id="${aID}"]`).forEach(aEl => {
