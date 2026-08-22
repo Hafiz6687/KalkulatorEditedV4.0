@@ -696,7 +696,59 @@ function formatIC(str) {
 
 // Butang 1 & 2
 function janaLaporanPenuh() { paparModalLaporan('penuh'); }
-function janaPenyataGaji() { paparModalLaporan('penyata'); }
+function janaPenyataGaji() { 
+    let orpCardLengkap = false;
+    let orpCardWujud = null;
+    let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template)');
+    
+    // Semak sama ada ORP wujud dan dah dikira
+    semuaKadAktif.forEach(kad => {
+        let orpData = kad.querySelector('[id="orpData"], [data-original-id="orpData"]');
+        if (orpData) {
+            orpCardWujud = kad;
+            if (window.getComputedStyle(orpData).display !== "none") {
+                orpCardLengkap = true;
+            }
+        }
+    });
+
+    if (!orpCardLengkap) {
+        alert("Peringatan: Sila lengkapkan Kalkulator Kadar Upah Biasa (ORP) terlebih dahulu untuk menjana Penyata Gaji.");
+        
+        // Auto-papar atau auto-skrol ke ORP
+        if (!orpCardWujud) {
+            if (typeof window.tambahKalkulator === 'function') {
+                window.tambahKalkulator('orp');
+                let cards = document.querySelectorAll('.calculator-card:not(.hidden-template)');
+                orpCardWujud = cards[cards.length - 1];
+            }
+        } else {
+            orpCardWujud.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Auto-trigger Pop-Up sebaik sahaja user selesai kira ORP
+        if (orpCardWujud) {
+            let kiraBtn = orpCardWujud.querySelector('button[data-action-func*="calculateORP"]');
+            if (!kiraBtn) kiraBtn = orpCardWujud.querySelector('button[onclick*="calculateORP"]');
+            
+            if (kiraBtn) {
+                const autoPopup = function() {
+                    setTimeout(() => {
+                        let dataEl = orpCardWujud.querySelector('[id="orpData"], [data-original-id="orpData"]');
+                        if (dataEl && window.getComputedStyle(dataEl).display !== "none") {
+                            paparModalLaporan('penyata');
+                            kiraBtn.removeEventListener('click', autoPopup); // Buang listener supaya tak trigger berkali-kali
+                        }
+                    }, 500);
+                };
+                kiraBtn.addEventListener('click', autoPopup);
+            }
+        }
+        return;
+    }
+
+    paparModalLaporan('penyata'); 
+}
 
 // Fungsi Pembantu Dinamik (Tambah Baris Pop-Up)
 function tambahBarisElaunModal() {
@@ -739,7 +791,7 @@ function paparModalLaporan(jenis) {
         let elaunModalHtml = '';
         if (typeof senaraiElaunGlobal !== 'undefined' && senaraiElaunGlobal.length > 0) {
             senaraiElaunGlobal.forEach((elaun, index) => {
-                let btnX = index === 0 ? `<button type="button" style="visibility:hidden; padding:0 10px;">X</button>` : `<button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
+                let btnX = index === 0 ? `` : `<button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
                 let nFormatted = elaun.nilai ? formatSafeRM(elaun.nilai) : '';
                 elaunModalHtml += `
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
@@ -756,7 +808,6 @@ function paparModalLaporan(jenis) {
                 <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
                 <div style="flex: 2; display: flex; gap: 5px;">
                     <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
-                    <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
                 </div>
             </div>`;
         }
@@ -849,7 +900,6 @@ function paparModalLaporan(jenis) {
                                 </div>
                                 <div style="flex: 3; display: flex; gap: 5px;">
                                     <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
-                                    <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
                                 </div>
                             </div>
                         </div>
@@ -1414,14 +1464,15 @@ function transformAllowanceField(allowInput) {
     let htmlRows = '';
     if (senaraiElaunGlobal && senaraiElaunGlobal.length > 0) {
         senaraiElaunGlobal.forEach((elaun, i) => {
-            let btnX = i === 0 ? `<button type="button" style="visibility:hidden; padding:0 10px;">X</button>` : `<button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
-            // GUNA FUNGSI SEDIA ADA UNTUK FORMAT
+            let btnX = i === 0 ? `` : `<button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
             let nFormatted = elaun.nilai ? formatSafeRM(elaun.nilai) : '';
             htmlRows += `
                 <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
                     <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" value="${elaun.jenis || ''}" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="this.value = formatTitleCase(this.value); updateGlobalElaunSum(this);">
-                    <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" value="${nFormatted}" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
-                    ${btnX}
+                    <div style="flex:2; display:flex; gap:5px;">
+                        <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" value="${nFormatted}" style="width:100%; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+                        ${btnX}
+                    </div>
                 </div>
             `;
         });
@@ -1429,8 +1480,9 @@ function transformAllowanceField(allowInput) {
         htmlRows = `
             <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
                 <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="this.value = formatTitleCase(this.value); updateGlobalElaunSum(this);">
-                <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
-                <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
+                <div style="flex:2; display:flex; gap:5px;">
+                    <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width:100%; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+                </div>
             </div>
         `;
     }
@@ -1479,14 +1531,16 @@ window.tambahBarisElaunGlobalKalkulator = function(btn) {
     row.style.cssText = "display:flex; gap:5px; margin-bottom:5px;";
     row.innerHTML = `
         <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="this.value = formatTitleCase(this.value); updateGlobalElaunSum(this);">
-        <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
-        <button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+        <div style="flex:2; display:flex; gap:5px;">
+            <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width:100%; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+            <button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+        </div>
     `;
     list.appendChild(row);
 };
 
 window.buangBarisElaunGlobalKalkulator = function(btn) {
-    let row = btn.parentElement;
+    let row = btn.parentElement.parentElement; // Perlu naik 2 tingkat div
     let container = row.closest('.dynamic-allowance-wrapper');
     row.remove();
     updateGlobalElaunSum(container);
