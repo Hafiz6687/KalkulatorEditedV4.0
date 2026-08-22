@@ -782,15 +782,15 @@ function paparModalLaporan(jenis) {
             ${htmlMajikan}
 
             <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pekerja</h3>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px; margin-top: 15px;">
-                <div style="flex: 1;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Pekerja:</label>
-                    <input type="text" id="inputNamaLaporan" placeholder="Contoh: Ahmad Bin Abu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
-                </div>
-                <div style="flex: 1;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Kad Pengenalan:</label>
-                    <input type="text" id="inputICLaporan" placeholder="Contoh: 900101-01-1234" maxlength="14" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
-                </div>
+            
+            <!-- KEMBALI KEPADA REKA BENTUK ASAL: NAMA ATAS & IC BAWAH -->
+            <div style="margin-bottom: 15px; margin-top: 15px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Pekerja:</label>
+                <input type="text" id="inputNamaLaporan" placeholder="Contoh: Ahmad Bin Abu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
+            </div>
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Kad Pengenalan:</label>
+                <input type="text" id="inputICLaporan" placeholder="Contoh: 900101-01-1234" maxlength="14" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
             </div>
 
             ${htmlTambahan}
