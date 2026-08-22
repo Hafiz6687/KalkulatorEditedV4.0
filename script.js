@@ -692,14 +692,32 @@ function formatIC(str) {
     return val.slice(0,6) + '-' + val.slice(6,8) + '-' + val.slice(8,12);
 }
 
-// Butang 1: Jana Laporan Penuh (Tanpa Majikan)
-function janaLaporanPenuh() {
-    paparModalLaporan('penuh');
+// Butang 1 & 2
+function janaLaporanPenuh() { paparModalLaporan('penuh'); }
+function janaPenyataGaji() { paparModalLaporan('penyata'); }
+
+// Fungsi Pembantu Dinamik (Tambah Baris Pop-Up)
+function tambahBarisElaunModal() {
+    let div = document.createElement('div');
+    div.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px;";
+    div.innerHTML = `
+        <div style="flex: 2;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+        <div style="flex: 1;"><input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+        <button type="button" onclick="this.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+    `;
+    document.getElementById('containerElaunModal').appendChild(div);
 }
 
-// Butang 2: Jana Penyata Gaji (Dengan Majikan)
-function janaPenyataGaji() {
-    paparModalLaporan('penyata');
+function tambahBarisPotonganModal() {
+    let div = document.createElement('div');
+    div.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px;";
+    div.innerHTML = `
+        <div style="flex: 2;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+        <div style="flex: 1;"><input type="text" class="potong-pct" placeholder="%" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+        <div style="flex: 1.5;"><input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+        <button type="button" onclick="this.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+    `;
+    document.getElementById('containerPotonganModal').appendChild(div);
 }
 
 // Enjin Utama Pop-Up
@@ -707,16 +725,13 @@ function paparModalLaporan(jenis) {
     let existingModal = document.getElementById('modalLaporanPenuh'); if(existingModal) existingModal.remove();
 
     if (jenis === 'penyata') {
-        // REKA BENTUK 2 LAJUR (KIRI & KANAN) UNTUK JANA PENYATA GAJI
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
             <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-                    
-                    <!-- LAJUR KIRI: MAJIKAN & PEKERJA -->
                     <div>
-                        <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Majikan / Syarikat / Organisasi</h3>
+                        <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Majikan / Syarikat</h3>
                         <div style="margin-bottom: 15px; margin-top: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Majikan/Syarikat/Organisasi:</label>
                             <input type="text" id="inputNamaMajikan" placeholder="Contoh: SYARIKAT ABC SDN BHD" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
@@ -741,21 +756,22 @@ function paparModalLaporan(jenis) {
                         </div>
                     </div>
 
-                    <!-- LAJUR KANAN: ELAUN & POTONGAN -->
                     <div>
                         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Tambahan (Untuk Cetakan)</h3>
                         
-                        <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px;">Maklumat Elaun</p>
-                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                            <div style="flex: 2;">
-                                <input type="text" id="inputJenisElaun" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 13px;">
-                            </div>
-                            <div style="flex: 1;">
-                                <input type="text" id="inputNilaiElaun" placeholder="Nilai (RM)" class="number-input" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 13px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                            <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Maklumat Elaun</p>
+                            <button type="button" onclick="tambahBarisElaunModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
+                        </div>
+                        <div id="containerElaunModal">
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <div style="flex: 2;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                                <div style="flex: 1;"><input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                                <button type="button" style="visibility:hidden; padding:8px 12px;">X</button>
                             </div>
                         </div>
 
-                        <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px;">Maklumat Potongan Berkanun (Pekerja)</p>
+                        <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; margin-top: 15px;">Potongan Berkanun</p>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">KWSP</label>
                             <input type="text" id="inputKWSPPeratus" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;">
@@ -772,16 +788,16 @@ function paparModalLaporan(jenis) {
                             <input type="text" id="inputSIPNilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;">
                         </div>
 
-                        <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px;">Lain-lain Potongan</p>
-                        <div style="display: flex; gap: 10px; margin-bottom: 25px;">
-                            <div style="flex: 2;">
-                                <input type="text" id="inputJenisPotonganLain" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 13px;">
-                            </div>
-                            <div style="flex: 1;">
-                                <input type="text" id="inputPotonganLainPeratus" placeholder="%" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;">
-                            </div>
-                            <div style="flex: 1.5;">
-                                <input type="text" id="inputPotonganLainNilai" placeholder="Nilai (RM)" class="number-input" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 13px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                            <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Lain-lain Potongan</p>
+                            <button type="button" onclick="tambahBarisPotonganModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
+                        </div>
+                        <div id="containerPotonganModal" style="margin-bottom: 25px;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <div style="flex: 2;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                                <div style="flex: 1;"><input type="text" class="potong-pct" placeholder="%" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                                <div style="flex: 1.5;"><input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
+                                <button type="button" style="visibility:hidden; padding:8px 12px;">X</button>
                             </div>
                         </div>
                     </div>
@@ -796,13 +812,11 @@ function paparModalLaporan(jenis) {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         
     } else {
-        // REKA BENTUK 1 LAJUR KEKAL ASAL (UNTUK JANA LAPORAN PENUH)
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
             <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
                 
                 <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pekerja</h3>
-                
                 <div style="margin-bottom: 15px; margin-top: 15px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Pekerja:</label>
                     <input type="text" id="inputNamaLaporan" placeholder="Contoh: Ahmad Bin Abu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
@@ -825,38 +839,37 @@ function paparModalLaporan(jenis) {
 // Tindakan Selepas Butang 'Jana Cetakan' (dalam pop-up) Ditekan
 function teruskanJanaLaporan(jenis) {
     let namaMajikan = ""; let noDaftarMajikan = ""; let tempohUpah = "";
-    
-    // Pembolehubah tambahan untuk Elaun & Potongan
-    let jElaun="", nElaun="", kwspP="", kwspN="", perkesoP="", perkesoN="", sipP="", sipN="", jPotongL="", pPotongL="", nPotongL="";
+    let kwspP="", kwspN="", perkesoP="", perkesoN="", sipP="", sipN="";
+    let senaraiElaun = []; let senaraiPotongan = [];
 
     if (jenis === 'penyata') {
         let getV = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : "";
         namaMajikan = getV('inputNamaMajikan');
         noDaftarMajikan = getV('inputNoDaftarMajikan');
         tempohUpah = getV('inputTempohUpah');
+        kwspP = getV('inputKWSPPeratus'); kwspN = getV('inputKWSPNilai');
+        perkesoP = getV('inputPERKESOPeratus'); perkesoN = getV('inputPERKESONilai');
+        sipP = getV('inputSIPPeratus'); sipN = getV('inputSIPNilai');
+
+        document.querySelectorAll('#containerElaunModal > div').forEach(row => {
+            let j = row.querySelector('.elaun-jenis').value.trim();
+            let n = row.querySelector('.elaun-nilai').value.trim();
+            if (j || n) senaraiElaun.push({ jenis: j, nilai: n });
+        });
+
+        document.querySelectorAll('#containerPotonganModal > div').forEach(row => {
+            let j = row.querySelector('.potong-jenis').value.trim();
+            let p = row.querySelector('.potong-pct').value.trim();
+            let n = row.querySelector('.potong-nilai').value.trim();
+            if (j || p || n) senaraiPotongan.push({ jenis: j, pct: p, nilai: n });
+        });
     }
 
     let namaPekerja = document.getElementById('inputNamaLaporan') ? document.getElementById('inputNamaLaporan').value.trim() : ""; 
     let icPekerja = document.getElementById('inputICLaporan') ? document.getElementById('inputICLaporan').value.trim() : "";
-    
-    // Tangkap nilai-nilai tambahan (Elaun & Potongan) - Terpakai untuk kedua-dua jenis laporan
-    let getValPop = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : "";
-    jElaun = getValPop('inputJenisElaun');
-    nElaun = getValPop('inputNilaiElaun');
-    kwspP = getValPop('inputKWSPPeratus');
-    kwspN = getValPop('inputKWSPNilai');
-    perkesoP = getValPop('inputPERKESOPeratus');
-    perkesoN = getValPop('inputPERKESONilai');
-    sipP = getValPop('inputSIPPeratus');
-    sipN = getValPop('inputSIPNilai');
-    jPotongL = getValPop('inputJenisPotonganLain');
-    pPotongL = getValPop('inputPotonganLainPeratus');
-    nPotongL = getValPop('inputPotonganLainNilai');
-
     document.getElementById('modalLaporanPenuh').remove(); 
     
-    // Hantar SEMUA parameter baharu ke enjin cetak
-    prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, jenis, {jElaun, nElaun, kwspP, kwspN, perkesoP, perkesoN, sipP, sipN, jPotongL, pPotongL, nPotongL});
+    prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, jenis, { senaraiElaun, senaraiPotongan, kwspP, kwspN, perkesoP, perkesoN, sipP, sipN });
 }
 
 function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, jenisCetak, xtra) { 
@@ -1020,24 +1033,19 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
     
     let tarikhHariIni = new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }); 
     
-    // --- MULA KOD MAKLUMAT MAJIKAN & PEKERJA (PDF) ---
     let tajukHeaderHTML = "";
-    let contentSeterusnya = htmlLaporan; // Lalai: Kekalkan laporan kotak-kotak asal
+    let contentSeterusnya = htmlLaporan; 
     
-    // Fungsi bantuan untuk format RM dengan cekap
     let parseRMStr = (val) => {
         if (!val) return "";
         try { let clean = val.toString().replace(/[^\d\.\+\-\*\/\(\)]/g, ''); let calc = new Function('return ' + clean)(); if (calc > 0) return "RM " + calc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } catch(e) {}
         return val;
     };
     
-    // Fungsi untuk tambah peratusan pada label potongan
     let labelWithPct = (label, pct) => pct ? `${label} (${pct}%)` : label;
 
-    // SANGAT PENTING: PENGASINGAN FUNGSI CETAKAN BERLAKU DI SINI
     if (jenisCetak === 'penyata') {
         
-        // HANYA JIKA BUTANG 'JANA PENYATA GAJI' DITEKAN
         tajukHeaderHTML = `
             <div style="text-align: center; margin-bottom: 2px;">
                 <div style="font-size: 27px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; color: #000; letter-spacing: 1px;">PENYATA GAJI</div>
@@ -1075,9 +1083,17 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
 
         let htmlUpahDalaman = `
             ${trU("Gaji Pokok", "", parseRMStr(v_basic))}
-            ${trU("Elaun", "", parseRMStr(v_elaun))}
+            ${trU("Elaun Tetap", "", parseRMStr(v_elaun))}
         `;
-        if (xtra && (xtra.jElaun || xtra.nElaun)) { htmlUpahDalaman += trU(xtra.jElaun || "Elaun Tambahan", "", parseRMStr(xtra.nElaun)); }
+        
+        // Loop Elaun Dinamik dari Pop-up
+        if (xtra && xtra.senaraiElaun) {
+            xtra.senaraiElaun.forEach(elaun => {
+                if (elaun.jenis || elaun.nilai) {
+                    htmlUpahDalaman += trU(elaun.jenis || "Elaun Tambahan", "", parseRMStr(elaun.nilai));
+                }
+            });
+        }
         
         htmlUpahDalaman += `
             ${trU("OT Normal (1.5)", h_otb ? h_otb + " jam" : "", r_otb)}
@@ -1100,7 +1116,16 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
                 ${trP(labelWithPct("PERKESO", xtra.perkesoP), xtra.perkesoN)}
                 ${trP(labelWithPct("SIP/EIS", xtra.sipP), xtra.sipN)}
             `;
-            if (xtra.jPotongL || xtra.pPotongL || xtra.nPotongL) { htmlPotonganDalaman += trP(labelWithPct(xtra.jPotongL || "Lain-lain", xtra.pPotongL), xtra.nPotongL); }
+            
+            // Loop Potongan Dinamik dari Pop-up
+            if (xtra.senaraiPotongan) {
+                xtra.senaraiPotongan.forEach(potong => {
+                    if (potong.jenis || potong.pct || potong.nilai) {
+                        htmlPotonganDalaman += trP(labelWithPct(potong.jenis || "Lain-lain", potong.pct), potong.nilai);
+                    }
+                });
+            }
+            
         } else {
              htmlPotonganDalaman = `
                 ${trP("Pendahuluan", "")}
@@ -1130,17 +1155,14 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
         contentSeterusnya = penyataGajiHTML; 
 
     } else {
-        // JIKA BUTANG 'JANA LAPORAN PENUH' DITEKAN, KEKALKAN 100% RUPA LAMA
         tajukHeaderHTML = `
             <h1 class="main-title">PENGIRAAN DI BAWAH AKTA KERJA 1955</h1>
             <p class="subtitle">Tarikh Janaan: ${tarikhHariIni}</p>
         `;
-        contentSeterusnya = htmlLaporan; // Kekalkan laporan formula kotak-kotak asal
+        contentSeterusnya = htmlLaporan; 
     }
 
     let maklumatSyarikatPekerjaHTML = "";
-    
-    // Jadual MAKLUMAT PEKERJA (Nama & IC sahaja - format asal terpelihara)
     if (namaPekerja !== "" || icPekerja !== "") {
         maklumatSyarikatPekerjaHTML = `<div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;">
             <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT PEKERJA</div>
@@ -1159,7 +1181,6 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
     if (!tetingkapCetak) { alert("Pop-up disekat oleh pelayar web (browser) anda. Sila benarkan 'Pop-ups and redirects' untuk laman ini bagi melihat laporan."); return; }
     tetingkapCetak.document.write(cetakHTML); tetingkapCetak.document.close(); tetingkapCetak.focus(); 
 }
-
 // =====================================================
 // 6. SISTEM LOGIN & RESET 
 // =====================================================
