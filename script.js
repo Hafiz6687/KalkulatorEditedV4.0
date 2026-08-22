@@ -796,17 +796,17 @@ function paparModalLaporan(jenis) {
                         <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">Potongan Berkanun</p>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">KWSP</label>
-                            <input type="text" id="inputKWSPPeratus" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <input type="text" id="inputKWSPPeratus" value="11" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
                             <input type="text" id="inputKWSPNilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">PERKESO</label>
-                            <input type="text" id="inputPERKESOPeratus" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <input type="text" id="inputPERKESOPeratus" value="0.5" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
                             <input type="text" id="inputPERKESONilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">SIP / EIS</label>
-                            <input type="text" id="inputSIPPeratus" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <input type="text" id="inputSIPPeratus" value="0.5" placeholder="%" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
                             <input type="text" id="inputSIPNilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
 
@@ -818,7 +818,9 @@ function paparModalLaporan(jenis) {
                             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                                 <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;"></div>
                                 <div style="flex: 1;"><input type="text" class="potong-pct" placeholder="%" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;"></div>
-                                <div style="flex: 3;"><input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
+                                <div style="flex: 3; display: flex; gap: 5px;">
+                                    <input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1187,6 +1189,8 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
     }
 
     let maklumatSyarikatPekerjaHTML = "";
+    
+    // PENYELESAIAN MASALAH PDF (LAPORAN PENUH TAK KELUAR NO PEKERJA)
     if (namaPekerja !== "" || icPekerja !== "" || noPekerja !== "") {
         maklumatSyarikatPekerjaHTML = `<div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;">
             <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT PEKERJA</div>
