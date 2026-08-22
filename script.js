@@ -705,7 +705,7 @@ function tambahBarisElaunModal() {
     div.innerHTML = `
         <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
         <div style="flex: 2; display: flex; gap: 5px;">
-            <input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+            <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
             <button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
         </div>
     `;
@@ -722,7 +722,7 @@ function tambahBarisPotonganModal() {
             <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
         </div>
         <div style="flex: 3; display: flex; gap: 5px;">
-            <input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+            <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
             <button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
         </div>
     `;
@@ -740,11 +740,12 @@ function paparModalLaporan(jenis) {
         if (typeof senaraiElaunGlobal !== 'undefined' && senaraiElaunGlobal.length > 0) {
             senaraiElaunGlobal.forEach((elaun, index) => {
                 let btnX = index === 0 ? `<button type="button" style="visibility:hidden; padding:0 10px;">X</button>` : `<button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
+                let nFormatted = elaun.nilai ? formatSafeRM(elaun.nilai) : '';
                 elaunModalHtml += `
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                     <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" value="${elaun.jenis || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
                     <div style="flex: 2; display: flex; gap: 5px;">
-                        <input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" value="${elaun.nilai || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                        <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" value="${nFormatted}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         ${btnX}
                     </div>
                 </div>`;
@@ -754,7 +755,7 @@ function paparModalLaporan(jenis) {
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
                 <div style="flex: 2; display: flex; gap: 5px;">
-                    <input type="text" class="elaun-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                    <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                     <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
                 </div>
             </div>`;
@@ -793,7 +794,7 @@ function paparModalLaporan(jenis) {
                             <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; margin-top:0;">Maklumat Pendahuluan</p>
                             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                                 <div style="flex: 3;"><input type="text" value="Pendahuluan" readonly style="width: 100%; padding: 8px; border: 1px solid #eee; border-radius: 5px; font-size: 13px; background: #f9f9f9; color: #777;"></div>
-                                <div style="flex: 2;"><input type="text" id="inputPendahuluanNilai" class="number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
+                                <div style="flex: 2;"><input type="text" id="inputPendahuluanNilai" class="number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"></div>
                             </div>
                         </div>
                     </div>
@@ -820,19 +821,19 @@ function paparModalLaporan(jenis) {
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">KWSP</label>
                             <input type="text" id="inputKWSPPeratus" value="11" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
                             <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
-                            <input type="text" id="inputKWSPNilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                            <input type="text" id="inputKWSPNilai" placeholder="Nilai (RM)" class="number-input salary-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">PERKESO</label>
                             <input type="text" id="inputPERKESOPeratus" value="0.5" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
                             <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
-                            <input type="text" id="inputPERKESONilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                            <input type="text" id="inputPERKESONilai" placeholder="Nilai (RM)" class="number-input salary-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">SIP / EIS</label>
                             <input type="text" id="inputSIPPeratus" value="0.5" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
                             <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
-                            <input type="text" id="inputSIPNilai" placeholder="Nilai (RM)" class="number-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                            <input type="text" id="inputSIPNilai" placeholder="Nilai (RM)" class="number-input salary-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
 
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">
@@ -847,7 +848,7 @@ function paparModalLaporan(jenis) {
                                     <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
                                 </div>
                                 <div style="flex: 3; display: flex; gap: 5px;">
-                                    <input type="text" class="potong-nilai number-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                                    <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                                     <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
                                 </div>
                             </div>
@@ -1390,6 +1391,7 @@ window.tambahKalkulator = function(templateId) {
     if (rumusanCard) { rumusanCard.style.display = "block"; }
     clone.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
+
 // =====================================================
 // 8. ENJIN ELAUN DINAMIK GLOBAL (AUTO-TRIGGER)
 // =====================================================
@@ -1413,10 +1415,11 @@ function transformAllowanceField(allowInput) {
     if (senaraiElaunGlobal && senaraiElaunGlobal.length > 0) {
         senaraiElaunGlobal.forEach((elaun, i) => {
             let btnX = i === 0 ? `<button type="button" style="visibility:hidden; padding:0 10px;">X</button>` : `<button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
+            let nFormatted = elaun.nilai ? formatSafeRM(elaun.nilai) : '';
             htmlRows += `
                 <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
-                    <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" value="${elaun.jenis || ''}" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="updateGlobalElaunSum(this)">
-                    <input type="text" class="global-elaun-nilai number-input" placeholder="Nilai (RM)" value="${elaun.nilai || ''}" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+                    <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" value="${elaun.jenis || ''}" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="this.value = formatTitleCase(this.value); updateGlobalElaunSum(this);">
+                    <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" value="${nFormatted}" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
                     ${btnX}
                 </div>
             `;
@@ -1424,8 +1427,8 @@ function transformAllowanceField(allowInput) {
     } else {
         htmlRows = `
             <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
-                <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="updateGlobalElaunSum(this)">
-                <input type="text" class="global-elaun-nilai number-input" placeholder="Nilai (RM)" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+                <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="this.value = formatTitleCase(this.value); updateGlobalElaunSum(this);">
+                <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
                 <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
             </div>
         `;
@@ -1474,8 +1477,8 @@ window.tambahBarisElaunGlobalKalkulator = function(btn) {
     row.className = 'elaun-row-kalkulator';
     row.style.cssText = "display:flex; gap:5px; margin-bottom:5px;";
     row.innerHTML = `
-        <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="updateGlobalElaunSum(this)">
-        <input type="text" class="global-elaun-nilai number-input" placeholder="Nilai (RM)" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+        <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="this.value = formatTitleCase(this.value); updateGlobalElaunSum(this);">
+        <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="flex:2; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
         <button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
     `;
     list.appendChild(row);
