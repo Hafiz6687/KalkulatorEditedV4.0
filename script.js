@@ -696,6 +696,59 @@ function formatIC(str) {
     return val.slice(0,6) + '-' + val.slice(6,8) + '-' + val.slice(8,12);
 }
 
+// FUNGSI AUTO-KIRA POTONGAN BERKANUN (KWSP, PERKESO, SIP) 
+window.autoKiraPotonganBerkanun = function() {
+    let baseBasic = 0;
+    let baseElaunAsal = 0;
+
+    // 1. Sedut Gaji Pokok dan Elaun dari Kalkulator Utama di latar belakang
+    document.querySelectorAll('.calculator-card:not(.hidden-template)').forEach(kad => {
+        ["orpBasicSalary", "otBasicSalary", "rhBasicSalary", "rhMoreBasicSalary", "section18ABasicSalary", "otRHBasicSalary", "phBasicSalary", "otPHBasicSalary", "ggnUniBasic"].forEach(id => {
+            let el = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`);
+            if (el && evaluateSmartMath(el.value) > 0 && baseBasic === 0) baseBasic = evaluateSmartMath(el.value);
+        });
+        ["orpAllowance", "otAllowance", "rhAllowance", "rhMoreAllowance", "section18AAllowance", "otRHAllowance", "phAllowance", "otPHAllowance", "ggnUniAllowance"].forEach(id => {
+            let el = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`);
+            if (el && evaluateSmartMath(el.value) > 0 && baseElaunAsal === 0) baseElaunAsal = evaluateSmartMath(el.value);
+        });
+    });
+
+    // 2. Kumpul Elaun dari Pop-up Penyata Gaji
+    let totalElaunPopup = 0;
+    let adaElaunPopup = false;
+    let containerElaunModal = document.getElementById('containerElaunModal');
+    if(containerElaunModal) {
+        containerElaunModal.querySelectorAll('.elaun-nilai').forEach(input => {
+            let val = evaluateSmartMath(input.value);
+            if (val > 0) totalElaunPopup += val;
+            if (input.value.trim() !== "") adaElaunPopup = true;
+        });
+    }
+
+    // 3. Campurkan Gaji Pokok + Elaun
+    let finalElaun = adaElaunPopup ? totalElaunPopup : baseElaunAsal;
+    let totalGajiElaun = baseBasic + finalElaun;
+
+    // 4. Proses Kiraan Berkanun
+    let kwspInput = document.getElementById('inputKWSPPeratus');
+    let perkesoInput = document.getElementById('inputPERKESOPeratus');
+    let sipInput = document.getElementById('inputSIPPeratus');
+
+    if(kwspInput && perkesoInput && sipInput) {
+        let pctKWSP = parseFloat(kwspInput.value) || 0;
+        let pctPERKESO = parseFloat(perkesoInput.value) || 0;
+        let pctSIP = parseFloat(sipInput.value) || 0;
+
+        let kwspNilai = document.getElementById('inputKWSPNilai');
+        let perkesoNilai = document.getElementById('inputPERKESONilai');
+        let sipNilai = document.getElementById('inputSIPNilai');
+
+        if(kwspNilai && document.activeElement !== kwspNilai) kwspNilai.value = (pctKWSP > 0 && totalGajiElaun > 0) ? formatSafeRM(totalGajiElaun * (pctKWSP / 100)) : "";
+        if(perkesoNilai && document.activeElement !== perkesoNilai) perkesoNilai.value = (pctPERKESO > 0 && totalGajiElaun > 0) ? formatSafeRM(totalGajiElaun * (pctPERKESO / 100)) : "";
+        if(sipNilai && document.activeElement !== sipNilai) sipNilai.value = (pctSIP > 0 && totalGajiElaun > 0) ? formatSafeRM(totalGajiElaun * (pctSIP / 100)) : "";
+    }
+};
+
 // Butang 1 & 2
 function janaLaporanPenuh() { paparModalLaporan('penuh'); }
 function janaPenyataGaji() { 
@@ -759,8 +812,8 @@ function tambahBarisElaunModal() {
     div.innerHTML = `
         <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
         <div style="flex: 2; display: flex; gap: 5px;">
-            <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
-            <button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+            <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;" oninput="autoKiraPotonganBerkanun()">
+            <button type="button" onclick="this.parentElement.parentElement.remove(); autoKiraPotonganBerkanun();" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
         </div>
     `;
     document.getElementById('containerElaunModal').appendChild(div);
@@ -859,7 +912,7 @@ function paparModalLaporan(jenis) {
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
                 <div style="flex: 2; display: flex; gap: 5px;">
-                    <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                    <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;" oninput="autoKiraPotonganBerkanun()">
                     <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
                 </div>
             </div>`;
@@ -925,19 +978,19 @@ function paparModalLaporan(jenis) {
                         <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">Potongan Berkanun</p>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">KWSP</label>
-                            <input type="text" id="inputKWSPPeratus" value="11" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <input type="text" id="inputKWSPPeratus" value="11" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="autoKiraPotonganBerkanun()">
                             <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
                             <input type="text" id="inputKWSPNilai" placeholder="Nilai (RM)" class="number-input salary-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">PERKESO</label>
-                            <input type="text" id="inputPERKESOPeratus" value="0.5" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <input type="text" id="inputPERKESOPeratus" value="0.5" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="autoKiraPotonganBerkanun()">
                             <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
                             <input type="text" id="inputPERKESONilai" placeholder="Nilai (RM)" class="number-input salary-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">SIP / EIS</label>
-                            <input type="text" id="inputSIPPeratus" value="0.5" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                            <input type="text" id="inputSIPPeratus" value="0.2" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="autoKiraPotonganBerkanun()">
                             <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
                             <input type="text" id="inputSIPNilai" placeholder="Nilai (RM)" class="number-input salary-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
@@ -971,7 +1024,8 @@ function paparModalLaporan(jenis) {
         </div>`;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-        // TRIGGER TOUR LEPAS RENDER MODAL
+        // TRIGGER AUTO CALCULATION & TOUR LEPAS RENDER MODAL
+        autoKiraPotonganBerkanun();
         if (!tourElaunPopupDitunjuk) {
             tourElaunPopupDitunjuk = true;
             setTimeout(() => tunjukTourElaunPopup(), 400); // Lengah sikit bagi siap buka
