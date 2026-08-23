@@ -1095,8 +1095,9 @@ function teruskanJanaLaporan(jenis) {
     let kwspP="", kwspN="", perkesoP="", perkesoN="", sipP="", sipN="", pendahuluanN="";
     let senaraiElaun = []; let senaraiPotongan = [];
 
+    let getV = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : "";
+
     if (jenis === 'penyata') {
-        let getV = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : "";
         namaMajikan = getV('inputNamaMajikan');
         noDaftarMajikan = getV('inputNoDaftarMajikan');
         tempohUpah = getV('inputTempohUpah');
@@ -1119,12 +1120,52 @@ function teruskanJanaLaporan(jenis) {
         });
     }
 
-    let namaPekerja = document.getElementById('inputNamaLaporan') ? document.getElementById('inputNamaLaporan').value.trim() : ""; 
-    let icPekerja = document.getElementById('inputICLaporan') ? document.getElementById('inputICLaporan').value.trim() : "";
-    let noPekerja = document.getElementById('inputNoPekerjaLaporan') ? document.getElementById('inputNoPekerjaLaporan').value.trim() : "";
+    let namaPekerja = getV('inputNamaLaporan');
+    let icPekerja = getV('inputICLaporan');
+    let noPekerja = getV('inputNoPekerjaLaporan');
+
+    // ++ ENJIN REKOD AUTOMATIK KE JADUAL MAKLUMAT GAJI ++
+    tambahRekodKeMaklumatGaji(jenis, namaPekerja, namaMajikan, tempohUpah);
+
     document.getElementById('modalLaporanPenuh').remove(); 
     
     prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenis, { senaraiElaun, senaraiPotongan, kwspP, kwspN, perkesoP, perkesoN, sipP, sipN, pendahuluanN });
+}
+
+// ++ FUNGSI BAHARU: DAFTAR REKOD AUTOMATIK ++
+function tambahRekodKeMaklumatGaji(jenis, namaPekerja, majikan, tempoh) {
+    let tbody = document.querySelector('#card-maklumatGaji tbody');
+    if (!tbody) return;
+
+    let jenisTeks = jenis === 'penyata' ? 'Penyata Gaji' : 'Laporan';
+    let warnaTeks = jenis === 'penyata' ? '#198754' : '#0d6efd'; 
+    let warnaBg   = jenis === 'penyata' ? '#d1e7dd' : '#cfe2ff';
+
+    let tr = document.createElement('tr');
+    tr.style.borderBottom = "1px solid #eee";
+    
+    // Reka bentuk baris yang akan dijana
+    tr.innerHTML = `
+        <td style="padding: 15px; font-size: 13px; font-weight: bold; color: ${warnaTeks};">
+            <span style="background: ${warnaBg}; padding: 4px 8px; border-radius: 4px;">${jenisTeks}</span>
+        </td>
+        <td style="padding: 15px; font-size: 13px;"><strong style="color: #333;">${namaPekerja || '-'}</strong></td>
+        <td style="padding: 15px; font-size: 13px;"><strong style="color: #333;">${majikan || '-'}</strong></td>
+        <td style="padding: 15px; text-align: center; font-size: 13px; color: #444;">${tempoh || '-'}</td>
+        <td style="padding: 15px; text-align: center;">
+            <button style="background: #0d6efd; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📂 Buka</button>
+            <button onclick="this.closest('tr').remove()" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🗑️ Hapus</button>
+        </td>
+    `;
+    
+    // Logik pembersihan: Kalau baris contoh / *dummy* masih ada (KBR/10103...), kita buang supaya kemas
+    let firstRow = tbody.querySelector('tr');
+    if (firstRow && firstRow.innerHTML.includes('KBR/10103')) {
+        firstRow.remove();
+    }
+
+    // Masukkan rekod baharu di bahagian atas (susunan terbaru di atas)
+    tbody.prepend(tr);
 }
 
 function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenisCetak, xtra) { 
