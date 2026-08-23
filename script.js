@@ -1583,6 +1583,11 @@ function resetSemua() {
         let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
         semuaKadAktif.forEach(kad => kad.remove());
         resetRumusan();
+        
+        // ++ CUCI MEMORI ELAUN GLOBAL UNTUK SESI BARU ++
+        senaraiElaunGlobal = [];
+        allowanceCardTransformed = false;
+        
         let kadRumusan = document.querySelector('.rumusan-card');
         if (kadRumusan) {
             kadRumusan.style.display = "none";
