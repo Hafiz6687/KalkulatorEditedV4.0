@@ -821,22 +821,9 @@ function tunjukTourElaunPopup() {
                 Panduan Senarai Elaun
             </h4>
             
-            <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: bold; color: #1f4e79; background: #e8eaed; padding: 6px 8px; border-radius: 4px;">
+            <p style="margin: 0 0 15px 0; font-size: 11.5px; font-weight: bold; color: #1f4e79; background: #e8eaed; padding: 10px; border-radius: 4px; line-height: 1.5;">
                 CATATAN: Semua ELAUN selain yang telah dinyatakan di dalam Bahagian Kalkulator (Sama ada dibayar di dalam waktu kerja normal atau di luar waktu kerja normal).
             </p>
-
-            <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold; color: #333;">Maklumat Elaun adalah Elaun yang <span style="color:#d9534f;">SELAIN / TIDAK TERMASUK:</span></p>
-            
-            <ul style="margin: 0 0 12px 0; padding-left: 20px; font-size: 11px; color: #555; line-height: 1.4;">
-                <li>a) NILAI tempat tinggal, bekalan makanan, minyak, lampu atau air atau rawatan perubatan atau yang diluluskan JTK;</li>
-                <li>b) Bayaran CARUMAN;</li>
-                <li>c) Elaun Pengangkutan (Kenderaan/minyak);</li>
-                <li>d) Bayaran Khas perbelanjaan pekerjaan;</li>
-                <li>e) Bayaran persaraan/pemberhentian/pampasan;</li>
-                <li>f) Bonus tahunan.</li>
-            </ul>
-            
-            <p style="margin: 0 0 15px 0; font-size: 11px; font-weight: bold; color: #d9534f; background: #fff0f0; padding: 6px 8px; border-radius: 4px; border-left: 3px solid #d9534f;">* DAN TIDAK TERMASUK bayaran di luar waktu kerja normal.</p>
             
             <button id="btnTutupTourPopup" style="width: 100%; background: #1f4e79; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s;">OK, SAYA FAHAM</button>
         </div>
