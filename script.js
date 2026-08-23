@@ -701,7 +701,6 @@ window.autoKiraPotonganBerkanun = function() {
     let baseBasic = 0;
     let baseElaunAsal = 0;
 
-    // 1. Sedut Gaji Pokok dan Elaun dari Kalkulator Utama di latar belakang
     document.querySelectorAll('.calculator-card:not(.hidden-template)').forEach(kad => {
         ["orpBasicSalary", "otBasicSalary", "rhBasicSalary", "rhMoreBasicSalary", "section18ABasicSalary", "otRHBasicSalary", "phBasicSalary", "otPHBasicSalary", "ggnUniBasic"].forEach(id => {
             let el = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`);
@@ -713,7 +712,6 @@ window.autoKiraPotonganBerkanun = function() {
         });
     });
 
-    // 2. Kumpul Elaun dari Pop-up Penyata Gaji
     let totalElaunPopup = 0;
     let adaElaunPopup = false;
     let containerElaunModal = document.getElementById('containerElaunModal');
@@ -725,11 +723,9 @@ window.autoKiraPotonganBerkanun = function() {
         });
     }
 
-    // 3. Campurkan Gaji Pokok + Elaun
     let finalElaun = adaElaunPopup ? totalElaunPopup : baseElaunAsal;
     let totalGajiElaun = baseBasic + finalElaun;
 
-    // 4. Proses Kiraan Berkanun
     let kwspInput = document.getElementById('inputKWSPPeratus');
     let perkesoInput = document.getElementById('inputPERKESOPeratus');
     let sipInput = document.getElementById('inputSIPPeratus');
@@ -756,7 +752,6 @@ function janaPenyataGaji() {
     let orpCardWujud = null;
     let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template)');
     
-    // Semak sama ada ORP wujud dan dah dikira
     semuaKadAktif.forEach(kad => {
         let orpData = kad.querySelector('[id="orpData"], [data-original-id="orpData"]');
         if (orpData) {
@@ -769,8 +764,6 @@ function janaPenyataGaji() {
 
     if (!orpCardLengkap) {
         alert("Peringatan: Sila lengkapkan Kalkulator Kadar Upah Biasa (ORP) terlebih dahulu untuk menjana Penyata Gaji.");
-        
-        // Auto-papar atau auto-skrol ke ORP
         if (!orpCardWujud) {
             if (typeof window.tambahKalkulator === 'function') {
                 window.tambahKalkulator('orp');
@@ -781,7 +774,6 @@ function janaPenyataGaji() {
             orpCardWujud.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         
-        // Auto-trigger Pop-Up sebaik sahaja user selesai kira ORP
         if (orpCardWujud) {
             let kiraBtn = orpCardWujud.querySelector('button[data-action-func*="calculateORP"]');
             if (!kiraBtn) kiraBtn = orpCardWujud.querySelector('button[onclick*="calculateORP"]');
@@ -792,7 +784,7 @@ function janaPenyataGaji() {
                         let dataEl = orpCardWujud.querySelector('[id="orpData"], [data-original-id="orpData"]');
                         if (dataEl && window.getComputedStyle(dataEl).display !== "none") {
                             paparModalLaporan('penyata');
-                            kiraBtn.removeEventListener('click', autoPopup); // Buang listener supaya tak trigger berkali-kali
+                            kiraBtn.removeEventListener('click', autoPopup); 
                         }
                     }, 500);
                 };
@@ -801,7 +793,6 @@ function janaPenyataGaji() {
         }
         return;
     }
-
     paparModalLaporan('penyata'); 
 }
 
@@ -844,7 +835,6 @@ function tunjukTourElaunPopup() {
     
     targetContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
     
-    // Create overlay INSIDE the white box so it stays within the correct z-index trap
     let overlay = document.createElement('div');
     overlay.id = 'tourElaunPopupOverlay';
     overlay.style.cssText = `position: absolute; top: 0; left: 0; width: 100%; height: ${whiteBox.scrollHeight}px; background: rgba(0,0,0,0.75); z-index: 100; border-radius: 10px; transition: opacity 0.3s;`;
@@ -856,7 +846,7 @@ function tunjukTourElaunPopup() {
     let originalPadding = targetContainer.style.padding;
     
     targetContainer.style.position = 'relative';
-    targetContainer.style.zIndex = '101'; // Higher than the internal overlay
+    targetContainer.style.zIndex = '101'; 
     targetContainer.style.background = '#fff';
     targetContainer.style.padding = '15px';
     targetContainer.style.borderRadius = '8px';
@@ -906,8 +896,6 @@ function paparModalLaporan(jenis) {
     let existingModal = document.getElementById('modalLaporanPenuh'); if(existingModal) existingModal.remove();
 
     if (jenis === 'penyata') {
-        
-        // KEKAL KOSONG DEFAULT (Auto-Generate Dibuang Atas Arahan)
         let elaunModalHtml = `
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
@@ -1255,32 +1243,35 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
     
     let tarikhHariIni = new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }); 
     
-    let tajukHeaderHTML = "";
-    let contentSeterusnya = htmlLaporan; 
-    
     let parseRMStr = (val) => {
         if (!val) return "";
         try { let clean = val.toString().replace(/[^\d\.\+\-\*\/\(\)]/g, ''); let calc = new Function('return ' + clean)(); if (calc > 0) return "RM " + calc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } catch(e) {}
         return val;
+    };
+
+    let getValNum = (val) => {
+        if (!val) return 0;
+        try { let clean = val.toString().replace(/[^\d\.\+\-\*\/\(\)]/g, ''); let calc = new Function('return ' + clean)(); return calc > 0 ? calc : 0; } catch(e) { return 0; }
     };
     
     let labelWithPct = (label, pct) => pct ? `${label} (${pct}%)` : label;
 
     if (jenisCetak === 'penyata') {
         
-        tajukHeaderHTML = `
-            <div style="text-align: center; margin-bottom: 2px;">
-                <div style="font-size: 27px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; color: #000; letter-spacing: 1px;">PENYATA GAJI</div>
-                <h1 class="main-title">${namaMajikan || '-'}</h1>
-                <h1 class="main-title" style="border-bottom: none; padding-bottom: 0; margin-top: 5px;">(No. Pendaftaran: ${noDaftarMajikan || '-'})</h1>
+        let tajukHeaderHTML = `
+            <div style="text-align: center; margin-bottom: 15px;">
+                <div style="font-size: 27px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #000; letter-spacing: 1px;">PENYATA GAJI</div>
+                <div style="font-size: 27px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #000; letter-spacing: 1px;">${namaMajikan || '-'}</div>
+                <div style="font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #333; text-transform: uppercase;">(No. Pendaftaran: ${noDaftarMajikan || '-'})</div>
+                <div style="font-size: 11px; color: #555; margin-top: 5px;">Tarikh Janaan: ${tarikhHariIni} &nbsp;|&nbsp; Tempoh Upah: ${tempohUpah || '-'}</div>
             </div>
-            <p class="subtitle">Tarikh Janaan: ${tarikhHariIni} &nbsp;|&nbsp; Tempoh Upah: ${tempohUpah || '-'}</p>
         `;
         
         let v_basic = "", v_elaun = "";
         let r_otb = "", h_otb = ""; let r_rh05 = "", h_rh05 = ""; let r_rh1 = "", h_rh1 = "";
         let r_otrh = "", h_otrh = ""; let r_ph = "", h_ph = ""; let r_otph = "", h_otph = "";
         let r_cs = "", h_cs = ""; let r_ct = "", h_ct = "";
+        let totalUpah = 0; let totalPotongan = 0;
 
         semuaKadAktif.forEach(kad => {
             let v = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.value.trim() : ""; };
@@ -1300,69 +1291,139 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
         });
 
         let trU = (label, detail, amt) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #eee; width: 45%; text-align: left;">${label}</td><td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: center; width: 25%; color: #555; font-size: 10px;">${detail}</td><td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right; width: 30%; font-weight: bold;">${amt}</td></tr>`;
-        let trP = (label, amt) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #eee; width: 60%; text-align: left;">${label}</td><td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right; width: 40%; font-weight: bold; color: #d9534f;">${amt ? parseRMStr(amt) : ''}</td></tr>`;
-        let trKosong = `<tr><td colspan="2" style="padding: 8px 12px; border-bottom: 1px solid #eee; height: 32px;"></td></tr>`;
-
-        let htmlUpahDalaman = `
-            ${trU("Gaji Pokok", "", parseRMStr(v_basic))}
-        `;
+        let trP = (label, amt) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #eee; width: 60%; text-align: left;">${label}</td><td style="padding: 8px 12px; border-bottom: 1px solid #eee; text-align: right; width: 40%; font-weight: bold; color: #d9534f;">${amt}</td></tr>`;
         
-        // ELAUN AUTO-EXTRACT
+        // --- PROSES BUTIRAN UPAH ---
+        let htmlUpahDalaman = "";
+        let vBasicNum = getValNum(v_basic);
+        if(vBasicNum > 0) {
+            htmlUpahDalaman += trU("Gaji Pokok", "", parseRMStr(v_basic));
+            totalUpah += vBasicNum;
+        }
+
+        // Sedut elaun dari kalkulator ATAU elaun tambahan
         let jumlahElaunPopUp = 0;
         if (xtra && xtra.senaraiElaun && xtra.senaraiElaun.length > 0) {
             xtra.senaraiElaun.forEach(elaun => {
-                if (elaun.jenis || elaun.nilai) {
+                let n = getValNum(elaun.nilai);
+                if (elaun.jenis || n > 0) {
                     htmlUpahDalaman += trU(elaun.jenis || "Elaun Tambahan", "", parseRMStr(elaun.nilai));
+                    totalUpah += n;
                     jumlahElaunPopUp++;
                 }
             });
         }
-        if (jumlahElaunPopUp === 0 && v_elaun) {
-            htmlUpahDalaman += trU("Elaun Tetap", "", parseRMStr(v_elaun));
-        }
         
-        htmlUpahDalaman += `
-            ${trU("OT Normal (1.5)", h_otb ? h_otb + " jam" : "", r_otb)}
-            ${trU("Kerja Hari Rehat (0.5)", h_rh05 ? h_rh05 + " hari" : "", r_rh05)}
-            ${trU("Kerja Hari Rehat (1.0)", h_rh1 ? h_rh1 + " hari" : "", r_rh1)}
-            ${trU("OT Hari Rehat (2.0)", h_otrh ? h_otrh + " jam" : "", r_otrh)}
-            ${trU("Kerja Hari Kelepasan (2.0)", h_ph ? h_ph + " hari" : "", r_ph)}
-            ${trU("OT Hari Kelepasan (3.0)", h_otph ? h_otph + " jam" : "", r_otph)}
-            ${trU("Cuti Sakit", h_cs ? h_cs + " hari" : "", r_cs)}
-            ${trU("Cuti Tahunan", h_ct ? h_ct + " hari" : "", r_ct)}
-        `;
+        let vElaunNum = getValNum(v_elaun);
+        if (jumlahElaunPopUp === 0 && vElaunNum > 0) {
+            htmlUpahDalaman += trU("Elaun", "", parseRMStr(v_elaun));
+            totalUpah += vElaunNum;
+        }
 
+        // Komponen Upah Lain (hanya yang diisi)
+        let itemsUpah = [
+            { label: "OT Normal (1.5)", detail: h_otb ? h_otb + " jam" : "", amt: r_otb },
+            { label: "Kerja Hari Rehat (0.5)", detail: h_rh05 ? h_rh05 + " hari" : "", amt: r_rh05 },
+            { label: "Kerja Hari Rehat (1.0)", detail: h_rh1 ? h_rh1 + " hari" : "", amt: r_rh1 },
+            { label: "OT Hari Rehat (2.0)", detail: h_otrh ? h_otrh + " jam" : "", amt: r_otrh },
+            { label: "Kerja Hari Kelepasan (2.0)", detail: h_ph ? h_ph + " hari" : "", amt: r_ph },
+            { label: "OT Hari Kelepasan (3.0)", detail: h_otph ? h_otph + " jam" : "", amt: r_otph },
+            { label: "Cuti Sakit", detail: h_cs ? h_cs + " hari" : "", amt: r_cs },
+            { label: "Cuti Tahunan", detail: h_ct ? h_ct + " hari" : "", amt: r_ct }
+        ];
+
+        itemsUpah.forEach(i => {
+            let n = getValNum(i.amt);
+            if (n > 0) {
+                htmlUpahDalaman += trU(i.label, i.detail, parseRMStr(i.amt));
+                totalUpah += n;
+            }
+        });
+
+        // Baris JUMLAH UPAH
+        htmlUpahDalaman += `<tr><td colspan="2" style="padding: 8px 12px; border-top: 2px solid #ccc; font-weight: bold; text-align: right; background:#f4f6f9;">JUMLAH UPAH</td><td style="padding: 8px 12px; border-top: 2px solid #ccc; font-weight: bold; text-align: right; background:#f4f6f9;">${parseRMStr(totalUpah)}</td></tr>`;
         let upahHTML = `<table style="width: 100%; border-collapse: collapse; font-size: 11px;">${htmlUpahDalaman}</table>`;
 
+        // --- PROSES BUTIRAN POTONGAN ---
         let htmlPotonganDalaman = "";
         if (xtra) {
-            htmlPotonganDalaman = `
-                ${trP("Pendahuluan", xtra.pendahuluanN)}
-                ${trP(labelWithPct("KWSP", xtra.kwspP), xtra.kwspN)}
-                ${trP(labelWithPct("PERKESO", xtra.perkesoP), xtra.perkesoN)}
-                ${trP(labelWithPct("SIP/EIS", xtra.sipP), xtra.sipN)}
-            `;
-            
+            let itemsPotongan = [
+                { label: "Pendahuluan", amt: xtra.pendahuluanN },
+                { label: labelWithPct("KWSP", xtra.kwspP), amt: xtra.kwspN },
+                { label: labelWithPct("PERKESO", xtra.perkesoP), amt: xtra.perkesoN },
+                { label: labelWithPct("SIP/EIS", xtra.sipP), amt: xtra.sipN }
+            ];
+
+            itemsPotongan.forEach(i => {
+                let n = getValNum(i.amt);
+                if (n > 0) {
+                    htmlPotonganDalaman += trP(i.label, parseRMStr(i.amt));
+                    totalPotongan += n;
+                }
+            });
+
             if (xtra.senaraiPotongan) {
                 xtra.senaraiPotongan.forEach(potong => {
-                    if (potong.jenis || potong.pct || potong.nilai) {
-                        htmlPotonganDalaman += trP(labelWithPct(potong.jenis || "Lain-lain", potong.pct), potong.nilai);
+                    let n = getValNum(potong.nilai);
+                    if (potong.jenis || n > 0) {
+                        htmlPotonganDalaman += trP(labelWithPct(potong.jenis || "Lain-lain", potong.pct), parseRMStr(n));
+                        totalPotongan += n;
                     }
                 });
             }
-            
-        } else {
-             htmlPotonganDalaman = `
-                ${trP("Pendahuluan", "")}
-                ${trP("KWSP", "")}
-                ${trP("PERKESO", "")}
-                ${trP("SIP/EIS", "")}
-            `;
         }
-
-        htmlPotonganDalaman += `${trKosong}${trKosong}${trKosong}${trKosong}${trKosong}${trKosong}`;
         
+        // Baris JUMLAH POTONGAN
+        htmlPotonganDalaman += `<tr><td style="padding: 8px 12px; border-top: 2px solid #ccc; font-weight: bold; text-align: right; background:#fff0f0;">JUMLAH POTONGAN</td><td style="padding: 8px 12px; border-top: 2px solid #ccc; font-weight: bold; text-align: right; color:#d9534f; background:#fff0f0;">${parseRMStr(totalPotongan)}</td></tr>`;
         let potongHTML = `<table style="width: 100%; border-collapse: collapse; font-size: 11px;">${htmlPotonganDalaman}</table>`;
+
+        // --- PROSES JUMLAH KESELURUHAN UPAH (BERSIH) ---
+        let jumlahBersih = totalUpah - totalPotongan;
+        let bersihHtml = `
+            <div style="grid-column: 1 / -1; background: #1f4e79; color: white; padding: 12px 20px; border-radius: 6px; text-align: right; margin-bottom: 15px; display:flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 14px; font-weight: normal; letter-spacing: 0.5px;">JUMLAH KESELURUHAN UPAH (BERSIH)</span>
+                <span style="font-size: 18px; font-weight: bold;">${parseRMStr(jumlahBersih)}</span>
+            </div>
+        `;
+
+        // --- PROSES MAKLUMAT BERKAITAN PERKHIDMATAN ---
+        let v_ct_layak = "-", v_cs_layak = "-", v_ch_layak = "-";
+        semuaKadAktif.forEach(kad => {
+            let v = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.value.trim() : ""; };
+            if(!v_ct_layak || v_ct_layak === "-") v_ct_layak = v("cutiLayak");
+            if(!v_cs_layak || v_cs_layak === "-") v_cs_layak = v("sakitLayak");
+            if(!v_ch_layak || v_ch_layak === "-") v_ch_layak = v("hospLayak");
+        });
+        
+        v_ct_layak = (v_ct_layak && v_ct_layak !== "-") ? v_ct_layak + " Hari" : "-";
+        v_cs_layak = (v_cs_layak && v_cs_layak !== "-") ? v_cs_layak + " Hari" : "-";
+        v_ch_layak = (v_ch_layak && v_ch_layak !== "-") ? v_ch_layak + " Hari" : "-";
+
+        let htmlMaklumatPerkhidmatan = `
+            <div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;">
+                <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT BERKAITAN PERKHIDMATAN</div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center;">
+                    <thead>
+                        <tr style="background: #f4f6f9; border-bottom: 1px solid #ccc;">
+                            <th style="padding: 8px;">Kelayakan</th>
+                            <th style="padding: 8px;">Hari Kelepasan</th>
+                            <th style="padding: 8px;">Cuti Tahunan</th>
+                            <th style="padding: 8px;">Cuti Sakit</th>
+                            <th style="padding: 8px;">Cuti Hospitalisasi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 8px; font-weight: bold; background: #fafafa;">Tahunan</td>
+                            <td style="padding: 8px; font-weight: bold;">11 Hari</td>
+                            <td style="padding: 8px; font-weight: bold;">${v_ct_layak}</td>
+                            <td style="padding: 8px; font-weight: bold;">${v_cs_layak}</td>
+                            <td style="padding: 8px; font-weight: bold;">${v_ch_layak}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
 
         let penyataGajiHTML = `
         <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 15px; margin-bottom: 15px; grid-column: 1 / -1; align-items: start;">
@@ -1375,12 +1436,14 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
                 ${potongHTML}
             </div>
         </div>
+        ${bersihHtml}
+        ${htmlMaklumatPerkhidmatan}
         `;
 
         contentSeterusnya = penyataGajiHTML; 
 
     } else {
-        tajukHeaderHTML = `
+        let tajukHeaderHTML = `
             <h1 class="main-title">PENGIRAAN DI BAWAH AKTA KERJA 1955</h1>
             <p class="subtitle">Tarikh Janaan: ${tarikhHariIni}</p>
         `;
@@ -1402,7 +1465,7 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
 
     let cssBaru = `.floating-action-bar { position: fixed; top: 25px; right: 25px; display: flex; z-index: 9999; align-items: center; } .kebab-btn { background: #0d6efd; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 24px; cursor: pointer; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: 0.2s; display: flex; justify-content: center; align-items: center; line-height: 1; padding-bottom: 5px; } .kebab-btn:hover { background: #0b5ed7; transform: scale(1.05); } .kebab-dropdown { display: none; position: absolute; right: 0; top: 115%; background-color: white; min-width: 170px; box-shadow: 0px 4px 15px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; border: 1px solid #ddd; text-align: left; } .kebab-dropdown a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; font-weight: bold; transition: 0.2s; } .kebab-dropdown a:hover { background-color: #f4f6f9; } .kebab-dropdown a:first-child { border-bottom: 1px solid #eee; } @media print { .floating-action-bar, .print-btn-container { display: none !important; } }`;
     
-    let cetakHTML = `<!DOCTYPE html><html lang="ms"><head><meta charset="UTF-8"><title>Laporan Pengiraan Akta Kerja 1955</title><style>* { font-family: 'Segoe UI', Arial, sans-serif; box-sizing: border-box; } body { color: #111; line-height: 1.35; padding: 20px; font-size: 11px; background: #fdfdfd; margin-bottom: 80px; } .main-title { text-align: center; margin-bottom: 2px; font-size: 18px; font-weight: bold; border-bottom: 2px solid #222; padding-bottom: 6px; text-transform: uppercase; color: #000; letter-spacing: 1px; } .subtitle { text-align: center; color: #555; margin-top: 5px; margin-bottom: 25px; font-size: 11px; } .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; align-items: start; } .report-box { border: 1px solid #aaa; padding: 12px; border-radius: 6px; page-break-inside: avoid; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); } .report-header { font-size: 13px; font-weight: 800; text-align: center; background: #e8eaed; padding: 8px; border-bottom: 1px solid #aaa; margin: -12px -12px 12px -12px; border-radius: 6px 6px 0 0; text-transform: uppercase; color: #1a1a1a; letter-spacing: 0.5px; } .report-section-title { font-size: 10px; font-weight: bold; color: #1f4e79; letter-spacing: 0.5px; border-bottom: 1px dashed #ccc; padding-bottom: 3px; margin-bottom: 6px; text-transform: uppercase; } .param-table { width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 12px; } .param-label { padding: 3px 0; color: #444; width: 55%; } .param-value { padding: 3px 0; text-align: right; font-weight: 700; color: #000; } .formula-box { background-color: #f4f6f9; border-left: 3px solid #1f4e79; padding: 10px 12px; margin: 12px 0; font-size: 11px; color: #222; border-radius: 0 4px 4px 0; } .formula-title { font-weight: bold; font-size: 10px; color: #1f4e79; margin-bottom: 6px; letter-spacing: 0.5px; } .compact-result .result-row { display: flex; justify-content: space-between; margin-bottom: 5px; align-items: center; flex-wrap: wrap; } .compact-result .result-row span { font-size: 11px; color: #333; } .compact-result .result-row strong, #orpBakiAmount { font-size: 12px; color: #000; white-space: nowrap; } .compact-result hr { display: none !important; } .clean-table { width: 100%; border-collapse: collapse; font-size: 11px; border: none; margin-bottom: 5px; } .clean-table td { padding: 4px 2px; border: none; color: #222; } .highlight-row, .result-row[style*="background"] { background: transparent !important; border: 1.5px solid #1f4e79; padding: 8px !important; border-radius: 4px; margin-top: 10px; } .highlight-row span, .result-row[style*="background"] span { color: #1f4e79 !important; font-weight: bold; } .highlight-row strong, .result-row[style*="background"] strong { color: #1f4e79 !important; font-size: 14px !important; } @media print { body { padding: 0; background: #fff; margin-bottom: 0; } .report-box { border: 1px solid #aaa; box-shadow: none; } .report-header, .formula-box, .highlight-row, .result-row[style*="background"] { -webkit-print-color-adjust: exact; print-color-adjust: exact; } } ${cssBaru} </style></head><body><div class="floating-action-bar"><div style="position: relative;"><button class="kebab-btn" onclick="var d = document.getElementById('kebabDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block';">&#8942;</button><div id="kebabDropdown" class="kebab-dropdown"><a href="#" onclick="window.close(); return false;">✏️ Kemaskini</a><a href="#" onclick="window.print(); window.close(); return false;">🖨️ Cetak Laporan</a></div></div></div>${tajukHeaderHTML}<div class="grid-container">${maklumatSyarikatPekerjaHTML}${contentSeterusnya}</div><div class="print-btn-container" style="text-align: center; margin-top: 30px; grid-column: 1 / -1;"><p style="font-size: 11px; color:#666; font-style: italic;">*Untuk simpan dalam peranti, sila pilih <b>'Save as PDF'</b> pada tetingkap pencetak (Destination).</p></div><script>window.onafterprint = function() { setTimeout(function() { window.close(); }, 500); };<\/script></body></html>`;
+    let cetakHTML = `<!DOCTYPE html><html lang="ms"><head><meta charset="UTF-8"><title>Laporan Pengiraan Akta Kerja 1955</title><style>* { font-family: 'Segoe UI', Arial, sans-serif; box-sizing: border-box; } body { color: #111; line-height: 1.35; padding: 20px; font-size: 11px; background: #fdfdfd; margin-bottom: 80px; } .main-title { text-align: center; margin-bottom: 2px; font-size: 18px; font-weight: bold; border-bottom: 2px solid #222; padding-bottom: 6px; text-transform: uppercase; color: #000; letter-spacing: 1px; } .subtitle { text-align: center; color: #555; margin-top: 5px; margin-bottom: 25px; font-size: 11px; } .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; align-items: start; } .report-box { border: 1px solid #aaa; padding: 12px; border-radius: 6px; page-break-inside: avoid; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); } .report-header { font-size: 13px; font-weight: 800; text-align: center; background: #e8eaed; padding: 8px; border-bottom: 1px solid #aaa; margin: -12px -12px 12px -12px; border-radius: 6px 6px 0 0; text-transform: uppercase; color: #1a1a1a; letter-spacing: 0.5px; } .report-section-title { font-size: 10px; font-weight: bold; color: #1f4e79; letter-spacing: 0.5px; border-bottom: 1px dashed #ccc; padding-bottom: 3px; margin-bottom: 6px; text-transform: uppercase; } .param-table { width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 12px; } .param-label { padding: 3px 0; color: #444; width: 55%; } .param-value { padding: 3px 0; text-align: right; font-weight: 700; color: #000; } .formula-box { background-color: #f4f6f9; border-left: 3px solid #1f4e79; padding: 10px 12px; margin: 12px 0; font-size: 11px; color: #222; border-radius: 0 4px 4px 0; } .formula-title { font-weight: bold; font-size: 10px; color: #1f4e79; margin-bottom: 6px; letter-spacing: 0.5px; } .compact-result .result-row { display: flex; justify-content: space-between; margin-bottom: 5px; align-items: center; flex-wrap: wrap; } .compact-result .result-row span { font-size: 11px; color: #333; } .compact-result .result-row strong, #orpBakiAmount { font-size: 12px; color: #000; white-space: nowrap; } .compact-result hr { display: none !important; } .clean-table { width: 100%; border-collapse: collapse; font-size: 11px; border: none; margin-bottom: 5px; } .clean-table td { padding: 4px 2px; border: none; color: #222; } .highlight-row, .result-row[style*="background"] { background: transparent !important; border: 1.5px solid #1f4e79; padding: 8px !important; border-radius: 4px; margin-top: 10px; } .highlight-row span, .result-row[style*="background"] span { color: #1f4e79 !important; font-weight: bold; } .highlight-row strong, .result-row[style*="background"] strong { color: #1f4e79 !important; font-size: 14px !important; } @media print { body { padding: 0; background: #fff; margin-bottom: 0; } .report-box { border: 1px solid #aaa; box-shadow: none; } .report-header, .formula-box, .highlight-row, .result-row[style*="background"] { -webkit-print-color-adjust: exact; print-color-adjust: exact; } } ${cssBaru} </style></head><body><div class="floating-action-bar"><div style="position: relative;"><button class="kebab-btn" onclick="var d = document.getElementById('kebabDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block';">&#8942;</button><div id="kebabDropdown" class="kebab-dropdown"><a href="#" onclick="window.close(); return false;">✏️ Kemaskini</a><a href="#" onclick="window.print(); window.close(); return false;">🖨️ Cetak Laporan</a></div></div></div>${jenisCetak === 'penyata' ? tajukHeaderHTML : tajukHeaderHTML}<div class="grid-container">${maklumatSyarikatPekerjaHTML}${contentSeterusnya}</div><div class="print-btn-container" style="text-align: center; margin-top: 30px; grid-column: 1 / -1;"><p style="font-size: 11px; color:#666; font-style: italic;">*Untuk simpan dalam peranti, sila pilih <b>'Save as PDF'</b> pada tetingkap pencetak (Destination).</p></div><script>window.onafterprint = function() { setTimeout(function() { window.close(); }, 500); };<\/script></body></html>`;
     
     let tetingkapCetak = window.open('', '_blank'); 
     if (!tetingkapCetak) { alert("Pop-up disekat oleh pelayar web (browser) anda. Sila benarkan 'Pop-ups and redirects' untuk laman ini bagi melihat laporan."); return; }
