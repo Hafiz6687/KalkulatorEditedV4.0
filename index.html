@@ -43,14 +43,23 @@
       <p class="menu-label" style="font-size: 17.5px; font-weight: 900; color: #1f4e79; text-shadow: 2px 2px 5px rgba(0,0,0,0.2); letter-spacing: 1px; text-decoration: underline; margin-top: 15px; margin-bottom: 0;">PILIHAN KALKULATOR</p>
     </div>
 
-    <!-- KAWASAN SCROLL BERMULA DI SINI -->
+<!-- KAWASAN SCROLL BERMULA DI SINI -->
     <div class="sidebar-menu" style="padding-top: 15px;">
+      
+      <!-- MENU BARU: MAKLUMAT GAJI -->
+      <button class="menu-btn" onclick="tambahKalkulator('maklumatGaji')">
+        <span class="icon">💳</span> <span style="font-size: 14px; text-transform: uppercase;">Maklumat Gaji</span>
+      </button>
+
       <button class="menu-btn active" onclick="tambahKalkulator('orp')">
         <span class="icon">📊</span> <span style="font-size: 14px; text-transform: uppercase;">Kadar Upah Biasa (ORP)</span>
       </button>
+      
       <button class="menu-btn" onclick="tambahKalkulator('baki')">
         <span class="icon">💰</span> <span style="font-size: 14px; text-transform: uppercase;">Baki Upah / Gaji</span>
       </button>
+
+      <!-- ... (butang-butang lain kekal di bawah ini) ... -->
 <button class="menu-btn" onclick="tambahKalkulator('otBiasa')">
     <span class="icon">⏱️</span> <span style="font-size: 14px; text-transform: uppercase;">OT Hari Biasa</span>
 </button>
