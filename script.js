@@ -67,7 +67,8 @@ const salaryMap = {
     "rhMoreBasicSalary": ["rhMoreAllowance", "rhMoreTotalSalary"],
     "phBasicSalary": ["phAllowance", "phTotalSalary"],
     "otPHBasicSalary": ["otPHAllowance", "otPHTotalSalary"],
-    "tbbBasicSalary": ["tbbAllowance", "tbbTotalSalary"]
+    "tbbBasicSalary": ["tbbAllowance", "tbbTotalSalary"],
+    "lewatBasicSalary": ["lewatAllowance", "lewatTotalSalary"] // KALKULATOR BARU: LEWAT
 };
 
 function evaluateSmartMath(inputStr) {
@@ -211,6 +212,20 @@ function calculateOTBiasa(e) {
 function resetOTBiasa() {
     ["otBasicSalary", "otAllowance", "otHours"].forEach(id => setValue(id, "")); setValue("otTotalSalary", "RM 0.00"); setValue("normalWorkingHours", "");
     ["otResultTotal", "otORP", "otHourly", "otAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("ot", false);
+}
+
+// ENJIN BARU: KADAR LEWAT SEMINIT
+function calculateLewat(e) {
+    setContext(e); let totalSalary = updateSalaryTotal("lewatBasicSalary", "lewatAllowance", "lewatTotalSalary");
+    let minutes = Number(getElement("lewatMinit").value); let workingHours = Number(getElement("lewatNormalWorkingHours").value);
+    if (!workingHours) { alert("Sila pilih jam kerja normal sehari."); return; }
+    let ORP = totalSalary / 26; let hourly = ORP / workingHours; let minutely = hourly / 60; let amount = minutely * minutes;
+    setText("lewatResultTotal", formatRM(totalSalary)); setText("lewatORP", formatRM(ORP));
+    setText("lewatMinutely", formatRM(minutely)); setText("lewatAmount", formatRM(amount)); toggleResult("lewat", true); autoMasukRumusan('lewatAmount', activeCardContext);
+}
+function resetLewat() {
+    ["lewatBasicSalary", "lewatAllowance", "lewatMinit"].forEach(id => setValue(id, "")); setValue("lewatTotalSalary", "RM 0.00"); setValue("lewatNormalWorkingHours", "");
+    ["lewatResultTotal", "lewatORP", "lewatMinutely", "lewatAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("lewat", false);
 }
 
 function calculateOTRH(e) {
@@ -535,7 +550,7 @@ function resetTBB() {
 // 4. ENJIN KALKULATOR RUMUSAN AKHIR
 // =====================================================
 const senaraiKalkulatorRumusan = [
-    { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)" }, { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)" }, { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)" }, { nilai: "tbbAmount", teks: "Faedah Penamatan" }, { nilai: "otAmount", teks: "OT Hari Biasa" }, { nilai: "otRHAmount", teks: "OT Hari Rehat" }, { nilai: "otPHAmount", teks: "OT Hari Kelepasan" }, { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)" }, { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)" }, { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan" }, { nilai: "amount18A", teks: "Seksyen 18A (Bulan Tidak Lengkap)" }, { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan" }, { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit" }
+    { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)" }, { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)" }, { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)" }, { nilai: "tbbAmount", teks: "Faedah Penamatan" }, { nilai: "otAmount", teks: "OT Hari Biasa" }, { nilai: "otRHAmount", teks: "OT Hari Rehat" }, { nilai: "otPHAmount", teks: "OT Hari Kelepasan" }, { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)" }, { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)" }, { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan" }, { nilai: "amount18A", teks: "Seksyen 18A (Bulan Tidak Lengkap)" }, { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan" }, { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit" }, { nilai: "lewatAmount", teks: "Potongan Lewat Seminit" }
 ];
 
 function formatRMRumusan(amount) { if (isNaN(amount) || amount === "") return "RM0.00"; return "RM " + parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -619,6 +634,7 @@ function kemaskiniPatutBayar(selectElement) {
                     else if (idSasaran.includes("annualLeaveAmount")) { let hari = getVal("annualLeaveDays"); if(hari) detail = `${hari} hari`; }
                     else if (idSasaran.includes("sickLeaveAmount")) { let hari = getVal("sickLeaveDays"); if(hari) detail = `${hari} hari`; }
                     else if (idSasaran.includes("resUniMonthAmount")) { let bulan = getVal("ggnUniMonthVal"); if(bulan) detail = `${bulan} bulan`; }
+                    else if (idSasaran.includes("lewatAmount")) { let min = getVal("lewatMinit"); if(min) detail = `${min} minit`; }
                     else if (idSasaran.includes("resUni18AAmount")) { 
                         let m = getVal("ggnUniWeekVal"), h = getVal("ggnUniDayVal"); 
                         if(m) detail = `${m} minggu`; else if(h) detail = `${h} hari`;
@@ -686,7 +702,7 @@ function autoMasukRumusan(idSasaran, contextCard) {
 // =====================================================
 // 5. LAPORAN PENUH & PENYATA GAJI (PDF)
 // =====================================================
-let tourElaunPopupDitunjuk = false; // Memori supaya Pop-Up Tour hanya keluar SEKALI
+let tourElaunPopupDitunjuk = false; 
 
 function formatTitleCase(str) { return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); }
 
@@ -696,17 +712,16 @@ function formatIC(str) {
     return val.slice(0,6) + '-' + val.slice(6,8) + '-' + val.slice(8,12);
 }
 
-// FUNGSI AUTO-KIRA POTONGAN BERKANUN (KWSP, PERKESO, SIP) 
 window.autoKiraPotonganBerkanun = function() {
     let baseBasic = 0;
     let baseElaunAsal = 0;
 
     document.querySelectorAll('.calculator-card:not(.hidden-template)').forEach(kad => {
-        ["orpBasicSalary", "otBasicSalary", "rhBasicSalary", "rhMoreBasicSalary", "section18ABasicSalary", "otRHBasicSalary", "phBasicSalary", "otPHBasicSalary", "ggnUniBasic"].forEach(id => {
+        ["orpBasicSalary", "otBasicSalary", "rhBasicSalary", "rhMoreBasicSalary", "section18ABasicSalary", "otRHBasicSalary", "phBasicSalary", "otPHBasicSalary", "ggnUniBasic", "lewatBasicSalary"].forEach(id => {
             let el = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`);
             if (el && evaluateSmartMath(el.value) > 0 && baseBasic === 0) baseBasic = evaluateSmartMath(el.value);
         });
-        ["orpAllowance", "otAllowance", "rhAllowance", "rhMoreAllowance", "section18AAllowance", "otRHAllowance", "phAllowance", "otPHAllowance", "ggnUniAllowance"].forEach(id => {
+        ["orpAllowance", "otAllowance", "rhAllowance", "rhMoreAllowance", "section18AAllowance", "otRHAllowance", "phAllowance", "otPHAllowance", "ggnUniAllowance", "lewatAllowance"].forEach(id => {
             let el = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`);
             if (el && evaluateSmartMath(el.value) > 0 && baseElaunAsal === 0) baseElaunAsal = evaluateSmartMath(el.value);
         });
@@ -745,7 +760,6 @@ window.autoKiraPotonganBerkanun = function() {
     }
 };
 
-// Butang 1 & 2
 function janaLaporanPenuh() { paparModalLaporan('penuh'); }
 function janaPenyataGaji() { 
     let orpCardLengkap = false;
@@ -796,7 +810,6 @@ function janaPenyataGaji() {
     paparModalLaporan('penyata'); 
 }
 
-// Fungsi Pembantu Dinamik (Tambah Baris Pop-Up)
 function tambahBarisElaunModal() {
     let div = document.createElement('div');
     div.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px;";
@@ -827,7 +840,6 @@ function tambahBarisPotonganModal() {
     document.getElementById('containerPotonganModal').appendChild(div);
 }
 
-// FUNGSI POP-UP TOUR ONBOARDING ELAUN (Untuk Pop-Up Penyata Gaji)
 function tunjukTourElaunPopup() {
     let targetContainer = document.getElementById('tourTargetElaunPopup');
     let whiteBox = document.getElementById('modalPenyataWhiteBox');
@@ -855,7 +867,6 @@ function tunjukTourElaunPopup() {
     let popover = document.createElement('div');
     popover.innerHTML = `
         <div class="tour-popover-box" style="position: absolute; top: calc(100% + 15px); left: 0; background: white; border-radius: 8px; width: 100%; min-width: 320px; max-width: 380px; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 20px; border-top: 6px solid #d9534f; color: #333; font-family: sans-serif; cursor: default; animation: floatUp 0.4s ease-out; z-index: 102; text-align: left;">
-            
             <div style="position: absolute; bottom: 100%; left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #d9534f transparent;"></div>
             <div style="position: absolute; bottom: calc(100% - 6px); left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #fff transparent;"></div>
             
@@ -891,11 +902,26 @@ function tunjukTourElaunPopup() {
     document.getElementById('btnTutupTourPopup').addEventListener('click', tutupTourPopup);
 }
 
-// Enjin Utama Pop-Up
 function paparModalLaporan(jenis) {
     let existingModal = document.getElementById('modalLaporanPenuh'); if(existingModal) existingModal.remove();
 
     if (jenis === 'penyata') {
+        
+        // Pengekstrakan Kalkulator Kelewatan untuk dimasukkan ke Potongan Modal
+        let totalKelewatan = 0;
+        let minitKelewatan = 0;
+        document.querySelectorAll('.calculator-card:not(.hidden-template)').forEach(kad => {
+            let amtEl = kad.querySelector('[id="lewatAmount"], [data-original-id="lewatAmount"]');
+            if (amtEl && amtEl.innerText && amtEl.innerText.trim() !== "RM 0.00" && amtEl.innerText.trim() !== "-") {
+                let num = evaluateSmartMath(amtEl.innerText);
+                if (num > 0) {
+                    totalKelewatan += num;
+                    let minEl = kad.querySelector('[id="lewatMinit"], [data-original-id="lewatMinit"]');
+                    if (minEl) minitKelewatan += Number(minEl.value) || 0;
+                }
+            }
+        });
+
         let elaunModalHtml = `
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
@@ -904,6 +930,36 @@ function paparModalLaporan(jenis) {
                     <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
                 </div>
             </div>`;
+
+        let potonganModalHtml = '';
+        if (totalKelewatan > 0) {
+            potonganModalHtml += `
+                <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                    <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" value="Kelewatan (${minitKelewatan} minit)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
+                    <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
+                        <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                        <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
+                    </div>
+                    <div style="flex: 3; display: flex; gap: 5px;">
+                        <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" value="${formatSafeRM(totalKelewatan)}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                        <button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+                    </div>
+                </div>
+            `;
+        }
+        potonganModalHtml += `
+            <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
+                <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
+                    <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                        <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
+                </div>
+                <div style="flex: 3; display: flex; gap: 5px;">
+                    <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                    <button type="button" ${totalKelewatan > 0 ? 'onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;"' : 'style="visibility:hidden; padding:0 10px;"'}>X</button>
+                </div>
+            </div>
+        `;
 
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
@@ -988,17 +1044,7 @@ function paparModalLaporan(jenis) {
                             <button type="button" onclick="tambahBarisPotonganModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
                         </div>
                         <div id="containerPotonganModal" style="margin-bottom: 25px;">
-                            <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-                                <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
-                                <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
-                                    <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
-                                    <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
-                                </div>
-                                <div style="flex: 3; display: flex; gap: 5px;">
-                                    <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
-                                    <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
-                                </div>
-                            </div>
+                            ${potonganModalHtml}
                         </div>
                     </div>
                     
@@ -1012,11 +1058,10 @@ function paparModalLaporan(jenis) {
         </div>`;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-        // TRIGGER AUTO CALCULATION & TOUR LEPAS RENDER MODAL
         autoKiraPotonganBerkanun();
         if (!tourElaunPopupDitunjuk) {
             tourElaunPopupDitunjuk = true;
-            setTimeout(() => tunjukTourElaunPopup(), 400); // Lengah sikit bagi siap buka
+            setTimeout(() => tunjukTourElaunPopup(), 400);
         }
         
     } else {
@@ -1044,7 +1089,6 @@ function paparModalLaporan(jenis) {
     }
 }
 
-// Tindakan Selepas Butang 'Jana Cetakan' (dalam pop-up) Ditekan
 function teruskanJanaLaporan(jenis) {
     let namaMajikan = ""; let noDaftarMajikan = ""; let tempohUpah = "";
     let kwspP="", kwspN="", perkesoP="", perkesoN="", sipP="", sipN="", pendahuluanN="";
@@ -1091,7 +1135,7 @@ function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPe
         { id: "otPHData", tajuk: "OT Hari Kelepasan" }, { id: "sickLeaveData", tajuk: "Bayaran Cuti Sakit" }, 
         { id: "kelayakanCutiData", tajuk: "Kelayakan Cuti Tahunan" }, { id: "annualLeaveData", tajuk: "Bayaran Cuti Tahunan" }, 
         { id: "ggnResBulan", tajuk: "Gaji Ganti Notis (Kiraan Bulan)" }, { id: "ggnRes18A", tajuk: "Gaji Ganti Notis (Kiraan Hari/Minggu)" }, 
-        { id: "kelayakanSakitData", tajuk: "Kelayakan Cuti Sakit & Hospitalisasi" }, { id: "tbbData", tajuk: "Faedah Penamatan" }
+        { id: "kelayakanSakitData", tajuk: "Kelayakan Cuti Sakit & Hospitalisasi" }, { id: "tbbData", tajuk: "Faedah Penamatan" }, { id: "lewatData", tajuk: "Kadar Lewat Seminit" }
     ];
 
     function getJalanKira(id, kadAsal) {
@@ -1137,6 +1181,7 @@ function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPe
                 html = `(A) Formula Kadar Sehari (ORP):<br>Jumlah Upah 12 Bulan ÷ 365 hari<br>= ${d("tbbTotal12M")} ÷ 365<br>= <b>${d("tbbORP")}</b><br><br>
                 (B) Formula Kelayakan Hari:<br>Tempoh perkhidmatan x Bil. hari layak setahun<br>[(${years} tahun x ${kadar} hari setahun)] + [(${months} bulan / 12 bulan setahun) x ${kadar}]<br>= ${yDays} hari + ${mDays} hari<br>= <b>${totalHariLengkap}</b><br><br>
                 Formula Faedah:<br>ORP (A) x Kelayakan Hari (B)<br>= ${d("tbbORP")} x ${totalHariLengkap}<br>= <b>${d("tbbAmount")}</b>`; break;
+            case "lewatData": html = `Formula:<br>[(Jumlah Upah / 26) ÷ Jam Kerja ÷ 60 minit] x Minit Lewat<br>[(${d("lewatResultTotal")} / 26) ÷ ${s("lewatNormalWorkingHours")} ÷ 60] x ${v("lewatMinit")} minit<br>= <b>${d("lewatAmount")}</b>`; break;
         }
         if (html) return `<div class="formula-box"><div class="formula-title">JALAN KIRA & FORMULA:</div>${html}</div>`; return "";
     }
@@ -1277,8 +1322,8 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
             let v = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.value.trim() : ""; };
             let t = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.innerText.trim() : ""; };
 
-            if (!v_basic) { ["orpBasicSalary", "otBasicSalary", "rhBasicSalary", "rhMoreBasicSalary", "section18ABasicSalary", "otRHBasicSalary", "phBasicSalary", "otPHBasicSalary", "ggnUniBasic"].forEach(id => { let val = v(id); if (val) v_basic = val; }); }
-            if (!v_elaun) { ["orpAllowance", "otAllowance", "rhAllowance", "rhMoreAllowance", "section18AAllowance", "otRHAllowance", "phAllowance", "otPHAllowance", "ggnUniAllowance"].forEach(id => { let val = v(id); if (val) v_elaun = val; }); }
+            if (!v_basic) { ["orpBasicSalary", "otBasicSalary", "rhBasicSalary", "rhMoreBasicSalary", "section18ABasicSalary", "otRHBasicSalary", "phBasicSalary", "otPHBasicSalary", "ggnUniBasic", "lewatBasicSalary"].forEach(id => { let val = v(id); if (val) v_basic = val; }); }
+            if (!v_elaun) { ["orpAllowance", "otAllowance", "rhAllowance", "rhMoreAllowance", "section18AAllowance", "otRHAllowance", "phAllowance", "otPHAllowance", "ggnUniAllowance", "lewatAllowance"].forEach(id => { let val = v(id); if (val) v_elaun = val; }); }
 
             if(t("otAmount") && t("otAmount") !== "RM 0.00") { r_otb = t("otAmount"); h_otb = v("otHours"); }
             if(t("rhAmount") && t("rhAmount") !== "RM 0.00") { r_rh05 = t("rhAmount"); h_rh05 = v("rhDays"); }
@@ -1471,392 +1516,3 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
     if (!tetingkapCetak) { alert("Pop-up disekat oleh pelayar web (browser) anda. Sila benarkan 'Pop-ups and redirects' untuk laman ini bagi melihat laporan."); return; }
     tetingkapCetak.document.write(cetakHTML); tetingkapCetak.document.close(); tetingkapCetak.focus(); 
 }
-
-// =====================================================
-// 6. SISTEM LOGIN & RESET 
-// =====================================================
-function paparLogMasuk() { document.getElementById("loginOverlay").style.display = "flex"; document.getElementById("loginPassword").value = ""; document.getElementById("loginError").style.display = "none"; }
-function semakLogin() {
-    let inputLaluan = document.getElementById("loginPassword").value; let ralatMesej = document.getElementById("loginError"); let kataLaluanSebenar = "kerja1955"; 
-    if (inputLaluan === kataLaluanSebenar) {
-        document.getElementById("loginOverlay").style.display = "none"; let btn = document.getElementById("butangAuth");
-        if (btn) { btn.innerHTML = "⏻ Log Keluar"; btn.style.background = "#dc3545"; btn.style.borderColor = "#dc3545"; btn.setAttribute("onclick", "logKeluar()"); }
-    } else { ralatMesej.style.display = "block"; }
-}
-document.addEventListener("DOMContentLoaded", function() { let kotakPassword = document.getElementById("loginPassword"); if (kotakPassword) { kotakPassword.addEventListener("keypress", function(event) { if (event.key === "Enter") semakLogin(); }); } });
-function logKeluar() { let btn = document.getElementById("butangAuth"); if (btn) { btn.innerHTML = "⏻ Log Masuk"; btn.style.background = "#1f4e79"; btn.style.borderColor = "#1f4e79"; btn.setAttribute("onclick", "paparLogMasuk()"); } alert("Anda telah berjaya log keluar dari sistem."); }
-function resetSemua() {
-    let sah = confirm("Adakah anda pasti mahu memadam KESEMUA data pengiraan? Tindakan ini tidak boleh diundur.");
-    if (sah) {
-        let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
-        semuaKadAktif.forEach(kad => kad.remove());
-        resetRumusan();
-        let kadRumusan = document.querySelector('.rumusan-card');
-        if (kadRumusan) {
-            kadRumusan.style.display = "none";
-        }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-}
-
-// =====================================================
-// 7. ENGINE 2026: CLONE & MULTI-INSTANCE
-// =====================================================
-window.tambahKalkulator = function(templateId) {
-    document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
-    let activeBtn = document.querySelector(`.menu-btn[onclick*="${templateId}"]`);
-    if(activeBtn) activeBtn.classList.add('active');
-
-    let templateCard = document.getElementById('card-' + templateId);
-    if (!templateCard) return alert('Kalkulator tidak ditemui!');
-
-    let grid = document.getElementById('active-calculators-grid');
-    let rumusanCard = document.querySelector('.rumusan-card');
-    
-    let clone = templateCard.cloneNode(true);
-    clone.classList.remove('hidden-template');
-    
-    let uniqueSuffix = '_' + Math.random().toString(36).substr(2, 9);
-    clone.id = clone.id + uniqueSuffix;
-    clone.style.position = "relative";
-
-    let closeBtn = document.createElement('button');
-    closeBtn.className = "close-card-btn";
-    closeBtn.innerHTML = "X";
-    closeBtn.onclick = function() { 
-        clone.remove(); 
-        let kadTinggal = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
-        if (kadTinggal.length === 0) {
-            let kadRumusan = document.querySelector('.rumusan-card');
-            if (kadRumusan) { kadRumusan.style.display = "none"; }
-        }
-    };
-    clone.appendChild(closeBtn);
-
-    let allElementsWithId = clone.querySelectorAll('[id]');
-    allElementsWithId.forEach(el => {
-        el.setAttribute('data-original-id', el.id);
-        el.id = el.id + uniqueSuffix;
-        if(el.tagName === 'INPUT' && el.type !== 'button') el.value = "";
-        if(el.tagName === 'STRONG' || el.tagName === 'SPAN') {
-            if(el.innerText.includes('RM')) el.innerText = 'RM 0.00';
-            else if(el.innerText !== 'Kadar Sehari' && el.innerText !== 'Bayaran' && el.innerText !== 'Hari Bekerja') el.innerText = '-';
-        }
-    });
-    
-    let allElementsWithName = clone.querySelectorAll('[name]');
-    allElementsWithName.forEach(el => {
-        el.setAttribute('name', el.getAttribute('name') + uniqueSuffix);
-    });
-
-    let currentBasic = "";
-    let currentAllowance = "";
-    
-    function extractSalaryFromCard(kad) {
-        for (let mapKey of Object.keys(salaryMap)) {
-            let sourceBasic = kad.querySelector(`[data-original-id="${mapKey}"]`);
-            if (sourceBasic && sourceBasic.value) {
-                let semakNilai = evaluateSmartMath(sourceBasic.value);
-                if (semakNilai > 0) {
-                    let allowVal = "";
-                    let sourceAllowId = salaryMap[mapKey][0];
-                    let sourceAllow = kad.querySelector(`[data-original-id="${sourceAllowId}"]`);
-                    if (sourceAllow) allowVal = sourceAllow.value;
-                    return { basic: sourceBasic.value, allow: allowVal };
-                }
-            }
-        }
-        return null;
-    }
-
-    if (activeCardContext && !activeCardContext.classList.contains('hidden-template') && !activeCardContext.classList.contains('rumusan-card')) {
-        let extracted = extractSalaryFromCard(activeCardContext);
-        if (extracted) { currentBasic = extracted.basic; currentAllowance = extracted.allow; }
-    }
-
-    if (currentBasic === "") {
-        let kadAktifLain = Array.from(document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)'));
-        for (let i = kadAktifLain.length - 1; i >= 0; i--) {
-            let extracted = extractSalaryFromCard(kadAktifLain[i]);
-            if (extracted) { currentBasic = extracted.basic; currentAllowance = extracted.allow; break; }
-        }
-    }
-
-    if (currentBasic !== "") {
-        for (let targetKey of Object.keys(salaryMap)) {
-            let targetBasic = clone.querySelector(`[data-original-id="${targetKey}"]`);
-            let targetAllowId = salaryMap[targetKey][0];
-            let targetAllow = clone.querySelector(`[data-original-id="${targetAllowId}"]`);
-            let targetTotalId = salaryMap[targetKey][1];
-            let targetTotal = clone.querySelector(`[data-original-id="${targetTotalId}"]`);
-
-            if (targetBasic) {
-                targetBasic.value = currentBasic;
-                if (targetAllow && currentAllowance !== "") { targetAllow.value = currentAllowance; }
-                if (targetTotal) {
-                    let calcBasic = evaluateSmartMath(currentBasic);
-                    let calcAllow = currentAllowance !== "" ? evaluateSmartMath(currentAllowance) : 0;
-                    targetTotal.value = "RM " + (calcBasic + calcAllow).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                }
-            }
-        }
-    }
-
-    let allButtons = clone.querySelectorAll('button');
-    allButtons.forEach(btn => {
-        let oriClick = btn.getAttribute('onclick');
-        if (oriClick && !oriClick.includes('clone.remove')) {
-            let funcName = oriClick.replace(/\(.*?\)/, '').trim(); 
-            btn.removeAttribute('onclick');
-            btn.setAttribute('data-action-func', oriClick);
-            btn.addEventListener('click', function(e) {
-                activeCardContext = clone; 
-                try { if (typeof window[funcName] === 'function') window[funcName](e); } finally { activeCardContext = null; }
-            });
-        }
-    });
-
-    if (rumusanCard) grid.insertBefore(clone, rumusanCard); else grid.appendChild(clone);
-    if (rumusanCard) { rumusanCard.style.display = "block"; }
-    clone.scrollIntoView({ behavior: 'smooth', block: 'center' });
-};
-
-// =====================================================
-// 8. ENJIN ELAUN DINAMIK GLOBAL & ONBOARDING TOUR
-// =====================================================
-let senaraiElaunGlobal = [];
-let allowanceCardTransformed = false;
-let elaunTourDitunjuk = false; // Memori: Pastikan pop-up tour hanya keluar SEKALI sahaja
-
-// Fungsi ini menukar kotak elaun asal menjadi borang dinamik
-function transformAllowanceField(allowInput) {
-    allowInput.style.display = 'none'; // Sorok kotak asal (TIDAK DIPADAM, Enjin asal tak terganggu)
-
-    // Sorok label "Elaun (RM)" asal
-    let prev = allowInput.previousElementSibling;
-    if (prev && prev.tagName === 'LABEL') prev.style.display = 'none';
-
-    let container = document.createElement('div');
-    container.className = 'dynamic-allowance-wrapper';
-    container.style.cssText = 'width: 100%; margin-bottom: 15px; background: #f4f6f9; padding: 12px; border: 1px dashed #1f4e79; border-radius: 6px; position: relative;';
-
-    // Bina senarai baris jika dah ada memori elaun sebelum ni
-    let htmlRows = '';
-    if (senaraiElaunGlobal && senaraiElaunGlobal.length > 0) {
-        senaraiElaunGlobal.forEach((elaun, i) => {
-            let btnX = i === 0 ? `` : `<button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
-            let nFormatted = elaun.nilai ? formatSafeRM(elaun.nilai) : '';
-            htmlRows += `
-                <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
-                    <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" value="${elaun.jenis || ''}" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="this.value = formatTitleCase(this.value); updateGlobalElaunSum(this);">
-                    <div style="flex:2; display:flex; gap:5px;">
-                        <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" value="${nFormatted}" style="width:100%; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
-                        ${btnX}
-                    </div>
-                </div>
-            `;
-        });
-    } else {
-        htmlRows = `
-            <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
-                <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="this.value = formatTitleCase(this.value); updateGlobalElaunSum(this);">
-                <div style="flex:2; display:flex; gap:5px;">
-                    <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width:100%; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
-                </div>
-            </div>
-        `;
-    }
-
-    container.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-            <label style="font-weight:bold; color:#1f4e79; margin:0; font-size:12px;">Maklumat Elaun</label>
-            <button type="button" onclick="tambahBarisElaunGlobalKalkulator(this)" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah Elaun</button>
-        </div>
-        <div class="dynamic-elaun-list-kalkulator">
-            ${htmlRows}
-        </div>
-    `;
-    allowInput.parentNode.insertBefore(container, allowInput.nextSibling);
-    
-    if (senaraiElaunGlobal.length > 0) { updateGlobalElaunSum(container); }
-
-    // TRIGGER POP-UP TOUR (Hanya Untuk Kali Pertama)
-    if (!elaunTourDitunjuk) {
-        elaunTourDitunjuk = true; // Kunci supaya tak keluar lagi
-        setTimeout(() => tunjukTourElaun(container), 400); // Lengah sikit bagi UI render cantik
-    }
-}
-
-// FUNGSI POP-UP TOUR ONBOARDING ELAUN (Design Terkini)
-function tunjukTourElaun(targetContainer) {
-    // 1. Skrol ke paparan tengah
-    targetContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
-    // 2. Buat skrin belakang jadi gelap (Overlay)
-    let overlay = document.createElement('div');
-    overlay.id = 'tourElaunOverlay';
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); z-index: 99998; backdrop-filter: blur(2px); transition: opacity 0.3s;';
-    document.body.appendChild(overlay);
-
-    // 3. Highlight Kotak Elaun
-    let originalPos = targetContainer.style.position;
-    let originalZ = targetContainer.style.zIndex;
-    let originalBg = targetContainer.style.background;
-    
-    targetContainer.style.position = 'relative';
-    targetContainer.style.zIndex = '99999';
-    targetContainer.style.background = '#fff';
-    targetContainer.style.boxShadow = '0 0 0 4px #fff, 0 0 0 6px #d9534f, 0 15px 35px rgba(0,0,0,0.5)';
-
-    // 4. Buat Tooltip/Buih Pop-up yang tunjuk ke kotak Elaun
-    let popover = document.createElement('div');
-    popover.innerHTML = `
-        <div class="tour-popover-box" style="position: absolute; top: calc(100% + 15px); left: 15px; background: white; border-radius: 8px; width: 330px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 20px; border-top: 6px solid #d9534f; color: #333; font-family: sans-serif; cursor: default; animation: floatUp 0.4s ease-out; z-index: 100000; text-align: left;">
-            
-            <!-- Segitiga (Arrow) hala ke atas pointing ke kotak elaun -->
-            <div style="position: absolute; bottom: 100%; left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #d9534f transparent;"></div>
-            <div style="position: absolute; bottom: calc(100% - 6px); left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #fff transparent;"></div>
-            
-            <h4 style="margin: 0 0 10px 0; color: #1f4e79; font-size: 15px; display: flex; align-items: center; gap: 8px;">
-                <span style="background: #1f4e79; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px;">💡</span>
-                Panduan Maklumat Elaun
-            </h4>
-            <p style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; color: #333;">Maklumat Elaun adalah Elaun yang <span style="color:#d9534f;">SELAIN / TIDAK TERMASUK:</span></p>
-            
-            <ul style="margin: 0 0 12px 0; padding-left: 20px; font-size: 11.5px; color: #555; line-height: 1.45;">
-                <li>NILAI tempat tinggal, bekalan makanan, minyak, lampu, air, rawatan perubatan atau yang diluluskan JTK;</li>
-                <li>Bayaran CARUMAN;</li>
-                <li>Elaun Pengangkutan (Kenderaan/minyak (yang sama erti dengannya));</li>
-                <li>Bayaran Khas untuk tujuan perbelanjaan pekerjaan;</li>
-                <li>Bayaran persaraan/pemberhentian/pampasan;</li>
-                <li>Bonus tahunan.</li>
-            </ul>
-            
-            <p style="margin: 0 0 15px 0; font-size: 11px; font-weight: bold; color: #d9534f; background: #fff0f0; padding: 6px 8px; border-radius: 4px; border-left: 3px solid #d9534f;">* DAN TIDAK TERMASUK bayaran yang dibayar di luar waktu kerja normal.</p>
-            
-            <button id="btnTutupTour" style="width: 100%; background: #1f4e79; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s;">OK, SAYA FAHAM</button>
-        </div>
-        <style>
-            @keyframes floatUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
-            #btnTutupTour:hover { background: #153859 !important; }
-            @media (max-width: 400px) { .tour-popover-box { width: calc(100vw - 60px) !important; left: -10px !important; } }
-        </style>
-    `;
-    targetContainer.appendChild(popover);
-
-    // Fungsi tutup tour
-    const tutupTour = () => {
-        overlay.remove();
-        popover.remove();
-        targetContainer.style.position = originalPos;
-        targetContainer.style.zIndex = originalZ;
-        targetContainer.style.background = originalBg;
-        targetContainer.style.boxShadow = 'none';
-    };
-
-    overlay.addEventListener('click', tutupTour);
-    document.getElementById('btnTutupTour').addEventListener('click', tutupTour);
-}
-
-
-// Fungsi semak kad untuk ditukar jadi dinamik
-function semakDanTukarElaun(card) {
-    if (allowanceCardTransformed) {
-        if (!document.querySelector('.dynamic-allowance-wrapper')) {
-            allowanceCardTransformed = false; 
-        } else {
-            return; 
-        }
-    }
-    let allowInput = null;
-    for(let k of Object.keys(salaryMap)) {
-        let aid = salaryMap[k][0];
-        let found = card.querySelector(`[id="${aid}"], [data-original-id="${aid}"]`);
-        if(found) { allowInput = found; break; }
-    }
-    if (allowInput) {
-        allowanceCardTransformed = true;
-        transformAllowanceField(allowInput);
-    }
-}
-
-// Butang + Tambah Baris
-window.tambahBarisElaunGlobalKalkulator = function(btn) {
-    let list = btn.parentElement.nextElementSibling;
-    let row = document.createElement('div');
-    row.className = 'elaun-row-kalkulator';
-    row.style.cssText = "display:flex; gap:5px; margin-bottom:5px;";
-    row.innerHTML = `
-        <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="this.value = formatTitleCase(this.value); updateGlobalElaunSum(this);">
-        <div style="flex:2; display:flex; gap:5px;">
-            <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width:100%; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
-            <button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
-        </div>
-    `;
-    list.appendChild(row);
-};
-
-window.buangBarisElaunGlobalKalkulator = function(btn) {
-    let row = btn.parentElement.parentElement; // Perlu naik 2 tingkat div
-    let container = row.closest('.dynamic-allowance-wrapper');
-    row.remove();
-    updateGlobalElaunSum(container);
-};
-
-// Enjin kumpul jumlah elaun dan serapkan ke semua kalkulator lain
-window.updateGlobalElaunSum = function(el) {
-    let wrapper = el.closest('.dynamic-allowance-wrapper');
-    if (!wrapper) return;
-    let rows = wrapper.querySelectorAll('.elaun-row-kalkulator');
-    let total = 0;
-    senaraiElaunGlobal = []; // Reset memori global
-    
-    rows.forEach(r => {
-        let j = r.querySelector('.global-elaun-jenis').value.trim();
-        let nStr = r.querySelector('.global-elaun-nilai').value;
-        let n = evaluateSmartMath(nStr);
-        if (j || nStr) {
-            senaraiElaunGlobal.push({jenis: j, nilai: n > 0 ? n : nStr});
-        }
-        if (n > 0) total += n;
-    });
-
-    let formattedTotal = total > 0 ? formatRM(total) : "";
-
-    // Ghaibkan suntikan ke dalam sistem teras TANPA merosakkan format/enjin sedia ada
-    Object.keys(salaryMap).forEach(key => {
-        let aID = salaryMap[key][0];
-        document.querySelectorAll(`[id="${aID}"], [data-original-id="${aID}"]`).forEach(aEl => {
-            if(aEl.value !== formattedTotal) {
-                aEl.value = formattedTotal;
-                aEl.dispatchEvent(new Event('input', {bubbles:true})); 
-            }
-        });
-    });
-};
-
-// PEMANTAU AUTOMATIK (MUTATION OBSERVER)
-const observerKalkulator = new MutationObserver((mutations) => {
-    mutations.forEach(mutation => {
-        mutation.addedNodes.forEach(node => {
-            if (node.nodeType === 1 && node.classList && node.classList.contains('calculator-card')) {
-                setTimeout(() => semakDanTukarElaun(node), 50); 
-            }
-        });
-        mutation.removedNodes.forEach(node => {
-            if (node.nodeType === 1 && node.querySelector('.dynamic-allowance-wrapper')) {
-                allowanceCardTransformed = false; 
-            }
-        });
-    });
-});
-
-// Hidupkan pemantau automatik pada grid utama
-document.addEventListener('DOMContentLoaded', () => {
-    let gridNode = document.getElementById('active-calculators-grid');
-    if (gridNode) observerKalkulator.observe(gridNode, { childList: true });
-    
-    document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)').forEach(card => {
-        semakDanTukarElaun(card);
-    });
-});
