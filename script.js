@@ -786,14 +786,16 @@ function tambahBarisPotonganModal() {
 // FUNGSI POP-UP TOUR ONBOARDING ELAUN (Untuk Pop-Up Penyata Gaji)
 function tunjukTourElaunPopup() {
     let targetContainer = document.getElementById('tourTargetElaunPopup');
-    if (!targetContainer) return;
+    let whiteBox = document.getElementById('modalPenyataWhiteBox');
+    if (!targetContainer || !whiteBox) return;
     
     targetContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
     
+    // Create overlay INSIDE the white box so it stays within the correct z-index trap
     let overlay = document.createElement('div');
     overlay.id = 'tourElaunPopupOverlay';
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); z-index: 9999998; backdrop-filter: blur(2px); transition: opacity 0.3s;';
-    document.body.appendChild(overlay);
+    overlay.style.cssText = `position: absolute; top: 0; left: 0; width: 100%; height: ${whiteBox.scrollHeight}px; background: rgba(0,0,0,0.75); z-index: 100; border-radius: 10px; transition: opacity 0.3s;`;
+    whiteBox.appendChild(overlay);
 
     let originalPos = targetContainer.style.position;
     let originalZ = targetContainer.style.zIndex;
@@ -801,15 +803,15 @@ function tunjukTourElaunPopup() {
     let originalPadding = targetContainer.style.padding;
     
     targetContainer.style.position = 'relative';
-    targetContainer.style.zIndex = '9999999';
+    targetContainer.style.zIndex = '101'; // Higher than the internal overlay
     targetContainer.style.background = '#fff';
-    targetContainer.style.padding = '10px';
+    targetContainer.style.padding = '15px';
     targetContainer.style.borderRadius = '8px';
     targetContainer.style.boxShadow = '0 0 0 4px #fff, 0 0 0 6px #d9534f, 0 15px 35px rgba(0,0,0,0.5)';
 
     let popover = document.createElement('div');
     popover.innerHTML = `
-        <div class="tour-popover-box" style="position: absolute; top: calc(100% + 15px); left: 0; background: white; border-radius: 8px; width: 360px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 20px; border-top: 6px solid #d9534f; color: #333; font-family: sans-serif; cursor: default; animation: floatUp 0.4s ease-out; z-index: 9999999; text-align: left;">
+        <div class="tour-popover-box" style="position: absolute; top: calc(100% + 15px); left: 0; background: white; border-radius: 8px; width: 100%; min-width: 320px; max-width: 380px; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 20px; border-top: 6px solid #d9534f; color: #333; font-family: sans-serif; cursor: default; animation: floatUp 0.4s ease-out; z-index: 102; text-align: left;">
             
             <div style="position: absolute; bottom: 100%; left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #d9534f transparent;"></div>
             <div style="position: absolute; bottom: calc(100% - 6px); left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #fff transparent;"></div>
@@ -819,7 +821,7 @@ function tunjukTourElaunPopup() {
                 Panduan Senarai Elaun
             </h4>
             
-            <p style="margin: 0 0 10px 0; font-size: 11.5px; font-weight: bold; color: #1f4e79; background: #e8eaed; padding: 6px 8px; border-radius: 4px;">
+            <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: bold; color: #1f4e79; background: #e8eaed; padding: 6px 8px; border-radius: 4px;">
                 CATATAN: Semua ELAUN selain yang telah dinyatakan di dalam Bahagian Kalkulator (Sama ada dibayar di dalam waktu kerja normal atau di luar waktu kerja normal).
             </p>
 
@@ -828,20 +830,19 @@ function tunjukTourElaunPopup() {
             <ul style="margin: 0 0 12px 0; padding-left: 20px; font-size: 11px; color: #555; line-height: 1.4;">
                 <li>a) NILAI tempat tinggal, bekalan makanan, minyak, lampu atau air atau rawatan perubatan atau yang diluluskan JTK;</li>
                 <li>b) Bayaran CARUMAN;</li>
-                <li>c) Elaun Pengangkutan (Kenderaan/minyak (yang sama erti dengannya));</li>
-                <li>d) Bayaran Khas untuk tujuan perbelanjaan pekerjaan;</li>
+                <li>c) Elaun Pengangkutan (Kenderaan/minyak);</li>
+                <li>d) Bayaran Khas perbelanjaan pekerjaan;</li>
                 <li>e) Bayaran persaraan/pemberhentian/pampasan;</li>
                 <li>f) Bonus tahunan.</li>
             </ul>
             
-            <p style="margin: 0 0 15px 0; font-size: 11px; font-weight: bold; color: #d9534f; background: #fff0f0; padding: 6px 8px; border-radius: 4px; border-left: 3px solid #d9534f;">* DAN TIDAK TERMASUK bayaran yang dibayar di luar waktu kerja normal.</p>
+            <p style="margin: 0 0 15px 0; font-size: 11px; font-weight: bold; color: #d9534f; background: #fff0f0; padding: 6px 8px; border-radius: 4px; border-left: 3px solid #d9534f;">* DAN TIDAK TERMASUK bayaran di luar waktu kerja normal.</p>
             
             <button id="btnTutupTourPopup" style="width: 100%; background: #1f4e79; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s;">OK, SAYA FAHAM</button>
         </div>
         <style>
             @keyframes floatUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
             #btnTutupTourPopup:hover { background: #153859 !important; }
-            @media (max-width: 400px) { .tour-popover-box { width: calc(100vw - 40px) !important; left: -10px !important; } }
         </style>
     `;
     targetContainer.appendChild(popover);
@@ -878,7 +879,7 @@ function paparModalLaporan(jenis) {
 
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
-            <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 850px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
+            <div id="modalPenyataWhiteBox" style="background: white; position: relative; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 850px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                     
                     <div>
