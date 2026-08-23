@@ -686,6 +686,8 @@ function autoMasukRumusan(idSasaran, contextCard) {
 // =====================================================
 // 5. LAPORAN PENUH & PENYATA GAJI (PDF)
 // =====================================================
+let tourElaunPopupDitunjuk = false; // Memori supaya Pop-Up Tour hanya keluar SEKALI
+
 function formatTitleCase(str) { return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '); }
 
 function formatIC(str) {
@@ -781,36 +783,98 @@ function tambahBarisPotonganModal() {
     document.getElementById('containerPotonganModal').appendChild(div);
 }
 
+// FUNGSI POP-UP TOUR ONBOARDING ELAUN (Untuk Pop-Up Penyata Gaji)
+function tunjukTourElaunPopup() {
+    let targetContainer = document.getElementById('tourTargetElaunPopup');
+    if (!targetContainer) return;
+    
+    targetContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    let overlay = document.createElement('div');
+    overlay.id = 'tourElaunPopupOverlay';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); z-index: 9999998; backdrop-filter: blur(2px); transition: opacity 0.3s;';
+    document.body.appendChild(overlay);
+
+    let originalPos = targetContainer.style.position;
+    let originalZ = targetContainer.style.zIndex;
+    let originalBg = targetContainer.style.background;
+    let originalPadding = targetContainer.style.padding;
+    
+    targetContainer.style.position = 'relative';
+    targetContainer.style.zIndex = '9999999';
+    targetContainer.style.background = '#fff';
+    targetContainer.style.padding = '10px';
+    targetContainer.style.borderRadius = '8px';
+    targetContainer.style.boxShadow = '0 0 0 4px #fff, 0 0 0 6px #d9534f, 0 15px 35px rgba(0,0,0,0.5)';
+
+    let popover = document.createElement('div');
+    popover.innerHTML = `
+        <div class="tour-popover-box" style="position: absolute; top: calc(100% + 15px); left: 0; background: white; border-radius: 8px; width: 360px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 20px; border-top: 6px solid #d9534f; color: #333; font-family: sans-serif; cursor: default; animation: floatUp 0.4s ease-out; z-index: 9999999; text-align: left;">
+            
+            <div style="position: absolute; bottom: 100%; left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #d9534f transparent;"></div>
+            <div style="position: absolute; bottom: calc(100% - 6px); left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #fff transparent;"></div>
+            
+            <h4 style="margin: 0 0 10px 0; color: #1f4e79; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <span style="background: #1f4e79; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px;">💡</span>
+                Panduan Senarai Elaun
+            </h4>
+            
+            <p style="margin: 0 0 10px 0; font-size: 11.5px; font-weight: bold; color: #1f4e79; background: #e8eaed; padding: 6px 8px; border-radius: 4px;">
+                CATATAN: Semua ELAUN selain yang telah dinyatakan di dalam Bahagian Kalkulator (Sama ada dibayar di dalam waktu kerja normal atau di luar waktu kerja normal).
+            </p>
+
+            <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold; color: #333;">Maklumat Elaun adalah Elaun yang <span style="color:#d9534f;">SELAIN / TIDAK TERMASUK:</span></p>
+            
+            <ul style="margin: 0 0 12px 0; padding-left: 20px; font-size: 11px; color: #555; line-height: 1.4;">
+                <li>a) NILAI tempat tinggal, bekalan makanan, minyak, lampu atau air atau rawatan perubatan atau yang diluluskan JTK;</li>
+                <li>b) Bayaran CARUMAN;</li>
+                <li>c) Elaun Pengangkutan (Kenderaan/minyak (yang sama erti dengannya));</li>
+                <li>d) Bayaran Khas untuk tujuan perbelanjaan pekerjaan;</li>
+                <li>e) Bayaran persaraan/pemberhentian/pampasan;</li>
+                <li>f) Bonus tahunan.</li>
+            </ul>
+            
+            <p style="margin: 0 0 15px 0; font-size: 11px; font-weight: bold; color: #d9534f; background: #fff0f0; padding: 6px 8px; border-radius: 4px; border-left: 3px solid #d9534f;">* DAN TIDAK TERMASUK bayaran yang dibayar di luar waktu kerja normal.</p>
+            
+            <button id="btnTutupTourPopup" style="width: 100%; background: #1f4e79; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s;">OK, SAYA FAHAM</button>
+        </div>
+        <style>
+            @keyframes floatUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+            #btnTutupTourPopup:hover { background: #153859 !important; }
+            @media (max-width: 400px) { .tour-popover-box { width: calc(100vw - 40px) !important; left: -10px !important; } }
+        </style>
+    `;
+    targetContainer.appendChild(popover);
+
+    const tutupTourPopup = () => {
+        overlay.remove();
+        popover.remove();
+        targetContainer.style.position = originalPos;
+        targetContainer.style.zIndex = originalZ;
+        targetContainer.style.background = originalBg;
+        targetContainer.style.padding = originalPadding;
+        targetContainer.style.boxShadow = 'none';
+    };
+
+    overlay.addEventListener('click', tutupTourPopup);
+    document.getElementById('btnTutupTourPopup').addEventListener('click', tutupTourPopup);
+}
+
 // Enjin Utama Pop-Up
 function paparModalLaporan(jenis) {
     let existingModal = document.getElementById('modalLaporanPenuh'); if(existingModal) existingModal.remove();
 
     if (jenis === 'penyata') {
         
-        // AUTO-GENERATE ELAUN DARI ENJIN DINAMIK GLOBAL KE DALAM POP-UP
-        let elaunModalHtml = '';
-        if (typeof senaraiElaunGlobal !== 'undefined' && senaraiElaunGlobal.length > 0) {
-            senaraiElaunGlobal.forEach((elaun, index) => {
-                let btnX = index === 0 ? `` : `<button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
-                let nFormatted = elaun.nilai ? formatSafeRM(elaun.nilai) : '';
-                elaunModalHtml += `
-                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" value="${elaun.jenis || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
-                    <div style="flex: 2; display: flex; gap: 5px;">
-                        <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" value="${nFormatted}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
-                        ${btnX}
-                    </div>
-                </div>`;
-            });
-        } else {
-            elaunModalHtml = `
+        // KEKAL KOSONG DEFAULT (Auto-Generate Dibuang Atas Arahan)
+        let elaunModalHtml = `
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
                 <div style="flex: 2; display: flex; gap: 5px;">
                     <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                    <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
                 </div>
             </div>`;
-        }
 
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
@@ -832,13 +896,16 @@ function paparModalLaporan(jenis) {
                             <input type="text" id="inputTempohUpah" placeholder="Contoh: Mei 2026 / 1 Mei - 31 Mei 2026" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
                         </div>
 
-                        <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Elaun</h3>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">
-                            <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Senarai Elaun</p>
-                            <button type="button" onclick="tambahBarisElaunModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
-                        </div>
-                        <div id="containerElaunModal">
-                            ${elaunModalHtml}
+                        <!-- KOTAK TARGET UNTUK POP-UP TOUR ELAUN -->
+                        <div id="tourTargetElaunPopup" style="border-radius: 6px; position: relative;">
+                            <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Elaun</h3>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">
+                                <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Senarai Elaun</p>
+                                <button type="button" onclick="tambahBarisElaunModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
+                            </div>
+                            <div id="containerElaunModal">
+                                ${elaunModalHtml}
+                            </div>
                         </div>
 
                         <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #ccc;">
@@ -900,6 +967,7 @@ function paparModalLaporan(jenis) {
                                 </div>
                                 <div style="flex: 3; display: flex; gap: 5px;">
                                     <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                                    <button type="button" style="visibility:hidden; padding:0 10px;">X</button>
                                 </div>
                             </div>
                         </div>
@@ -914,6 +982,12 @@ function paparModalLaporan(jenis) {
             </div>
         </div>`;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // TRIGGER TOUR LEPAS RENDER MODAL
+        if (!tourElaunPopupDitunjuk) {
+            tourElaunPopupDitunjuk = true;
+            setTimeout(() => tunjukTourElaunPopup(), 400); // Lengah sikit bagi siap buka
+        }
         
     } else {
         let modalHtml = `
