@@ -1516,3 +1516,373 @@ let rumusanTbody = document.getElementById('badanJadualRumusan');
     if (!tetingkapCetak) { alert("Pop-up disekat oleh pelayar web (browser) anda. Sila benarkan 'Pop-ups and redirects' untuk laman ini bagi melihat laporan."); return; }
     tetingkapCetak.document.write(cetakHTML); tetingkapCetak.document.close(); tetingkapCetak.focus(); 
 }
+
+// =====================================================
+// 6. SISTEM LOGIN & RESET 
+// =====================================================
+function paparLogMasuk() { document.getElementById("loginOverlay").style.display = "flex"; document.getElementById("loginPassword").value = ""; document.getElementById("loginError").style.display = "none"; }
+function semakLogin() {
+    let inputLaluan = document.getElementById("loginPassword").value; let ralatMesej = document.getElementById("loginError"); let kataLaluanSebenar = "kerja1955"; 
+    if (inputLaluan === kataLaluanSebenar) {
+        document.getElementById("loginOverlay").style.display = "none"; let btn = document.getElementById("butangAuth");
+        if (btn) { btn.innerHTML = "⏻ Log Keluar"; btn.style.background = "#dc3545"; btn.style.borderColor = "#dc3545"; btn.setAttribute("onclick", "logKeluar()"); }
+    } else { ralatMesej.style.display = "block"; }
+}
+document.addEventListener("DOMContentLoaded", function() { let kotakPassword = document.getElementById("loginPassword"); if (kotakPassword) { kotakPassword.addEventListener("keypress", function(event) { if (event.key === "Enter") semakLogin(); }); } });
+function logKeluar() { let btn = document.getElementById("butangAuth"); if (btn) { btn.innerHTML = "⏻ Log Masuk"; btn.style.background = "#1f4e79"; btn.style.borderColor = "#1f4e79"; btn.setAttribute("onclick", "paparLogMasuk()"); } alert("Anda telah berjaya log keluar dari sistem."); }
+function resetSemua() {
+    let sah = confirm("Adakah anda pasti mahu memadam KESEMUA data pengiraan? Tindakan ini tidak boleh diundur.");
+    if (sah) {
+        let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+        semuaKadAktif.forEach(kad => kad.remove());
+        resetRumusan();
+        let kadRumusan = document.querySelector('.rumusan-card');
+        if (kadRumusan) {
+            kadRumusan.style.display = "none";
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+// =====================================================
+// 7. ENGINE 2026: CLONE & MULTI-INSTANCE
+// =====================================================
+window.tambahKalkulator = function(templateId) {
+    document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+    let activeBtn = document.querySelector(`.menu-btn[onclick*="${templateId}"]`);
+    if(activeBtn) activeBtn.classList.add('active');
+
+    let templateCard = document.getElementById('card-' + templateId);
+    if (!templateCard) return alert('Kalkulator tidak ditemui!');
+
+    let grid = document.getElementById('active-calculators-grid');
+    let rumusanCard = document.querySelector('.rumusan-card');
+    
+    let clone = templateCard.cloneNode(true);
+    clone.classList.remove('hidden-template');
+    
+    let uniqueSuffix = '_' + Math.random().toString(36).substr(2, 9);
+    clone.id = clone.id + uniqueSuffix;
+    clone.style.position = "relative";
+
+    let closeBtn = document.createElement('button');
+    closeBtn.className = "close-card-btn";
+    closeBtn.innerHTML = "X";
+    closeBtn.onclick = function() { 
+        clone.remove(); 
+        let kadTinggal = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+        if (kadTinggal.length === 0) {
+            let kadRumusan = document.querySelector('.rumusan-card');
+            if (kadRumusan) { kadRumusan.style.display = "none"; }
+        }
+    };
+    clone.appendChild(closeBtn);
+
+    let allElementsWithId = clone.querySelectorAll('[id]');
+    allElementsWithId.forEach(el => {
+        el.setAttribute('data-original-id', el.id);
+        el.id = el.id + uniqueSuffix;
+        if(el.tagName === 'INPUT' && el.type !== 'button') el.value = "";
+        if(el.tagName === 'STRONG' || el.tagName === 'SPAN') {
+            if(el.innerText.includes('RM')) el.innerText = 'RM 0.00';
+            else if(el.innerText !== 'Kadar Sehari' && el.innerText !== 'Bayaran' && el.innerText !== 'Hari Bekerja') el.innerText = '-';
+        }
+    });
+    
+    let allElementsWithName = clone.querySelectorAll('[name]');
+    allElementsWithName.forEach(el => {
+        el.setAttribute('name', el.getAttribute('name') + uniqueSuffix);
+    });
+
+    let currentBasic = "";
+    let currentAllowance = "";
+    
+    function extractSalaryFromCard(kad) {
+        for (let mapKey of Object.keys(salaryMap)) {
+            let sourceBasic = kad.querySelector(`[data-original-id="${mapKey}"]`);
+            if (sourceBasic && sourceBasic.value) {
+                let semakNilai = evaluateSmartMath(sourceBasic.value);
+                if (semakNilai > 0) {
+                    let allowVal = "";
+                    let sourceAllowId = salaryMap[mapKey][0];
+                    let sourceAllow = kad.querySelector(`[data-original-id="${sourceAllowId}"]`);
+                    if (sourceAllow) allowVal = sourceAllow.value;
+                    return { basic: sourceBasic.value, allow: allowVal };
+                }
+            }
+        }
+        return null;
+    }
+
+    if (activeCardContext && !activeCardContext.classList.contains('hidden-template') && !activeCardContext.classList.contains('rumusan-card')) {
+        let extracted = extractSalaryFromCard(activeCardContext);
+        if (extracted) { currentBasic = extracted.basic; currentAllowance = extracted.allow; }
+    }
+
+    if (currentBasic === "") {
+        let kadAktifLain = Array.from(document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)'));
+        for (let i = kadAktifLain.length - 1; i >= 0; i--) {
+            let extracted = extractSalaryFromCard(kadAktifLain[i]);
+            if (extracted) { currentBasic = extracted.basic; currentAllowance = extracted.allow; break; }
+        }
+    }
+
+    if (currentBasic !== "") {
+        for (let targetKey of Object.keys(salaryMap)) {
+            let targetBasic = clone.querySelector(`[data-original-id="${targetKey}"]`);
+            let targetAllowId = salaryMap[targetKey][0];
+            let targetAllow = clone.querySelector(`[data-original-id="${targetAllowId}"]`);
+            let targetTotalId = salaryMap[targetKey][1];
+            let targetTotal = clone.querySelector(`[data-original-id="${targetTotalId}"]`);
+
+            if (targetBasic) {
+                targetBasic.value = currentBasic;
+                if (targetAllow && currentAllowance !== "") { targetAllow.value = currentAllowance; }
+                if (targetTotal) {
+                    let calcBasic = evaluateSmartMath(currentBasic);
+                    let calcAllow = currentAllowance !== "" ? evaluateSmartMath(currentAllowance) : 0;
+                    targetTotal.value = "RM " + (calcBasic + calcAllow).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+            }
+        }
+    }
+
+    let allButtons = clone.querySelectorAll('button');
+    allButtons.forEach(btn => {
+        let oriClick = btn.getAttribute('onclick');
+        if (oriClick && !oriClick.includes('clone.remove')) {
+            let funcName = oriClick.replace(/\(.*?\)/, '').trim(); 
+            btn.removeAttribute('onclick');
+            btn.setAttribute('data-action-func', oriClick);
+            btn.addEventListener('click', function(e) {
+                activeCardContext = clone; 
+                try { if (typeof window[funcName] === 'function') window[funcName](e); } finally { activeCardContext = null; }
+            });
+        }
+    });
+
+    if (rumusanCard) grid.insertBefore(clone, rumusanCard); else grid.appendChild(clone);
+    if (rumusanCard) { rumusanCard.style.display = "block"; }
+    clone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
+// =====================================================
+// 8. ENJIN ELAUN DINAMIK GLOBAL & ONBOARDING TOUR
+// =====================================================
+let senaraiElaunGlobal = [];
+let allowanceCardTransformed = false;
+let elaunTourDitunjuk = false; 
+
+function transformAllowanceField(allowInput) {
+    allowInput.style.display = 'none'; 
+    let prev = allowInput.previousElementSibling;
+    if (prev && prev.tagName === 'LABEL') prev.style.display = 'none';
+
+    let container = document.createElement('div');
+    container.className = 'dynamic-allowance-wrapper';
+    container.style.cssText = 'width: 100%; margin-bottom: 15px; background: #f4f6f9; padding: 12px; border: 1px dashed #1f4e79; border-radius: 6px; position: relative;';
+
+    let htmlRows = '';
+    if (senaraiElaunGlobal && senaraiElaunGlobal.length > 0) {
+        senaraiElaunGlobal.forEach((elaun, i) => {
+            let btnX = i === 0 ? `` : `<button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
+            let nFormatted = elaun.nilai ? formatSafeRM(elaun.nilai) : '';
+            htmlRows += `
+                <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
+                    <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" value="${elaun.jenis || ''}" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="this.value = formatTitleCase(this.value); updateGlobalElaunSum(this);">
+                    <div style="flex:2; display:flex; gap:5px;">
+                        <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" value="${nFormatted}" style="width:100%; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+                        ${btnX}
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        htmlRows = `
+            <div style="display:flex; gap:5px; margin-bottom:5px;" class="elaun-row-kalkulator">
+                <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="this.value = formatTitleCase(this.value); updateGlobalElaunSum(this);">
+                <div style="flex:2; display:flex; gap:5px;">
+                    <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width:100%; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+            <label style="font-weight:bold; color:#1f4e79; margin:0; font-size:12px;">Maklumat Elaun</label>
+            <button type="button" onclick="tambahBarisElaunGlobalKalkulator(this)" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah Elaun</button>
+        </div>
+        <div class="dynamic-elaun-list-kalkulator">
+            ${htmlRows}
+        </div>
+    `;
+    allowInput.parentNode.insertBefore(container, allowInput.nextSibling);
+    
+    if (senaraiElaunGlobal.length > 0) { updateGlobalElaunSum(container); }
+
+    if (!elaunTourDitunjuk) {
+        elaunTourDitunjuk = true;
+        setTimeout(() => tunjukTourElaun(container), 400);
+    }
+}
+
+function tunjukTourElaun(targetContainer) {
+    targetContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    let overlay = document.createElement('div');
+    overlay.id = 'tourElaunOverlay';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); z-index: 99998; backdrop-filter: blur(2px); transition: opacity 0.3s;';
+    document.body.appendChild(overlay);
+
+    let originalPos = targetContainer.style.position;
+    let originalZ = targetContainer.style.zIndex;
+    let originalBg = targetContainer.style.background;
+    
+    targetContainer.style.position = 'relative';
+    targetContainer.style.zIndex = '99999';
+    targetContainer.style.background = '#fff';
+    targetContainer.style.boxShadow = '0 0 0 4px #fff, 0 0 0 6px #d9534f, 0 15px 35px rgba(0,0,0,0.5)';
+
+    let popover = document.createElement('div');
+    popover.innerHTML = `
+        <div class="tour-popover-box" style="position: absolute; top: calc(100% + 15px); left: 15px; background: white; border-radius: 8px; width: 330px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 20px; border-top: 6px solid #d9534f; color: #333; font-family: sans-serif; cursor: default; animation: floatUp 0.4s ease-out; z-index: 100000; text-align: left;">
+            
+            <div style="position: absolute; bottom: 100%; left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #d9534f transparent;"></div>
+            <div style="position: absolute; bottom: calc(100% - 6px); left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #fff transparent;"></div>
+            
+            <h4 style="margin: 0 0 10px 0; color: #1f4e79; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <span style="background: #1f4e79; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px;">💡</span>
+                Panduan Maklumat Elaun
+            </h4>
+            <p style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; color: #333;">Maklumat Elaun adalah Elaun yang <span style="color:#d9534f;">SELAIN / TIDAK TERMASUK:</span></p>
+            
+            <ul style="margin: 0 0 12px 0; padding-left: 20px; font-size: 11.5px; color: #555; line-height: 1.45;">
+                <li>NILAI tempat tinggal, bekalan makanan, minyak, lampu, air, rawatan perubatan atau yang diluluskan JTK;</li>
+                <li>Bayaran CARUMAN;</li>
+                <li>Elaun Pengangkutan (Kenderaan/minyak (yang sama erti dengannya));</li>
+                <li>Bayaran Khas untuk tujuan perbelanjaan pekerjaan;</li>
+                <li>Bayaran persaraan/pemberhentian/pampasan;</li>
+                <li>Bonus tahunan.</li>
+            </ul>
+            
+            <p style="margin: 0 0 15px 0; font-size: 11px; font-weight: bold; color: #d9534f; background: #fff0f0; padding: 6px 8px; border-radius: 4px; border-left: 3px solid #d9534f;">* DAN TIDAK TERMASUK bayaran yang dibayar di luar waktu kerja normal.</p>
+            
+            <button id="btnTutupTour" style="width: 100%; background: #1f4e79; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s;">OK, SAYA FAHAM</button>
+        </div>
+        <style>
+            @keyframes floatUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+            #btnTutupTour:hover { background: #153859 !important; }
+            @media (max-width: 400px) { .tour-popover-box { width: calc(100vw - 60px) !important; left: -10px !important; } }
+        </style>
+    `;
+    targetContainer.appendChild(popover);
+
+    const tutupTour = () => {
+        overlay.remove();
+        popover.remove();
+        targetContainer.style.position = originalPos;
+        targetContainer.style.zIndex = originalZ;
+        targetContainer.style.background = originalBg;
+        targetContainer.style.boxShadow = 'none';
+    };
+
+    overlay.addEventListener('click', tutupTour);
+    document.getElementById('btnTutupTour').addEventListener('click', tutupTour);
+}
+
+function semakDanTukarElaun(card) {
+    if (allowanceCardTransformed) {
+        if (!document.querySelector('.dynamic-allowance-wrapper')) {
+            allowanceCardTransformed = false; 
+        } else {
+            return; 
+        }
+    }
+    let allowInput = null;
+    for(let k of Object.keys(salaryMap)) {
+        let aid = salaryMap[k][0];
+        let found = card.querySelector(`[id="${aid}"], [data-original-id="${aid}"]`);
+        if(found) { allowInput = found; break; }
+    }
+    if (allowInput) {
+        allowanceCardTransformed = true;
+        transformAllowanceField(allowInput);
+    }
+}
+
+window.tambahBarisElaunGlobalKalkulator = function(btn) {
+    let list = btn.parentElement.nextElementSibling;
+    let row = document.createElement('div');
+    row.className = 'elaun-row-kalkulator';
+    row.style.cssText = "display:flex; gap:5px; margin-bottom:5px;";
+    row.innerHTML = `
+        <input type="text" class="global-elaun-jenis" placeholder="Jenis Elaun" style="flex:3; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px;" oninput="this.value = formatTitleCase(this.value); updateGlobalElaunSum(this);">
+        <div style="flex:2; display:flex; gap:5px;">
+            <input type="text" class="global-elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width:100%; padding:8px; font-size:13px; border:1px solid #ccc; border-radius:5px; text-align:right;" oninput="updateGlobalElaunSum(this)" onfocus="this.select()">
+            <button type="button" onclick="buangBarisElaunGlobalKalkulator(this)" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+        </div>
+    `;
+    list.appendChild(row);
+};
+
+window.buangBarisElaunGlobalKalkulator = function(btn) {
+    let row = btn.parentElement.parentElement; 
+    let container = row.closest('.dynamic-allowance-wrapper');
+    row.remove();
+    updateGlobalElaunSum(container);
+};
+
+window.updateGlobalElaunSum = function(el) {
+    let wrapper = el.closest('.dynamic-allowance-wrapper');
+    if (!wrapper) return;
+    let rows = wrapper.querySelectorAll('.elaun-row-kalkulator');
+    let total = 0;
+    senaraiElaunGlobal = []; 
+    
+    rows.forEach(r => {
+        let j = r.querySelector('.global-elaun-jenis').value.trim();
+        let nStr = r.querySelector('.global-elaun-nilai').value;
+        let n = evaluateSmartMath(nStr);
+        if (j || nStr) {
+            senaraiElaunGlobal.push({jenis: j, nilai: n > 0 ? n : nStr});
+        }
+        if (n > 0) total += n;
+    });
+
+    let formattedTotal = total > 0 ? formatRM(total) : "";
+
+    Object.keys(salaryMap).forEach(key => {
+        let aID = salaryMap[key][0];
+        document.querySelectorAll(`[id="${aID}"], [data-original-id="${aID}"]`).forEach(aEl => {
+            if(aEl.value !== formattedTotal) {
+                aEl.value = formattedTotal;
+                aEl.dispatchEvent(new Event('input', {bubbles:true})); 
+            }
+        });
+    });
+};
+
+const observerKalkulator = new MutationObserver((mutations) => {
+    mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+            if (node.nodeType === 1 && node.classList && node.classList.contains('calculator-card')) {
+                setTimeout(() => semakDanTukarElaun(node), 50); 
+            }
+        });
+        mutation.removedNodes.forEach(node => {
+            if (node.nodeType === 1 && node.querySelector('.dynamic-allowance-wrapper')) {
+                allowanceCardTransformed = false; 
+            }
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    let gridNode = document.getElementById('active-calculators-grid');
+    if (gridNode) observerKalkulator.observe(gridNode, { childList: true });
+    
+    document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)').forEach(card => {
+        semakDanTukarElaun(card);
+    });
+});
