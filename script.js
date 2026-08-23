@@ -216,14 +216,16 @@ function resetOTBiasa() {
 
 // ENJIN BARU: KADAR LEWAT SEMINIT
 function calculateLewat(e) {
-    setContext(e); let totalSalary = updateSalaryTotal("lewatBasicSalary", "lewatAllowance", "lewatTotalSalary");
+    if(e && e.target) setContext(e); else if(e && e.closest) activeCardContext = e.closest('.calculator-card');
+    let totalSalary = updateSalaryTotal("lewatBasicSalary", "lewatAllowance", "lewatTotalSalary");
     let minutes = Number(getElement("lewatMinit").value); let workingHours = Number(getElement("lewatNormalWorkingHours").value);
     if (!workingHours) { alert("Sila pilih jam kerja normal sehari."); return; }
     let ORP = totalSalary / 26; let hourly = ORP / workingHours; let minutely = hourly / 60; let amount = minutely * minutes;
     setText("lewatResultTotal", formatRM(totalSalary)); setText("lewatORP", formatRM(ORP));
     setText("lewatMinutely", formatRM(minutely)); setText("lewatAmount", formatRM(amount)); toggleResult("lewat", true); autoMasukRumusan('lewatAmount', activeCardContext);
 }
-function resetLewat() {
+function resetLewat(e) {
+    if(e && e.target) setContext(e); else if(e && e.closest) activeCardContext = e.closest('.calculator-card');
     ["lewatBasicSalary", "lewatAllowance", "lewatMinit"].forEach(id => setValue(id, "")); setValue("lewatTotalSalary", "RM 0.00"); setValue("lewatNormalWorkingHours", "");
     ["lewatResultTotal", "lewatORP", "lewatMinutely", "lewatAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("lewat", false);
 }
