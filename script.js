@@ -1443,10 +1443,11 @@ window.tambahKalkulator = function(templateId) {
 };
 
 // =====================================================
-// 8. ENJIN ELAUN DINAMIK GLOBAL (AUTO-TRIGGER)
+// 8. ENJIN ELAUN DINAMIK GLOBAL & ONBOARDING TOUR
 // =====================================================
 let senaraiElaunGlobal = [];
 let allowanceCardTransformed = false;
+let elaunTourDitunjuk = false; // Memori: Pastikan pop-up tour hanya keluar SEKALI sahaja
 
 // Fungsi ini menukar kotak elaun asal menjadi borang dinamik
 function transformAllowanceField(allowInput) {
@@ -1458,7 +1459,7 @@ function transformAllowanceField(allowInput) {
 
     let container = document.createElement('div');
     container.className = 'dynamic-allowance-wrapper';
-    container.style.cssText = 'width: 100%; margin-bottom: 15px; background: #f4f6f9; padding: 12px; border: 1px dashed #1f4e79; border-radius: 6px;';
+    container.style.cssText = 'width: 100%; margin-bottom: 15px; background: #f4f6f9; padding: 12px; border: 1px dashed #1f4e79; border-radius: 6px; position: relative;';
 
     // Bina senarai baris jika dah ada memori elaun sebelum ni
     let htmlRows = '';
@@ -1498,9 +1499,86 @@ function transformAllowanceField(allowInput) {
     `;
     allowInput.parentNode.insertBefore(container, allowInput.nextSibling);
     
-    // Paksa update sekiranya memori ada data
     if (senaraiElaunGlobal.length > 0) { updateGlobalElaunSum(container); }
+
+    // TRIGGER POP-UP TOUR (Hanya Untuk Kali Pertama)
+    if (!elaunTourDitunjuk) {
+        elaunTourDitunjuk = true; // Kunci supaya tak keluar lagi
+        setTimeout(() => tunjukTourElaun(container), 400); // Lengah sikit bagi UI render cantik
+    }
 }
+
+// FUNGSI POP-UP TOUR ONBOARDING ELAUN (Design Terkini)
+function tunjukTourElaun(targetContainer) {
+    // 1. Skrol ke paparan tengah
+    targetContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // 2. Buat skrin belakang jadi gelap (Overlay)
+    let overlay = document.createElement('div');
+    overlay.id = 'tourElaunOverlay';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); z-index: 99998; backdrop-filter: blur(2px); transition: opacity 0.3s;';
+    document.body.appendChild(overlay);
+
+    // 3. Highlight Kotak Elaun
+    let originalPos = targetContainer.style.position;
+    let originalZ = targetContainer.style.zIndex;
+    let originalBg = targetContainer.style.background;
+    
+    targetContainer.style.position = 'relative';
+    targetContainer.style.zIndex = '99999';
+    targetContainer.style.background = '#fff';
+    targetContainer.style.boxShadow = '0 0 0 4px #fff, 0 0 0 6px #d9534f, 0 15px 35px rgba(0,0,0,0.5)';
+
+    // 4. Buat Tooltip/Buih Pop-up yang tunjuk ke kotak Elaun
+    let popover = document.createElement('div');
+    popover.innerHTML = `
+        <div class="tour-popover-box" style="position: absolute; top: calc(100% + 15px); left: 15px; background: white; border-radius: 8px; width: 330px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 20px; border-top: 6px solid #d9534f; color: #333; font-family: sans-serif; cursor: default; animation: floatUp 0.4s ease-out; z-index: 100000; text-align: left;">
+            
+            <!-- Segitiga (Arrow) hala ke atas pointing ke kotak elaun -->
+            <div style="position: absolute; bottom: 100%; left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #d9534f transparent;"></div>
+            <div style="position: absolute; bottom: calc(100% - 6px); left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #fff transparent;"></div>
+            
+            <h4 style="margin: 0 0 10px 0; color: #1f4e79; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <span style="background: #1f4e79; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px;">💡</span>
+                Panduan Maklumat Elaun
+            </h4>
+            <p style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; color: #333;">Maklumat Elaun adalah Elaun yang <span style="color:#d9534f;">SELAIN / TIDAK TERMASUK:</span></p>
+            
+            <ul style="margin: 0 0 12px 0; padding-left: 20px; font-size: 11.5px; color: #555; line-height: 1.45;">
+                <li>NILAI tempat tinggal, bekalan makanan, minyak, lampu, air, rawatan perubatan atau yang diluluskan JTK;</li>
+                <li>Bayaran CARUMAN;</li>
+                <li>Elaun Pengangkutan (Kenderaan/minyak (yang sama erti dengannya));</li>
+                <li>Bayaran Khas untuk tujuan perbelanjaan pekerjaan;</li>
+                <li>Bayaran persaraan/pemberhentian/pampasan;</li>
+                <li>Bonus tahunan.</li>
+            </ul>
+            
+            <p style="margin: 0 0 15px 0; font-size: 11px; font-weight: bold; color: #d9534f; background: #fff0f0; padding: 6px 8px; border-radius: 4px; border-left: 3px solid #d9534f;">* DAN TIDAK TERMASUK bayaran yang dibayar di luar waktu kerja normal.</p>
+            
+            <button id="btnTutupTour" style="width: 100%; background: #1f4e79; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s;">OK, SAYA FAHAM</button>
+        </div>
+        <style>
+            @keyframes floatUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+            #btnTutupTour:hover { background: #153859 !important; }
+            @media (max-width: 400px) { .tour-popover-box { width: calc(100vw - 60px) !important; left: -10px !important; } }
+        </style>
+    `;
+    targetContainer.appendChild(popover);
+
+    // Fungsi tutup tour
+    const tutupTour = () => {
+        overlay.remove();
+        popover.remove();
+        targetContainer.style.position = originalPos;
+        targetContainer.style.zIndex = originalZ;
+        targetContainer.style.background = originalBg;
+        targetContainer.style.boxShadow = 'none';
+    };
+
+    overlay.addEventListener('click', tutupTour);
+    document.getElementById('btnTutupTour').addEventListener('click', tutupTour);
+}
+
 
 // Fungsi semak kad untuk ditukar jadi dinamik
 function semakDanTukarElaun(card) {
@@ -1564,7 +1642,6 @@ window.updateGlobalElaunSum = function(el) {
         if (n > 0) total += n;
     });
 
-    // MEMATUHI AMARAN: GUNA FUNGSI FORMAT SEDIA ADA!
     let formattedTotal = total > 0 ? formatRM(total) : "";
 
     // Ghaibkan suntikan ke dalam sistem teras TANPA merosakkan format/enjin sedia ada
