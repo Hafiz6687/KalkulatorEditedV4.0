@@ -1427,131 +1427,179 @@ if (!adaData) { alert("Peringatan: Sila buat sekurang-kurangnya satu pengiraan a
             { label: "Cuti Tahunan", detail: h_ct ? h_ct + " hari" : "", amt: r_ct }
         ];
 
-        itemsUpah.forEach(i => {
-            let n = getValNum(i.amt);
+itemsUpah.forEach(i => {
+            let n = getValNum(i.amt); 
             if (n > 0) {
-                htmlUpahDalaman += trU(i.label, i.detail, parseRMStr(i.amt));
-                totalUpah += n;
-            }
-        });
+                htmlUpahDalaman += trU(i.label, i.detail, parseRMStr(i.amt)); 
+                totalUpah += n; 
+            } 
+        }); 
 
-        htmlUpahDalaman += `<tr><td colspan="2" style="padding: 8px 12px; border-top: 2px solid #ccc; font-weight: bold; text-align: right; background:#f4f6f9;">JUMLAH UPAH</td><td style="padding: 8px 12px; border-top: 2px solid #ccc; font-weight: bold; text-align: right; background:#f4f6f9;">${parseRMStr(totalUpah)}</td></tr>`;
-        let upahHTML = `<table style="width: 100%; border-collapse: collapse; font-size: 11px;">${htmlUpahDalaman}</table>`;
+        // UPAH HTML BARU DENGAN FLEXBOX SUPAYA SELARI BAWAH
+        let upahHTML = `
+            <div style="flex-grow: 1; padding: 10px 0;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">${htmlUpahDalaman}</table>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: auto;">
+                <tr>
+                    <td colspan="2" style="padding: 8px 12px; border-top: 1px solid #aaa; font-weight: bold; text-align: right; background:#e8eaed; color:#1a1a1a;">JUMLAH UPAH</td>
+                    <td style="padding: 8px 12px; border-top: 1px solid #aaa; font-weight: bold; text-align: right; background:#e8eaed; color:#1a1a1a; width: 30%;">${parseRMStr(totalUpah)}</td>
+                </tr>
+            </table>
+        `; 
 
-        let htmlPotonganDalaman = "";
+        let htmlPotonganDalaman = ""; 
         if (xtra) {
             let itemsPotongan = [
-                { label: "Pendahuluan", amt: xtra.pendahuluanN },
-                { label: labelWithPct("KWSP", xtra.kwspP), amt: xtra.kwspN },
-                { label: labelWithPct("PERKESO", xtra.perkesoP), amt: xtra.perkesoN },
-                { label: labelWithPct("SIP/EIS", xtra.sipP), amt: xtra.sipN }
-            ];
-
+                { label: "Pendahuluan", amt: xtra.pendahuluanN }, 
+                { label: labelWithPct("KWSP", xtra.kwspP), amt: xtra.kwspN }, 
+                { label: labelWithPct("PERKESO", xtra.perkesoP), amt: xtra.perkesoN }, 
+                { label: labelWithPct("SIP/EIS", xtra.sipP), amt: xtra.sipN } 
+            ]; 
             itemsPotongan.forEach(i => {
-                let n = getValNum(i.amt);
+                let n = getValNum(i.amt); 
                 if (n > 0) {
-                    htmlPotonganDalaman += trP(i.label, parseRMStr(i.amt));
-                    totalPotongan += n;
-                }
-            });
-
+                    htmlPotonganDalaman += trP(i.label, parseRMStr(i.amt)); 
+                    totalPotongan += n; 
+                } 
+            }); 
             if (xtra.senaraiPotongan) {
                 xtra.senaraiPotongan.forEach(potong => {
-                    let n = getValNum(potong.nilai);
+                    let n = getValNum(potong.nilai); 
                     if (potong.jenis || n > 0) {
-                        htmlPotonganDalaman += trP(labelWithPct(potong.jenis || "Lain-lain", potong.pct), parseRMStr(n));
-                        totalPotongan += n;
-                    }
-                });
-            }
-        }
-        
-        htmlPotonganDalaman += `<tr><td style="padding: 8px 12px; border-top: 2px solid #ccc; font-weight: bold; text-align: right; background:#fff0f0;">JUMLAH POTONGAN</td><td style="padding: 8px 12px; border-top: 2px solid #ccc; font-weight: bold; text-align: right; color:#d9534f; background:#fff0f0;">${parseRMStr(totalPotongan)}</td></tr>`;
-        let potongHTML = `<table style="width: 100%; border-collapse: collapse; font-size: 11px;">${htmlPotonganDalaman}</table>`;
+                        htmlPotonganDalaman += trP(labelWithPct(potong.jenis || "Lain-lain", potong.pct), parseRMStr(n)); 
+                        totalPotongan += n; 
+                    } 
+                }); 
+            } 
+        } 
 
-        let jumlahBersih = totalUpah - totalPotongan;
-        let bersihHtml = `
-            <div style="grid-column: 1 / -1; background: #1f4e79; color: white; padding: 12px 20px; border-radius: 6px; text-align: right; margin-bottom: 15px; display:flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 14px; font-weight: normal; letter-spacing: 0.5px;">JUMLAH KESELURUHAN UPAH (BERSIH)</span>
-                <span style="font-size: 18px; font-weight: bold;">${parseRMStr(jumlahBersih)}</span>
+        // POTONGAN HTML BARU DENGAN FLEXBOX SUPAYA SELARI BAWAH
+        let potongHTML = `
+            <div style="flex-grow: 1; padding: 10px 0;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">${htmlPotonganDalaman}</table>
             </div>
-        `;
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: auto;">
+                <tr>
+                    <td style="padding: 8px 12px; border-top: 1px solid #aaa; font-weight: bold; text-align: right; background:#e8eaed; color:#1a1a1a; width: 60%;">JUMLAH POTONGAN</td>
+                    <td style="padding: 8px 12px; border-top: 1px solid #aaa; font-weight: bold; text-align: right; color:#d9534f; background:#e8eaed; width: 40%;">${parseRMStr(totalPotongan)}</td>
+                </tr>
+            </table>
+        `; 
 
-        let v_ct_layak = "-", v_cs_layak = "-", v_ch_layak = "-";
+        let jumlahBersih = totalUpah - totalPotongan; 
+        
+        // WARNA JUMLAH BERSIH DITUKAR SAMA DENGAN SUB HEADER + MARGIN 3pt
+        let bersihHtml = ` 
+            <div class="report-box" style="grid-column: 1 / -1; border-left: 5px solid #1f4e79; margin-bottom: 3pt; display:flex; justify-content: space-between; align-items: center; background:#e8eaed; color:#1a1a1a; padding: 10px 20px; border-radius: 6px;"> 
+                <span style="font-size: 13px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">JUMLAH KESELURUHAN UPAH (BERSIH)</span> 
+                <span style="font-size: 16px; font-weight: bold;">${parseRMStr(jumlahBersih)}</span> 
+            </div> 
+        `; 
+
+        // KUTIP DATA CUTI/SAKIT/HOSP (LAYAK, GUNA & BAKI)
+        let v_ct_layak = "-", v_cs_layak = "-", v_ch_layak = "-"; 
+        let v_ct_guna = "-", v_cs_guna = "-", v_ch_guna = "-"; 
+        let v_ct_baki = "-", v_cs_baki = "-", v_ch_baki = "-"; 
+
         semuaKadAktif.forEach(kad => {
-            let v = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.value.trim() : ""; };
-            if(!v_ct_layak || v_ct_layak === "-") v_ct_layak = v("cutiLayak");
-            if(!v_cs_layak || v_cs_layak === "-") v_cs_layak = v("sakitLayak");
-            if(!v_ch_layak || v_ch_layak === "-") v_ch_layak = v("hospLayak");
-        });
-        
-        v_ct_layak = (v_ct_layak && v_ct_layak !== "-") ? v_ct_layak + " Hari" : "-";
-        v_cs_layak = (v_cs_layak && v_cs_layak !== "-") ? v_cs_layak + " Hari" : "-";
-        v_ch_layak = (v_ch_layak && v_ch_layak !== "-") ? v_ch_layak + " Hari" : "-";
+            let v = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.value.trim() : ""; }; 
+            
+            if(!v_ct_layak || v_ct_layak === "-") v_ct_layak = v("cutiLayak"); 
+            if(!v_cs_layak || v_cs_layak === "-") v_cs_layak = v("sakitLayak"); 
+            if(!v_ch_layak || v_ch_layak === "-") v_ch_layak = v("hospLayak"); 
+            
+            if(!v_ct_guna || v_ct_guna === "-") v_ct_guna = v("cutiGuna"); 
+            if(!v_cs_guna || v_cs_guna === "-") v_cs_guna = v("sakitGuna"); 
+            if(!v_ch_guna || v_ch_guna === "-") v_ch_guna = v("hospGuna"); 
+            
+            if(!v_ct_baki || v_ct_baki === "-") v_ct_baki = v("annualLeaveDays"); 
+            if(!v_cs_baki || v_cs_baki === "-") v_cs_baki = v("bakiSakitBiasa"); 
+            if(!v_ch_baki || v_ch_baki === "-") v_ch_baki = v("bakiHosp"); 
+        }); 
 
-        let htmlMaklumatPerkhidmatan = `
-            <div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;">
-                <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT BERKAITAN PERKHIDMATAN</div>
-                <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center;">
-                    <thead>
-                        <tr style="background: #f4f6f9; border-bottom: 1px solid #ccc;">
-                            <th style="padding: 8px;">Kelayakan</th>
-                            <th style="padding: 8px;">Hari Kelepasan</th>
-                            <th style="padding: 8px;">Cuti Tahunan</th>
-                            <th style="padding: 8px;">Cuti Sakit</th>
-                            <th style="padding: 8px;">Cuti Hospitalisasi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="padding: 8px; font-weight: bold; background: #fafafa;">Tahunan</td>
-                            <td style="padding: 8px; font-weight: bold;">11 Hari</td>
-                            <td style="padding: 8px; font-weight: bold;">${v_ct_layak}</td>
-                            <td style="padding: 8px; font-weight: bold;">${v_cs_layak}</td>
-                            <td style="padding: 8px; font-weight: bold;">${v_ch_layak}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        `;
+        let fDay = (val) => (val && val !== "-") ? val + " Hari" : "-";
+        v_ct_layak = fDay(v_ct_layak); v_cs_layak = fDay(v_cs_layak); v_ch_layak = fDay(v_ch_layak); 
+        v_ct_guna = fDay(v_ct_guna); v_cs_guna = fDay(v_cs_guna); v_ch_guna = fDay(v_ch_guna); 
+        v_ct_baki = fDay(v_ct_baki); v_cs_baki = fDay(v_cs_baki); v_ch_baki = fDay(v_ch_baki); 
 
-        let penyataGajiHTML = `
-        <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 15px; margin-bottom: 15px; grid-column: 1 / -1; align-items: start;">
-            <div class="report-box" style="padding: 0; overflow: hidden; border: 1px solid #1f4e79;">
-                <div style="background: #1f4e79; color: white; font-weight: bold; padding: 10px 12px; font-size: 12px; text-align: left; text-transform: uppercase;">BUTIRAN UPAH</div>
-                ${upahHTML}
-            </div>
-            <div class="report-box" style="padding: 0; overflow: hidden; border: 1px solid #d9534f;">
-                <div style="background: #d9534f; color: white; font-weight: bold; padding: 10px 12px; font-size: 12px; text-align: left; text-transform: uppercase;">BUTIRAN POTONGAN</div>
-                ${potongHTML}
-            </div>
-        </div>
-        ${bersihHtml}
-        ${htmlMaklumatPerkhidmatan}
-        `;
+        let htmlMaklumatPerkhidmatan = ` 
+            <div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;"> 
+                <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT BERKAITAN PERKHIDMATAN</div> 
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center;"> 
+                    <thead> 
+                        <tr style="background: #f4f6f9; border-bottom: 1px solid #ccc;"> 
+                            <th style="padding: 8px; text-align: left;">Perkara</th> 
+                            <th style="padding: 8px;">Hari Kelepasan</th> 
+                            <th style="padding: 8px;">Cuti Tahunan</th> 
+                            <th style="padding: 8px;">Cuti Sakit</th> 
+                            <th style="padding: 8px;">Cuti Hospitalisasi</th> 
+                        </tr> 
+                    </thead> 
+                    <tbody> 
+                        <tr style="border-bottom: 1px dashed #eee;"> 
+                            <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Kelayakan Tahunan</td> 
+                            <td style="padding: 8px; font-weight: bold;">11 Hari</td> 
+                            <td style="padding: 8px; font-weight: bold;">${v_ct_layak}</td> 
+                            <td style="padding: 8px; font-weight: bold;">${v_cs_layak}</td> 
+                            <td style="padding: 8px; font-weight: bold;">${v_ch_layak}</td> 
+                        </tr> 
+                        <tr style="border-bottom: 1px dashed #eee;"> 
+                            <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Telah Digunakan</td> 
+                            <td style="padding: 8px; font-weight: bold;">-</td> 
+                            <td style="padding: 8px; font-weight: bold;">${v_ct_guna}</td> 
+                            <td style="padding: 8px; font-weight: bold;">${v_cs_guna}</td> 
+                            <td style="padding: 8px; font-weight: bold;">${v_ch_guna}</td> 
+                        </tr> 
+                        <tr> 
+                            <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left; color:#1f4e79;">Baki</td> 
+                            <td style="padding: 8px; font-weight: bold; color:#1f4e79;">-</td> 
+                            <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${v_ct_baki}</td> 
+                            <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${v_cs_baki}</td> 
+                            <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${v_ch_baki}</td> 
+                        </tr> 
+                    </tbody> 
+                </table> 
+            </div> 
+        `; 
+
+        let penyataGajiHTML = ` 
+        <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 15px; margin-bottom: 1.5pt; grid-column: 1 / -1; align-items: stretch;"> 
+            <div class="report-box" style="padding: 0; border: 1px solid #aaa; display: flex; flex-direction: column;"> 
+                <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px; margin: 0; border-radius: 0; border-bottom: 1px solid #aaa;">BUTIRAN UPAH</div> 
+                ${upahHTML} 
+            </div> 
+            <div class="report-box" style="padding: 0; border: 1px solid #aaa; display: flex; flex-direction: column;"> 
+                <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px; margin: 0; border-radius: 0; border-bottom: 1px solid #aaa;">BUTIRAN POTONGAN</div> 
+                ${potongHTML} 
+            </div> 
+        </div> 
+        ${bersihHtml} 
+        ${htmlMaklumatPerkhidmatan} 
+        `; 
 
         contentSeterusnya = penyataGajiHTML; 
 
-    } else {
-        tajukHeaderHTML = `
-            <h1 class="main-title">PENGIRAAN DI BAWAH AKTA KERJA 1955</h1>
-            <p class="subtitle">Tarikh Janaan: ${tarikhHariIni}</p>
-        `;
+    } else { 
+        tajukHeaderHTML = ` 
+            <h1 class="main-title">PENGIRAAN DI BAWAH AKTA KERJA 1955</h1> 
+            <p class="subtitle">Tarikh Janaan: ${tarikhHariIni}</p> 
+        `; 
         contentSeterusnya = htmlLaporan; 
-    }
+    } 
 
-let maklumatSyarikatPekerjaHTML = "";
+    let maklumatSyarikatPekerjaHTML = ""; 
     
-    if (namaPekerja !== "" || icPekerja !== "" || noPekerja !== "" || namaMajikan !== "") {
-        maklumatSyarikatPekerjaHTML = `<div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;">
-            <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT PEKERJA & SYARIKAT</div>
-            <table class="param-table" style="margin-bottom: 0;">
-                ${namaMajikan ? `<tr><td class="param-label" style="width: 25%; font-weight: bold;">Syarikat/Organisasi/Majikan</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${namaMajikan}</td></tr>` : ''}
-                ${namaPekerja ? `<tr><td class="param-label" style="width: 25%; font-weight: bold;">Nama Pekerja</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${namaPekerja}</td></tr>` : ''}
-                ${icPekerja ? `<tr><td class="param-label" style="width: 25%; font-weight: bold;">No. Kad Pengenalan / No. Passport</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${icPekerja}</td></tr>` : ''}
-                ${noPekerja ? `<tr><td class="param-label" style="width: 25%; font-weight: bold;">No. Pekerja</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${noPekerja}</td></tr>` : ''}
-            </table>
-        </div>`;
+    if (namaPekerja !== "" || icPekerja !== "" || noPekerja !== "") { 
+        maklumatSyarikatPekerjaHTML = `
+        <div class="report-box" style="grid-column: 1 / -1; margin-bottom: 3pt; border-left: 5px solid #1f4e79;"> 
+            <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT PEKERJA</div> 
+            <table class="param-table" style="margin-bottom: 0;"> 
+                ${namaPekerja ? `<tr><td class="param-label" style="width: 25%; font-weight: bold;">Nama Pekerja</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${namaPekerja}</td></tr>` : ''} 
+                ${icPekerja ? `<tr><td class="param-label" style="width: 25%; font-weight: bold;">No. Kad Pengenalan / No. Passport</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${icPekerja}</td></tr>` : ''} 
+                ${noPekerja ? `<tr><td class="param-label" style="width: 25%; font-weight: bold;">No. Pekerja</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${noPekerja}</td></tr>` : ''} 
+            </table> 
+        </div>`; 
     }
 
 let cssBaru = `.floating-action-bar { position: fixed; top: 25px; right: 25px; display: flex; z-index: 9999; align-items: center; } .kebab-btn { background: #0d6efd; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 24px; cursor: pointer; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: 0.2s; display: flex; justify-content: center; align-items: center; line-height: 1; padding-bottom: 5px; } .kebab-btn:hover { background: #0b5ed7; transform: scale(1.05); } .kebab-dropdown { display: none; position: absolute; right: 0; top: 115%; background-color: white; min-width: 170px; box-shadow: 0px 4px 15px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; border: 1px solid #ddd; text-align: left; } .kebab-dropdown a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; font-weight: bold; transition: 0.2s; } .kebab-dropdown a:hover { background-color: #f4f6f9; } .kebab-dropdown a:first-child { border-bottom: 1px solid #eee; } @media print { .floating-action-bar, .print-btn-container { display: none !important; } }`;
