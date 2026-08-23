@@ -45,11 +45,6 @@
 
 <!-- KAWASAN SCROLL BERMULA DI SINI -->
     <div class="sidebar-menu" style="padding-top: 15px;">
-      
-      <!-- MENU BARU: MAKLUMAT GAJI -->
-      <button class="menu-btn" onclick="tambahKalkulator('maklumatGaji')">
-        <span class="icon">💳</span> <span style="font-size: 14px; text-transform: uppercase;">Maklumat Gaji</span>
-      </button>
 
       <button class="menu-btn active" onclick="tambahKalkulator('orp')">
         <span class="icon">📊</span> <span style="font-size: 14px; text-transform: uppercase;">Kadar Upah Biasa (ORP)</span>
@@ -119,9 +114,15 @@
       </button>
 
       <!-- Butang 2: Jana Penyata Gaji -->
-      <button class="menu-btn" onclick="janaPenyataGaji()" style="width: 100%; box-sizing: border-box; background: linear-gradient(to right, #c6d8f9 0%, #e8f0fe 35%, #ffffff 50%, #e8f0fe 65%, #c6d8f9 100%); color: #1f4e79; border-radius: 8px; box-shadow: 0 4px 10px rgba(31, 78, 121, 0.15), inset 0 2px 3px rgba(255, 255, 255, 0.8); border: 1px solid #1f4e79; transform: translateY(-2px); transition: transform 0.2s ease;">
+      <button class="menu-btn" onclick="janaPenyataGaji()" style="width: 100%; box-sizing: border-box; background: linear-gradient(to right, #c6d8f9 0%, #e8f0fe 35%, #ffffff 50%, #e8f0fe 65%, #c6d8f9 100%); color: #1f4e79; border-radius: 8px; box-shadow: 0 4px 10px rgba(31, 78, 121, 0.15), inset 0 2px 3px rgba(255, 255, 255, 0.8); border: 1px solid #1f4e79; margin-bottom: 10px; transform: translateY(-2px); transition: transform 0.2s ease;">
         <span class="icon" style="font-size: 16px;">💵</span> 
         <span style="font-size: 14px; text-transform: uppercase; font-weight: bold;">Jana Penyata Gaji</span>
+      </button>
+
+      <!-- Butang 3: Maklumat Gaji (BARU) -->
+      <button class="menu-btn" onclick="tambahKalkulator('maklumatGaji')" style="width: 100%; box-sizing: border-box; background: linear-gradient(to left, #e2e8f0 0%, #ffffff 50%, #e2e8f0 100%); color: #1f4e79; border-radius: 8px; box-shadow: 0 4px 10px rgba(31, 78, 121, 0.15), inset 0 2px 3px rgba(255, 255, 255, 0.8); border: 1px solid #1f4e79; transform: translateY(-2px); transition: transform 0.2s ease;">
+        <span class="icon" style="font-size: 16px;">💳</span> 
+        <span style="font-size: 14px; text-transform: uppercase; font-weight: bold;">Maklumat Gaji</span>
       </button>
 
     </div>
