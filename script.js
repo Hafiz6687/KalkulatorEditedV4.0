@@ -1668,11 +1668,9 @@ function resetKalkulatorIndividu(elementButangReset) {
     const kadKalkulator = elementButangReset.closest('.calculator-card');
     if (!kadKalkulator) return;
 
-    // 2. Kosongkan semua input teks & nombor (kecuali field read-only tertentu jika perlu)
+    // 2. Kosongkan semua input teks & nombor biasa
     const senaraiInput = kadKalkulator.querySelectorAll('input[type="text"], input[type="number"]');
     senaraiInput.forEach(input => {
-        // Biarkan field read-only seperti jumlah upah diproses oleh enjin pengiraan, 
-        // tapi kosongkan nilainya atau tetapkan ke default
         if (input.readOnly) {
             if (input.classList.contains('salary-total')) {
                 input.value = "RM 0.00";
@@ -1690,25 +1688,27 @@ function resetKalkulatorIndividu(elementButangReset) {
         select.selectedIndex = 0;
     });
 
-    // 4. BAHAGIAN ELAUN DINAMIK: Reset baris pertama & buang baris tambahan
+    // 4. PEMBAIKAN KHAS ELAUN DINAMIK: Cari wrapper atau input elaun asal secara langsung
     const kontenaElaun = kadKalkulator.querySelector('.dynamic-allowance-wrapper');
     if (kontenaElaun) {
         const senaraiBarisElaun = kontenaElaun.querySelectorAll('.elaun-row-kalkulator');
         senaraiBarisElaun.forEach((baris, index) => {
             if (index === 0) {
-                // Kosongkan input jenis elaun dan nilai elaun pada baris pertama
-                const inputsBaris = baris.querySelectorAll('input');
-                inputsBaris.forEach(inp => inp.value = '');
+                baris.querySelectorAll('input').forEach(inp => inp.value = '');
             } else {
-                // Buang baris elaun kedua dan seterusnya
                 baris.remove();
             }
         });
-        
-        // Kemas kini semula jumlah elaun global
         if (typeof updateGlobalElaunSum === 'function') {
             updateGlobalElaunSum(kontenaElaun);
         }
+    } else {
+        // Jika wrapper dinamik belum wujud, kosongkan terus input elaun asal berdasarkan salaryMap
+        Object.keys(salaryMap).forEach(key => {
+            let allowID = salaryMap[key][0];
+            let allowEl = kadKalkulator.querySelector(`[id="${allowID}"], [data-original-id="${allowID}"]`);
+            if (allowEl) allowEl.value = '';
+        });
     }
 
     // 5. Reset paparan keputusan (output) khusus untuk kad ini
@@ -1717,7 +1717,7 @@ function resetKalkulatorIndividu(elementButangReset) {
     pendings.forEach(p => p.style.display = "block");
     datas.forEach(d => d.style.display = "none");
     
-    // Pastikan sebarang teks keputusan khusus dikembalikan ke asal
+    // Kembalikan teks keputusan kepada nilai asal RM 0.00
     const resultRows = kadKalkulator.querySelectorAll('.result-row strong, [id$="Result"], [id$="Amount"]');
     resultRows.forEach(el => {
         if (el.id && (el.id.includes('Amount') || el.id.includes('Result') || el.id.includes('ORP') || el.id.includes('Hourly') || el.id.includes('Daily') || el.id.includes('Minutely'))) {
