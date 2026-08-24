@@ -620,6 +620,42 @@ function kemaskiniPatutBayar(selectElement) {
                     kalkulatorWujud = true;
                     if (window.getComputedStyle(dataEl).display !== "none") {
                         sudahKlikKira = true;
+                        let elemenKeputusan = kad.querySelector(`[id="${idSasaran}"], [data-original-id="${idSasaran}"]`);
+                        if (elemenKeputusan) {
+                            nilaiDiambil += unformatRMRumusan(elemenKeputusan.innerText);
+                            
+                            let detail = "";
+                            let getVal = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.value : ""; };
+                            let getTxt = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.innerText : ""; };
+
+                            if (idSasaran.includes("otAmount")) { let jam = getVal("otHours"); if(jam) detail = `${jam} jam`; }
+                            else if (idSasaran.includes("otRHAmount")) { let jam = getVal("otRHHours"); if(jam) detail = `${jam} jam`; }
+                            else if (idSasaran.includes("otPHAmount")) { let jam = getVal("otPHHours"); if(jam) detail = `${jam} jam`; }
+                            else if (idSasaran.includes("rhAmount") && !idSasaran.includes("rhMoreAmount")) { let hari = getVal("rhDays"); if(hari) detail = `${hari} hari`; }
+                            else if (idSasaran.includes("rhMoreAmount")) { let hari = getVal("rhMoreDays"); if(hari) detail = `${hari} hari`; }
+                            else if (idSasaran.includes("phAmount")) { let hari = getVal("phDays"); if(hari) detail = `${hari} hari`; }
+                            else if (idSasaran.includes("annualLeaveAmount")) { let hari = getVal("annualLeaveDays"); if(hari) detail = `${hari} hari`; }
+                            else if (idSasaran.includes("sickLeaveAmount")) { let hari = getVal("sickLeaveDays"); if(hari) detail = `${hari} hari`; }
+                            else if (idSasaran.includes("resUniMonthAmount")) { let bulan = getVal("ggnUniMonthVal"); if(bulan) detail = `${bulan} bulan`; }
+                            else if (idSasaran.includes("lewatAmount")) { let min = getVal("lewatMinit"); if(min) detail = `${min} minit`; }
+                            else if (idSasaran.includes("resUni18AAmount")) { 
+                                let m = getVal("ggnUniWeekVal"), h = getVal("ggnUniDayVal"); 
+                                if(m) detail = `${m} minggu`; else if(h) detail = `${h} hari`;
+                            }
+                            else if (idSasaran.includes("tbbAmount")) { let hari = getTxt("tbbHari"); if(hari && hari !== "-") detail = hari; }
+                            else if (idSasaran.includes("amount18A")) { 
+                                let mula = getVal("section18AStartDate"); 
+                                let akhir = getVal("section18AEndDate"); 
+                                if (mula && akhir) {
+                                    let fmt = (d) => d.split('-').reverse().join('/');
+                                    detail = `Dari ${fmt(mula)} hingga ${fmt(akhir)}`;
+                                } else {
+                                    detail = "Bulan Tidak Lengkap";
+                                }
+                            }
+
+                            if (detail) senaraiKeterangan.push(detail);
+                        }
                         break;
                     }
                 }
@@ -632,12 +668,25 @@ function kemaskiniPatutBayar(selectElement) {
                     let dataEl = kad.querySelector('[id="bakiData"], [data-original-id="bakiData"]');
                     if (dataEl && window.getComputedStyle(dataEl).display !== "none") {
                         sudahKlikKira = true;
+                        let jumlahPatut = 0, jumlahTelah = 0;
+                        let telahEl = kad.querySelector('[id="orpTelahTerima"], [data-original-id="orpTelahTerima"]');
+                        jumlahPatut += unformatRMRumusan(patutEl.value);
+                        jumlahTelah += unformatRMRumusan(telahEl ? telahEl.value : "0");
+                        nilaiDiambil = jumlahPatut;
+                        inputTelahBayar.value = formatRMRumusan(jumlahTelah);
+                        inputTelahBayar.setAttribute('readonly', true);
+                        inputTelahBayar.style.background = "#f4f4f4";
+                        
+                        if (jumlahPatut > jumlahTelah) senaraiKeterangan.push("Terkurang Bayar");
+                        else if (jumlahTelah > jumlahPatut) senaraiKeterangan.push("Terlebih Bayar");
+                        else senaraiKeterangan.push("Terkurang Bayar");
                         break;
                     }
                 }
             }
         }
 
+        // Jika kalkulator dipilih/wujud di skrin tapi belum klik Kira (atau belum buat pengiraan)
         if (kalkulatorWujud && !sudahKlikKira) {
             alert(`Peringatan: Anda telah memilih jenis bayaran "${selectedOption.text}", tetapi anda belum mengklik butang Kira pada kalkulator tersebut. Sila lengkapkan dan klik Kira terlebih dahulu!`);
             selectElement.selectedIndex = 0;
@@ -645,71 +694,6 @@ function kemaskiniPatutBayar(selectElement) {
             if (inputKeterangan) inputKeterangan.value = "-";
             kiraBakiBaris(selectElement);
             return;
-        }
-
-        if (idSasaran === "orpBakiAmount") {
-            let jumlahPatut = 0, jumlahTelah = 0;
-            for(let kad of semuaKadAktif) {
-                let patutEl = kad.querySelector('[id="orpPatutTerima"], [data-original-id="orpPatutTerima"]');
-                let telahEl = kad.querySelector('[id="orpTelahTerima"], [data-original-id="orpTelahTerima"]');
-                if (patutEl || telahEl) { 
-                    jumlahPatut += unformatRMRumusan(patutEl ? patutEl.value : "0");
-                    jumlahTelah += unformatRMRumusan(telahEl ? telahEl.value : "0");
-                }
-            }
-            nilaiDiambil = jumlahPatut;
-            inputTelahBayar.value = formatRMRumusan(jumlahTelah);
-            inputTelahBayar.setAttribute('readonly', true);
-            inputTelahBayar.style.background = "#f4f4f4";
-            
-            if (jumlahPatut > jumlahTelah) {
-                senaraiKeterangan.push("Terkurang Bayar");
-            } else if (jumlahTelah > jumlahPatut) {
-                senaraiKeterangan.push("Terlebih Bayar");
-            } else {
-                senaraiKeterangan.push("Terkurang Bayar"); 
-            }
-            
-        } else {
-            for(let kad of semuaKadAktif) {
-                let elemenKeputusan = kad.querySelector(`[id="${idSasaran}"], [data-original-id="${idSasaran}"]`);
-                if (elemenKeputusan && elemenKeputusan.innerText && unformatRMRumusan(elemenKeputusan.innerText) !== 0) {
-                    nilaiDiambil += unformatRMRumusan(elemenKeputusan.innerText);
-                    
-                    let detail = "";
-                    let getVal = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.value : ""; };
-                    let getTxt = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.innerText : ""; };
-
-                    if (idSasaran.includes("otAmount")) { let jam = getVal("otHours"); if(jam) detail = `${jam} jam`; }
-                    else if (idSasaran.includes("otRHAmount")) { let jam = getVal("otRHHours"); if(jam) detail = `${jam} jam`; }
-                    else if (idSasaran.includes("otPHAmount")) { let jam = getVal("otPHHours"); if(jam) detail = `${jam} jam`; }
-                    else if (idSasaran.includes("rhAmount") && !idSasaran.includes("rhMoreAmount")) { let hari = getVal("rhDays"); if(hari) detail = `${hari} hari`; }
-                    else if (idSasaran.includes("rhMoreAmount")) { let hari = getVal("rhMoreDays"); if(hari) detail = `${hari} hari`; }
-                    else if (idSasaran.includes("phAmount")) { let hari = getVal("phDays"); if(hari) detail = `${hari} hari`; }
-                    else if (idSasaran.includes("annualLeaveAmount")) { let hari = getVal("annualLeaveDays"); if(hari) detail = `${hari} hari`; }
-                    else if (idSasaran.includes("sickLeaveAmount")) { let hari = getVal("sickLeaveDays"); if(hari) detail = `${hari} hari`; }
-                    else if (idSasaran.includes("resUniMonthAmount")) { let bulan = getVal("ggnUniMonthVal"); if(bulan) detail = `${bulan} bulan`; }
-                    else if (idSasaran.includes("lewatAmount")) { let min = getVal("lewatMinit"); if(min) detail = `${min} minit`; }
-                    else if (idSasaran.includes("resUni18AAmount")) { 
-                        let m = getVal("ggnUniWeekVal"), h = getVal("ggnUniDayVal"); 
-                        if(m) detail = `${m} minggu`; else if(h) detail = `${h} hari`;
-                    }
-                    else if (idSasaran.includes("tbbAmount")) { let hari = getTxt("tbbHari"); if(hari && hari !== "-") detail = hari; }
-                    else if (idSasaran.includes("amount18A")) { 
-                        let mula = getVal("section18AStartDate"); 
-                        let akhir = getVal("section18AEndDate"); 
-                        if (mula && akhir) {
-                            let fmt = (d) => d.split('-').reverse().join('/');
-                            detail = `Dari ${fmt(mula)} hingga ${fmt(akhir)}`;
-                        } else {
-                            detail = "Bulan Tidak Lengkap";
-                        }
-                    }
-
-                    if (detail) senaraiKeterangan.push(detail);
-                }
-            }
-            inputTelahBayar.value = ""; 
         }
     } else { 
         inputTelahBayar.value = ""; 
