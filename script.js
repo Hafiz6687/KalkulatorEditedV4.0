@@ -1703,7 +1703,7 @@ window.tambahKalkulator = function(templateId) {
     } else {
         clone.id = clone.id + uniqueSuffix;
         clone.style.position = "relative";
-let closeBtn = document.createElement('button');
+        let closeBtn = document.createElement('button');
         closeBtn.className = "close-card-btn";
         closeBtn.innerHTML = "X";
         closeBtn.onclick = function() { 
