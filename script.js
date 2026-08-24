@@ -1648,31 +1648,43 @@ function logKeluar() { let btn = document.getElementById("butangAuth"); if (btn)
 function resetSemua() {
     let sah = confirm("Adakah anda pasti mahu memadam KESEMUA data pengiraan? Tindakan ini tidak boleh diundur.");
     if (sah) {
+        // 1. Buang semua kad kalkulator yang aktif
         let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
         semuaKadAktif.forEach(kad => kad.remove());
+        
+        // 2. Kosongkan jadual rumusan
         resetRumusan();
         
-        // ++ CUCI MEMORI ELAUN GLOBAL UNTUK SESI BARU ++
+        // 3. Cuci memori senarai elaun global
         senaraiElaunGlobal = [];
         
+        // 4. Sembunyikan kad rumusan
         let kadRumusan = document.querySelector('.rumusan-card');
         if (kadRumusan) {
             kadRumusan.style.display = "none";
         }
+        
+        // 5. Paksa sistem bina semula kotak elaun kosong pada paparan asal jika perlu
+        setTimeout(() => {
+            if (typeof window.semakDanTukarElaun === 'function') {
+                window.semakDanTukarElaun();
+            }
+        }, 50);
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
 function resetKalkulatorIndividu(elementButangReset) {
-    // 1. Cari kad kalkulator induk
+    // 1. Cari kad kalkulator induk tempat butang reset ditekan
     const kadKalkulator = elementButangReset.closest('.calculator-card');
     if (!kadKalkulator) return;
 
-    // 2. Kosongkan semua input teks & nombor biasa
-    const senaraiInput = kadKalkulator.querySelectorAll('input[type="text"], input[type="number"]');
+    // 2. Kosongkan semua input teks, nombor, dan tarikh dalam kad ini
+    const senaraiInput = kadKalkulator.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
     senaraiInput.forEach(input => {
         if (input.readOnly) {
-            if (input.classList.contains('salary-total')) {
+            if (input.classList.contains('salary-total') || input.id.includes('Total')) {
                 input.value = "RM 0.00";
             } else {
                 input.value = "";
@@ -1682,13 +1694,14 @@ function resetKalkulatorIndividu(elementButangReset) {
         }
     });
 
-    // 3. Tetapkan semula semua dropdown pilihan (select)
+    // 3. Tetapkan semula semua dropdown pilihan (select) ke pilihan pertama (- Sila Pilih -)
     const senaraiSelect = kadKalkulator.querySelectorAll('select');
     senaraiSelect.forEach(select => {
         select.selectedIndex = 0;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    // 4. PEMBAIKAN KHAS ELAUN DINAMIK: Cari wrapper atau input elaun asal secara langsung
+    // 4. RESET KHAS ELAUN DINAMIK: Kosongkan baris pertama & buang baris tambahan
     const kontenaElaun = kadKalkulator.querySelector('.dynamic-allowance-wrapper');
     if (kontenaElaun) {
         const senaraiBarisElaun = kontenaElaun.querySelectorAll('.elaun-row-kalkulator');
@@ -1702,27 +1715,27 @@ function resetKalkulatorIndividu(elementButangReset) {
         if (typeof updateGlobalElaunSum === 'function') {
             updateGlobalElaunSum(kontenaElaun);
         }
-    } else {
-        // Jika wrapper dinamik belum wujud, kosongkan terus input elaun asal berdasarkan salaryMap
-        Object.keys(salaryMap).forEach(key => {
-            let allowID = salaryMap[key][0];
-            let allowEl = kadKalkulator.querySelector(`[id="${allowID}"], [data-original-id="${allowID}"]`);
-            if (allowEl) allowEl.value = '';
-        });
     }
 
-    // 5. Reset paparan keputusan (output) khusus untuk kad ini
-    const pendings = kadKalkulator.querySelectorAll('[id$="Pending"]');
-    const datas = kadKalkulator.querySelectorAll('[id$="Data"]');
-    pendings.forEach(p => p.style.display = "block");
-    datas.forEach(d => d.style.display = "none");
-    
-    // Kembalikan teks keputusan kepada nilai asal RM 0.00
-    const resultRows = kadKalkulator.querySelectorAll('.result-row strong, [id$="Result"], [id$="Amount"]');
-    resultRows.forEach(el => {
-        if (el.id && (el.id.includes('Amount') || el.id.includes('Result') || el.id.includes('ORP') || el.id.includes('Hourly') || el.id.includes('Daily') || el.id.includes('Minutely'))) {
+    // 5. Sembunyikan bahagian data keputusan dan paparkan semula status "pending"
+    const prefixList = ['orp', 'baki', 'ot', 'lewat', 'otRH', 'otPH', 'rh', 'rhMore', 'ph', 'sec18A', 'annualLeave', 'sickLeave', 'kelayakanCuti', 'kelayakanSakit', 'resUni', 'tbb'];
+    prefixList.forEach(prefix => {
+        let pending = kadKalkulator.querySelector(`[id="${prefix}Pending"], [data-original-id="${prefix}Pending"]`);
+        let data = kadKalkulator.querySelector(`[id="${prefix}Data"], [data-original-id="${prefix}Data"]`);
+        if (pending && data) {
+            pending.style.display = "block";
+            data.style.display = "none";
+        }
+    });
+
+    // 6. Tetapkan semula semua elemen teks keputusan kepada "RM 0.00" atau "-"
+    const outputStrong = kadKalkulator.querySelectorAll('.result-row strong, [id$="Result"], [id$="Amount"], [id$="ORP"], [id$="Hourly"], [id$="Daily"], [id$="Minutely"], [id$="Hari"], [id$="Tempoh"], [id$="Kadar"]');
+    outputStrong.forEach(el => {
+        if (el.innerText.includes("RM") || el.id.includes('Amount') || el.id.includes('Result') || el.id.includes('ORP') || el.id.includes('Hourly') || el.id.includes('Daily') || el.id.includes('Minutely')) {
             el.innerText = "RM 0.00";
             el.style.color = "";
+        } else if (el.id.includes('Tempoh') || el.id.includes('Kadar') || el.id.includes('Hari')) {
+            el.innerText = "-";
         }
     });
 }
