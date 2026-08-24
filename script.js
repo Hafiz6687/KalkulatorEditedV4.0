@@ -1677,17 +1677,13 @@ window.tambahKalkulator = function(templateId) {
 
     // ==== LOGIK KHAS UNTUK PAPARAN MAKLUMAT GAJI ====
     if (templateId === 'maklumatGaji') {
-        // Hapus semua kalkulator yang terbuka untuk beri laluan pada paparan Gaji
         let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
         semuaKadAktif.forEach(kad => kad.remove());
         
-        // Sembunyikan Jadual Rumusan & Kotak Peringatan
         if (rumusanCard) rumusanCard.style.display = "none";
         if (warningBox) warningBox.style.display = "none";
     } else {
-        // Jika buka kalkulator biasa, kembalikan semula kotak Peringatan
         if (warningBox) warningBox.style.display = "block";
-        // Tutup Maklumat Gaji jika sedang dibuka
         let existingMg = document.getElementById('active-maklumatGaji');
         if (existingMg) existingMg.remove();
     }
@@ -1723,7 +1719,9 @@ window.tambahKalkulator = function(templateId) {
                 if (rumusanCard) { rumusanCard.style.display = "none"; }
             }
         };
-}
+        clone.appendChild(closeBtn);
+    }
+
     let allElementsWithId = clone.querySelectorAll('[id]');
     allElementsWithId.forEach(el => {
         el.setAttribute('data-original-id', el.id);
@@ -2030,8 +2028,11 @@ const observerKalkulator = new MutationObserver((mutations) => {
             }
         });
         mutation.removedNodes.forEach(node => {
-            if (node.nodeType === 1 && node.querySelector('.dynamic-allowance-wrapper')) {
-                allowanceCardTransformed = false; 
+            if (node.nodeType === 1 && (node.querySelector('.dynamic-allowance-wrapper') || node.classList.contains('calculator-card'))) {
+                let bakiElaunWrapper = document.querySelector('.dynamic-allowance-wrapper');
+                if (!bakiElaunWrapper) {
+                    allowanceCardTransformed = false; 
+                }
             }
         });
     });
