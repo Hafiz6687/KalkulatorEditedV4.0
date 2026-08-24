@@ -610,7 +610,6 @@ function kemaskiniPatutBayar(selectElement) {
     if (idSasaran !== "") {
         let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template)');
         
-        // Semak adakah kalkulator yang dipilih wujud dan pengguna telah klik butang kira (data dipaparkan)
         let kalkulatorWujud = false;
         let sudahKlikKira = false;
 
