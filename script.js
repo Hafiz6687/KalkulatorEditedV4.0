@@ -1644,6 +1644,7 @@ function semakLogin() {
 }
 document.addEventListener("DOMContentLoaded", function() { let kotakPassword = document.getElementById("loginPassword"); if (kotakPassword) { kotakPassword.addEventListener("keypress", function(event) { if (event.key === "Enter") semakLogin(); }); } });
 function logKeluar() { let btn = document.getElementById("butangAuth"); if (btn) { btn.innerHTML = "⏻ Log Masuk"; btn.style.background = "#1f4e79"; btn.style.borderColor = "#1f4e79"; btn.setAttribute("onclick", "paparLogMasuk()"); } alert("Anda telah berjaya log keluar dari sistem."); }
+
 function resetSemua() {
     let sah = confirm("Adakah anda pasti mahu memadam KESEMUA data pengiraan? Tindakan ini tidak boleh diundur.");
     if (sah) {
@@ -1653,7 +1654,6 @@ function resetSemua() {
         
         // ++ CUCI MEMORI ELAUN GLOBAL UNTUK SESI BARU ++
         senaraiElaunGlobal = [];
-        allowanceCardTransformed = false;
         
         let kadRumusan = document.querySelector('.rumusan-card');
         if (kadRumusan) {
@@ -1675,11 +1675,9 @@ window.tambahKalkulator = function(templateId) {
     let rumusanCard = document.querySelector('.rumusan-card');
     let warningBox = document.querySelector('.warning-box');
 
-    // ==== LOGIK KHAS UNTUK PAPARAN MAKLUMAT GAJI ====
     if (templateId === 'maklumatGaji') {
         let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
         semuaKadAktif.forEach(kad => kad.remove());
-        
         if (rumusanCard) rumusanCard.style.display = "none";
         if (warningBox) warningBox.style.display = "none";
     } else {
@@ -1696,7 +1694,6 @@ window.tambahKalkulator = function(templateId) {
     
     let uniqueSuffix = '_' + Math.random().toString(36).substr(2, 9);
     
-    // ==== TANDA 'X' HANYA DIBENARKAN UNTUK KALKULATOR BIASA ====
     if (templateId === 'maklumatGaji') {
         clone.id = 'active-maklumatGaji';
         clone.style.position = "relative";
@@ -1709,18 +1706,12 @@ window.tambahKalkulator = function(templateId) {
         closeBtn.onclick = function() { 
             clone.remove(); 
             
-            // SEMAKAN PANTAS: Jika kad yang ditutup ini ada unsur elaun dinamik, 
-            // terus reset kawalan global jika tiada lagi kad lain yang guna elaun dinamik.
-            if (clone.querySelector('.dynamic-allowance-wrapper') || clone.querySelector('.salary-input')) {
-                let bakiKadElaun = document.querySelectorAll('.dynamic-allowance-wrapper');
-                if (bakiKadElaun.length === 0) {
-                    allowanceCardTransformed = false;
-                }
-            }
-
             let kadTinggal = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
             if (kadTinggal.length === 0) {
                 if (rumusanCard) { rumusanCard.style.display = "none"; }
+            } else {
+                // PENYELESAIAN: Paksa sistem pasang dan KLON semula kotak elaun ke kalkulator lain yang tinggal!
+                setTimeout(() => window.semakDanTukarElaun(), 50);
             }
         };
         clone.appendChild(closeBtn);
@@ -1746,7 +1737,6 @@ window.tambahKalkulator = function(templateId) {
         });
     }
 
-    // ==== INHERIT DATA GAJI (Hanya Untuk Kalkulator Sahaja) ====
     if (templateId !== 'maklumatGaji') {
         let currentBasic = "";
         let currentAllowance = "";
@@ -1818,7 +1808,6 @@ window.tambahKalkulator = function(templateId) {
 
     if (rumusanCard) grid.insertBefore(clone, rumusanCard); else grid.appendChild(clone);
     
-    // ==== KAWALAN JADUAL RUMUSAN ====
     if (templateId !== 'maklumatGaji' && rumusanCard) { 
         let kadAktifBiasa = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card):not(#active-maklumatGaji)');
         if (kadAktifBiasa.length > 0) rumusanCard.style.display = "block"; 
@@ -1831,7 +1820,6 @@ window.tambahKalkulator = function(templateId) {
 // 8. ENJIN ELAUN DINAMIK GLOBAL & ONBOARDING TOUR
 // =====================================================
 let senaraiElaunGlobal = [];
-let allowanceCardTransformed = false;
 let elaunTourDitunjuk = false; 
 
 function transformAllowanceField(allowInput) {
@@ -1952,25 +1940,37 @@ function tunjukTourElaun(targetContainer) {
     document.getElementById('btnTutupTour').addEventListener('click', tutupTour);
 }
 
-function semakDanTukarElaun(card) {
-    if (allowanceCardTransformed) {
-        if (!document.querySelector('.dynamic-allowance-wrapper')) {
-            allowanceCardTransformed = false; 
-        } else {
-            return; 
+// INI PENYELESAIAN TERBARU (TIADA LAGI PEMBOLEH UBAH allowanceCardTransformed)
+window.semakDanTukarElaun = function() {
+    // Semak di seluruh skrin, adakah kotak elaun dinamik sudah dipaparkan di mana-mana kalkulator?
+    let wrapperSediaAda = document.querySelector('.dynamic-allowance-wrapper');
+    
+    // Jika YA (dah ada), maka berhenti. Tak perlu buat apa-apa.
+    if (wrapperSediaAda) return;
+
+    // Jika TIADA (mungkin baru padam kalkulator), cari kalkulator PERTAMA yang aktif
+    let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+    for (let i = 0; i < semuaKadAktif.length; i++) {
+        let kad = semuaKadAktif[i];
+        let allowInput = null;
+        
+        // Cari input elaun di dalam kalkulator tersebut
+        for (let k of Object.keys(salaryMap)) {
+            let aid = salaryMap[k][0];
+            let found = kad.querySelector(`[id="${aid}"], [data-original-id="${aid}"]`);
+            if (found && window.getComputedStyle(found).display !== 'none') { 
+                allowInput = found; 
+                break; 
+            }
+        }
+
+        // Pasang kotak elaun dinamik pada kalkulator ini! (Dan secara automatik dia akan KLON nilai dari senaraiElaunGlobal)
+        if (allowInput) {
+            transformAllowanceField(allowInput);
+            break; // Cukup pasang pada SATU kalkulator sahaja
         }
     }
-    let allowInput = null;
-    for(let k of Object.keys(salaryMap)) {
-        let aid = salaryMap[k][0];
-        let found = card.querySelector(`[id="${aid}"], [data-original-id="${aid}"]`);
-        if(found) { allowInput = found; break; }
-    }
-    if (allowInput) {
-        allowanceCardTransformed = true;
-        transformAllowanceField(allowInput);
-    }
-}
+};
 
 window.tambahBarisElaunGlobalKalkulator = function(btn) {
     let list = btn.parentElement.nextElementSibling;
@@ -2025,31 +2025,14 @@ window.updateGlobalElaunSum = function(el) {
 };
 
 const observerKalkulator = new MutationObserver((mutations) => {
-    let kenaSemakSemula = false;
+    let perluSemak = false;
     mutations.forEach(mutation => {
-        mutation.addedNodes.forEach(node => {
-            if (node.nodeType === 1 && node.classList && node.classList.contains('calculator-card')) {
-                setTimeout(() => semakDanTukarElaun(node), 50); 
-            }
-        });
-        mutation.removedNodes.forEach(node => {
-            if (node.nodeType === 1 && (node.querySelector('.dynamic-allowance-wrapper') || node.classList.contains('calculator-card'))) {
-                kenaSemakSemula = true;
-            }
-        });
+        if (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0) {
+            perluSemak = true;
+        }
     });
-
-    if (kenaSemakSemula) {
-        setTimeout(() => {
-            let bakiElaunWrapper = document.querySelector('.dynamic-allowance-wrapper');
-            if (!bakiElaunWrapper) {
-                allowanceCardTransformed = false; 
-                // PENTING: Arahkan sistem pusing dan semak semula kalkulator yang masih tinggal di skrin
-                document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)').forEach(card => {
-                    semakDanTukarElaun(card);
-                });
-            }
-        }, 50);
+    if (perluSemak) {
+        setTimeout(() => window.semakDanTukarElaun(), 50);
     }
 });
 
@@ -2057,7 +2040,5 @@ document.addEventListener('DOMContentLoaded', () => {
     let gridNode = document.getElementById('active-calculators-grid');
     if (gridNode) observerKalkulator.observe(gridNode, { childList: true });
     
-    document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)').forEach(card => {
-        semakDanTukarElaun(card);
-    });
+    setTimeout(() => window.semakDanTukarElaun(), 100);
 });
