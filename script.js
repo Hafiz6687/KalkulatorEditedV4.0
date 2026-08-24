@@ -1662,15 +1662,26 @@ function resetSemua() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
+
 function resetKalkulatorIndividu(elementButangReset) {
     // 1. Cari kad kalkulator induk
     const kadKalkulator = elementButangReset.closest('.calculator-card');
     if (!kadKalkulator) return;
 
-    // 2. Kosongkan semua input teks & nombor
+    // 2. Kosongkan semua input teks & nombor (kecuali field read-only tertentu jika perlu)
     const senaraiInput = kadKalkulator.querySelectorAll('input[type="text"], input[type="number"]');
     senaraiInput.forEach(input => {
-        input.value = '';
+        // Biarkan field read-only seperti jumlah upah diproses oleh enjin pengiraan, 
+        // tapi kosongkan nilainya atau tetapkan ke default
+        if (input.readOnly) {
+            if (input.classList.contains('salary-total')) {
+                input.value = "RM 0.00";
+            } else {
+                input.value = "";
+            }
+        } else {
+            input.value = '';
+        }
     });
 
     // 3. Tetapkan semula semua dropdown pilihan (select)
@@ -1679,17 +1690,22 @@ function resetKalkulatorIndividu(elementButangReset) {
         select.selectedIndex = 0;
     });
 
-    // 4. Padam & kosongkan baris elaun dinamik dalam kad ini
+    // 4. BAHAGIAN ELAUN DINAMIK: Reset baris pertama & buang baris tambahan
     const kontenaElaun = kadKalkulator.querySelector('.dynamic-allowance-wrapper');
     if (kontenaElaun) {
         const senaraiBarisElaun = kontenaElaun.querySelectorAll('.elaun-row-kalkulator');
         senaraiBarisElaun.forEach((baris, index) => {
             if (index === 0) {
-                baris.querySelectorAll('input').forEach(inp => inp.value = '');
+                // Kosongkan input jenis elaun dan nilai elaun pada baris pertama
+                const inputsBaris = baris.querySelectorAll('input');
+                inputsBaris.forEach(inp => inp.value = '');
             } else {
+                // Buang baris elaun kedua dan seterusnya
                 baris.remove();
             }
         });
+        
+        // Kemas kini semula jumlah elaun global
         if (typeof updateGlobalElaunSum === 'function') {
             updateGlobalElaunSum(kontenaElaun);
         }
@@ -1700,6 +1716,15 @@ function resetKalkulatorIndividu(elementButangReset) {
     const datas = kadKalkulator.querySelectorAll('[id$="Data"]');
     pendings.forEach(p => p.style.display = "block");
     datas.forEach(d => d.style.display = "none");
+    
+    // Pastikan sebarang teks keputusan khusus dikembalikan ke asal
+    const resultRows = kadKalkulator.querySelectorAll('.result-row strong, [id$="Result"], [id$="Amount"]');
+    resultRows.forEach(el => {
+        if (el.id && (el.id.includes('Amount') || el.id.includes('Result') || el.id.includes('ORP') || el.id.includes('Hourly') || el.id.includes('Daily') || el.id.includes('Minutely'))) {
+            el.innerText = "RM 0.00";
+            el.style.color = "";
+        }
+    });
 }
 
 // =====================================================
