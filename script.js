@@ -549,24 +549,10 @@ function resetTBB() {
 }
 
 // =====================================================
-// 4. ENJIN KALKULATOR RUMUSAN AKHIR (LIVE & RE-SYNC)
+// 4. ENJIN KALKULATOR RUMUSAN AKHIR
 // =====================================================
 const senaraiKalkulatorRumusan = [
-    { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, 
-    { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)", prefix: "baki" }, 
-    { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)", prefix: "ggnResBulan" }, 
-    { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)", prefix: "ggnRes18A" }, 
-    { nilai: "tbbAmount", teks: "Faedah Penamatan", prefix: "tbb" }, 
-    { nilai: "otAmount", teks: "OT Hari Biasa", prefix: "ot" }, 
-    { nilai: "otRHAmount", teks: "OT Hari Rehat", prefix: "otRH" }, 
-    { nilai: "otPHAmount", teks: "OT Hari Kelepasan", prefix: "otPH" }, 
-    { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)", prefix: "rh" }, 
-    { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)", prefix: "rhMore" }, 
-    { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan", prefix: "ph" }, 
-    { nilai: "amount18A", teks: "Seksyen 18A (Bulan Tidak Lengkap)", prefix: "sec18A" }, 
-    { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan", prefix: "annualLeave" }, 
-    { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit", prefix: "sickLeave" }, 
-    { nilai: "lewatAmount", teks: "Potongan Lewat Seminit", prefix: "lewat" }
+    { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)" }, { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)" }, { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)" }, { nilai: "tbbAmount", teks: "Faedah Penamatan" }, { nilai: "otAmount", teks: "OT Hari Biasa" }, { nilai: "otRHAmount", teks: "OT Hari Rehat" }, { nilai: "otPHAmount", teks: "OT Hari Kelepasan" }, { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)" }, { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)" }, { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan" }, { nilai: "amount18A", teks: "Seksyen 18A (Bulan Tidak Lengkap)" }, { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan" }, { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit" }, { nilai: "lewatAmount", teks: "Potongan Lewat Seminit" }
 ];
 
 function formatRMRumusan(amount) { if (isNaN(amount) || amount === "") return "RM0.00"; return "RM " + parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -574,7 +560,7 @@ function unformatRMRumusan(str) { if (!str) return 0; return parseFloat(str.toSt
 
 function tambahBarisRumusan() {
     const tbody = document.getElementById('badanJadualRumusan'); const tr = document.createElement('tr'); tr.style.borderBottom = "1px dashed #ddd";
-    let pilihanHTML = ''; senaraiKalkulatorRumusan.forEach(item => { pilihanHTML += `<option value="${item.nilai}" data-prefix="${item.prefix || ''}">${item.teks}</option>`; });
+    let pilihanHTML = ''; senaraiKalkulatorRumusan.forEach(item => { pilihanHTML += `<option value="${item.nilai}">${item.teks}</option>`; });
     tr.innerHTML = `
         <td style="padding: 10px;"><select class="select-input" style="width: 100%; border-color: #1f4e79;" onchange="kemaskiniPatutBayar(this)">${pilihanHTML}</select></td>
         <td style="padding: 10px;"><input type="text" class="number-input keterangan-baris" placeholder="-" style="background: #fff; text-align: center; width: 100%;"></td>
@@ -595,8 +581,6 @@ function formatPatutBayar(input) { let val = unformatRMRumusan(input.value); inp
 function kemaskiniPatutBayar(selectElement) {
     const baris = selectElement.closest('tr');
     const idSasaran = selectElement.value;
-    const selectedOption = selectElement.options[selectElement.selectedIndex];
-    const prefix = selectedOption.getAttribute('data-prefix');
     const inputKeterangan = baris.querySelector('.keterangan-baris');
     const inputPatutBayar = baris.querySelector('.patut-bayar');
     const inputTelahBayar = baris.querySelector('.telah-bayar');
@@ -609,89 +593,70 @@ function kemaskiniPatutBayar(selectElement) {
     
     if (idSasaran !== "") {
         let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template)');
-        let kalkulatorWujud = false;
-        let sudahKlikKira = false;
-
-        if (prefix) {
-            for (let kad of semuaKadAktif) {
-                let dataEl = kad.querySelector(`[id="${prefix}Data"], [data-original-id="${prefix}Data"]`);
-                if (dataEl) {
-                    kalkulatorWujud = true;
-                    if (window.getComputedStyle(dataEl).display !== "none") {
-                        sudahKlikKira = true;
-                        let elemenKeputusan = kad.querySelector(`[id="${idSasaran}"], [data-original-id="${idSasaran}"]`);
-                        if (elemenKeputusan) {
-                            nilaiDiambil += unformatRMRumusan(elemenKeputusan.innerText);
-                            
-                            let detail = "";
-                            let getVal = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.value : ""; };
-                            let getTxt = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.innerText : ""; };
-
-                            if (idSasaran.includes("otAmount")) { let jam = getVal("otHours"); if(jam) detail = `${jam} jam`; }
-                            else if (idSasaran.includes("otRHAmount")) { let jam = getVal("otRHHours"); if(jam) detail = `${jam} jam`; }
-                            else if (idSasaran.includes("otPHAmount")) { let jam = getVal("otPHHours"); if(jam) detail = `${jam} jam`; }
-                            else if (idSasaran.includes("rhAmount") && !idSasaran.includes("rhMoreAmount")) { let hari = getVal("rhDays"); if(hari) detail = `${hari} hari`; }
-                            else if (idSasaran.includes("rhMoreAmount")) { let hari = getVal("rhMoreDays"); if(hari) detail = `${hari} hari`; }
-                            else if (idSasaran.includes("phAmount")) { let hari = getVal("phDays"); if(hari) detail = `${hari} hari`; }
-                            else if (idSasaran.includes("annualLeaveAmount")) { let hari = getVal("annualLeaveDays"); if(hari) detail = `${hari} hari`; }
-                            else if (idSasaran.includes("sickLeaveAmount")) { let hari = getVal("sickLeaveDays"); if(hari) detail = `${hari} hari`; }
-                            else if (idSasaran.includes("resUniMonthAmount")) { let bulan = getVal("ggnUniMonthVal"); if(bulan) detail = `${bulan} bulan`; }
-                            else if (idSasaran.includes("lewatAmount")) { let min = getVal("lewatMinit"); if(min) detail = `${min} minit`; }
-                            else if (idSasaran.includes("resUni18AAmount")) { 
-                                let m = getVal("ggnUniWeekVal"), h = getVal("ggnUniDayVal"); 
-                                if(m) detail = `${m} minggu`; else if(h) detail = `${h} hari`;
-                            }
-                            else if (idSasaran.includes("tbbAmount")) { let hari = getTxt("tbbHari"); if(hari && hari !== "-") detail = hari; }
-                            else if (idSasaran.includes("amount18A")) { 
-                                let mula = getVal("section18AStartDate"); 
-                                let akhir = getVal("section18AEndDate"); 
-                                if (mula && akhir) {
-                                    let fmt = (d) => d.split('-').reverse().join('/');
-                                    detail = `Dari ${fmt(mula)} hingga ${fmt(akhir)}`;
-                                } else {
-                                    detail = "Bulan Tidak Lengkap";
-                                }
-                            }
-
-                            if (detail) senaraiKeterangan.push(detail);
-                        }
-                        break;
-                    }
-                }
-            }
-        } else if (idSasaran === "orpBakiAmount") {
-            for (let kad of semuaKadAktif) {
+        
+        if (idSasaran === "orpBakiAmount") {
+            let jumlahPatut = 0, jumlahTelah = 0;
+            for(let kad of semuaKadAktif) {
                 let patutEl = kad.querySelector('[id="orpPatutTerima"], [data-original-id="orpPatutTerima"]');
-                if (patutEl) {
-                    kalkulatorWujud = true;
-                    let dataEl = kad.querySelector('[id="bakiData"], [data-original-id="bakiData"]');
-                    if (dataEl && window.getComputedStyle(dataEl).display !== "none") {
-                        sudahKlikKira = true;
-                        let jumlahPatut = 0, jumlahTelah = 0;
-                        let telahEl = kad.querySelector('[id="orpTelahTerima"], [data-original-id="orpTelahTerima"]');
-                        jumlahPatut += unformatRMRumusan(patutEl.value);
-                        jumlahTelah += unformatRMRumusan(telahEl ? telahEl.value : "0");
-                        nilaiDiambil = jumlahPatut;
-                        inputTelahBayar.value = formatRMRumusan(jumlahTelah);
-                        inputTelahBayar.setAttribute('readonly', true);
-                        inputTelahBayar.style.background = "#f4f4f4";
-                        
-                        if (jumlahPatut > jumlahTelah) senaraiKeterangan.push("Terkurang Bayar");
-                        else if (jumlahTelah > jumlahPatut) senaraiKeterangan.push("Terlebih Bayar");
-                        else senaraiKeterangan.push("Terkurang Bayar");
-                        break;
-                    }
+                let telahEl = kad.querySelector('[id="orpTelahTerima"], [data-original-id="orpTelahTerima"]');
+                if (patutEl || telahEl) { 
+                    jumlahPatut += unformatRMRumusan(patutEl ? patutEl.value : "0");
+                    jumlahTelah += unformatRMRumusan(telahEl ? telahEl.value : "0");
                 }
             }
-        }
+            nilaiDiambil = jumlahPatut;
+            inputTelahBayar.value = formatRMRumusan(jumlahTelah);
+            inputTelahBayar.setAttribute('readonly', true);
+            inputTelahBayar.style.background = "#f4f4f4";
+            
+            if (jumlahPatut > jumlahTelah) {
+                senaraiKeterangan.push("Terkurang Bayar");
+            } else if (jumlahTelah > jumlahPatut) {
+                senaraiKeterangan.push("Terlebih Bayar");
+            } else {
+                senaraiKeterangan.push("Terkurang Bayar"); 
+            }
+            
+        } else {
+            for(let kad of semuaKadAktif) {
+                let elemenKeputusan = kad.querySelector(`[id="${idSasaran}"], [data-original-id="${idSasaran}"]`);
+                if (elemenKeputusan && elemenKeputusan.innerText && unformatRMRumusan(elemenKeputusan.innerText) !== 0) {
+                    nilaiDiambil += unformatRMRumusan(elemenKeputusan.innerText);
+                    
+                    let detail = "";
+                    let getVal = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.value : ""; };
+                    let getTxt = (id) => { let e = kad.querySelector(`[id="${id}"], [data-original-id="${id}"]`); return e ? e.innerText : ""; };
 
-        if (kalkulatorWujud && !sudahKlikKira) {
-            alert(`Peringatan: Anda telah memilih jenis bayaran "${selectedOption.text}", tetapi anda belum mengklik butang Kira pada kalkulator tersebut. Sila lengkapkan dan klik Kira terlebih dahulu!`);
-            selectElement.selectedIndex = 0;
-            inputPatutBayar.value = "RM 0.00";
-            if (inputKeterangan) inputKeterangan.value = "-";
-            kiraBakiBaris(selectElement);
-            return;
+                    if (idSasaran.includes("otAmount")) { let jam = getVal("otHours"); if(jam) detail = `${jam} jam`; }
+                    else if (idSasaran.includes("otRHAmount")) { let jam = getVal("otRHHours"); if(jam) detail = `${jam} jam`; }
+                    else if (idSasaran.includes("otPHAmount")) { let jam = getVal("otPHHours"); if(jam) detail = `${jam} jam`; }
+                    else if (idSasaran.includes("rhAmount") && !idSasaran.includes("rhMoreAmount")) { let hari = getVal("rhDays"); if(hari) detail = `${hari} hari`; }
+                    else if (idSasaran.includes("rhMoreAmount")) { let hari = getVal("rhMoreDays"); if(hari) detail = `${hari} hari`; }
+                    else if (idSasaran.includes("phAmount")) { let hari = getVal("phDays"); if(hari) detail = `${hari} hari`; }
+                    else if (idSasaran.includes("annualLeaveAmount")) { let hari = getVal("annualLeaveDays"); if(hari) detail = `${hari} hari`; }
+                    else if (idSasaran.includes("sickLeaveAmount")) { let hari = getVal("sickLeaveDays"); if(hari) detail = `${hari} hari`; }
+                    else if (idSasaran.includes("resUniMonthAmount")) { let bulan = getVal("ggnUniMonthVal"); if(bulan) detail = `${bulan} bulan`; }
+                    else if (idSasaran.includes("lewatAmount")) { let min = getVal("lewatMinit"); if(min) detail = `${min} minit`; }
+                    else if (idSasaran.includes("resUni18AAmount")) { 
+                        let m = getVal("ggnUniWeekVal"), h = getVal("ggnUniDayVal"); 
+                        if(m) detail = `${m} minggu`; else if(h) detail = `${h} hari`;
+                    }
+                    else if (idSasaran.includes("tbbAmount")) { let hari = getTxt("tbbHari"); if(hari && hari !== "-") detail = hari; }
+                    else if (idSasaran.includes("amount18A")) { 
+                        let mula = getVal("section18AStartDate"); 
+                        let akhir = getVal("section18AEndDate"); 
+                        if (mula && akhir) {
+                            let fmt = (d) => d.split('-').reverse().join('/');
+                            detail = `Dari ${fmt(mula)} hingga ${fmt(akhir)}`;
+                        } else {
+                            detail = "Bulan Tidak Lengkap";
+                        }
+                    }
+
+                    if (detail) senaraiKeterangan.push(detail);
+                }
+            }
+            inputTelahBayar.value = ""; 
         }
     } else { 
         inputTelahBayar.value = ""; 
@@ -726,8 +691,14 @@ function kiraJumlahKeseluruhanRumusan() {
 }
 
 function autoMasukRumusan(idSasaran, contextCard) {
-    // Fungsi ini dikekalkan kosong / nyahaktifkan autofill automatik supaya jadual rumusan 
-    // hanya bergantung pada pilihan dropdown manual oleh pengguna seperti yang diminta.
+    const jadual = document.getElementById('badanJadualRumusan'); const senaraiSelect = jadual.querySelectorAll('select'); let barisWujud = null;
+    senaraiSelect.forEach(select => { if (select.value === idSasaran) barisWujud = select; });
+    let tempContext = activeCardContext; if (contextCard) activeCardContext = contextCard;
+    if (barisWujud) { kemaskiniPatutBayar(barisWujud); } else {
+        tambahBarisRumusan(); let semuaSelectBaru = jadual.querySelectorAll('select'); let selectTerbaru = semuaSelectBaru[semuaSelectBaru.length - 1];
+        selectTerbaru.value = idSasaran; kemaskiniPatutBayar(selectTerbaru);
+    }
+    activeCardContext = tempContext;
 }
 
 // =====================================================
@@ -2191,7 +2162,11 @@ window.resetSemua = function() {
 
 window.resetKalkulatorIndividu = function(e) {
     if (!e) return;
+    
+    // PENTING: Penyelesaian isu enjin klon. 
+    // Kenal pasti sama ada parameter 'e' adalah objek Event atau Elemen HTML.
     let targetElemen = e.target ? e.target : e;
+    
     const kadKalkulator = targetElemen.closest('.calculator-card');
     if (!kadKalkulator) return;
 
@@ -2254,11 +2229,8 @@ window.resetKalkulatorIndividu = function(e) {
             el.innerText = "-";
         }
     });
-
-    // KEMAS KINI LIVE JADUAL RUMUSAN SELEPAS RESET KAD
-    document.querySelectorAll('#badanJadualRumusan select').forEach(select => {
-        if (select.value) {
-            kemaskiniPatutBayar(select);
-        }
-    });
 };
+function fungsiBaruRumusan(e) {
+    if (e) e.preventDefault();
+    // Ruang untuk fungsi baharu anda kelak
+}
