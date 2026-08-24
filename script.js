@@ -549,10 +549,24 @@ function resetTBB() {
 }
 
 // =====================================================
-// 4. ENJIN KALKULATOR RUMUSAN AKHIR
+// 4. ENJIN KALKULATOR RUMUSAN AKHIR (DIKEMASKINI)
 // =====================================================
 const senaraiKalkulatorRumusan = [
-    { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)" }, { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)" }, { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)" }, { nilai: "tbbAmount", teks: "Faedah Penamatan" }, { nilai: "otAmount", teks: "OT Hari Biasa" }, { nilai: "otRHAmount", teks: "OT Hari Rehat" }, { nilai: "otPHAmount", teks: "OT Hari Kelepasan" }, { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)" }, { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)" }, { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan" }, { nilai: "amount18A", teks: "Seksyen 18A (Bulan Tidak Lengkap)" }, { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan" }, { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit" }, { nilai: "lewatAmount", teks: "Potongan Lewat Seminit" }
+    { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, 
+    { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)", prefix: "baki" }, 
+    { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)", prefix: "ggnResBulan" }, 
+    { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)", prefix: "ggnRes18A" }, 
+    { nilai: "tbbAmount", teks: "Faedah Penamatan", prefix: "tbb" }, 
+    { nilai: "otAmount", teks: "OT Hari Biasa", prefix: "ot" }, 
+    { nilai: "otRHAmount", teks: "OT Hari Rehat", prefix: "otRH" }, 
+    { nilai: "otPHAmount", teks: "OT Hari Kelepasan", prefix: "otPH" }, 
+    { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)", prefix: "rh" }, 
+    { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)", prefix: "rhMore" }, 
+    { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan", prefix: "ph" }, 
+    { nilai: "amount18A", teks: "Seksyen 18A (Bulan Tidak Lengkap)", prefix: "sec18A" }, 
+    { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan", prefix: "annualLeave" }, 
+    { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit", prefix: "sickLeave" }, 
+    { nilai: "lewatAmount", teks: "Potongan Lewat Seminit", prefix: "lewat" }
 ];
 
 function formatRMRumusan(amount) { if (isNaN(amount) || amount === "") return "RM0.00"; return "RM " + parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -560,7 +574,7 @@ function unformatRMRumusan(str) { if (!str) return 0; return parseFloat(str.toSt
 
 function tambahBarisRumusan() {
     const tbody = document.getElementById('badanJadualRumusan'); const tr = document.createElement('tr'); tr.style.borderBottom = "1px dashed #ddd";
-    let pilihanHTML = ''; senaraiKalkulatorRumusan.forEach(item => { pilihanHTML += `<option value="${item.nilai}">${item.teks}</option>`; });
+    let pilihanHTML = ''; senaraiKalkulatorRumusan.forEach(item => { pilihanHTML += `<option value="${item.nilai}" data-prefix="${item.prefix || ''}">${item.teks}</option>`; });
     tr.innerHTML = `
         <td style="padding: 10px;"><select class="select-input" style="width: 100%; border-color: #1f4e79;" onchange="kemaskiniPatutBayar(this)">${pilihanHTML}</select></td>
         <td style="padding: 10px;"><input type="text" class="number-input keterangan-baris" placeholder="-" style="background: #fff; text-align: center; width: 100%;"></td>
@@ -581,6 +595,8 @@ function formatPatutBayar(input) { let val = unformatRMRumusan(input.value); inp
 function kemaskiniPatutBayar(selectElement) {
     const baris = selectElement.closest('tr');
     const idSasaran = selectElement.value;
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const prefix = selectedOption.getAttribute('data-prefix');
     const inputKeterangan = baris.querySelector('.keterangan-baris');
     const inputPatutBayar = baris.querySelector('.patut-bayar');
     const inputTelahBayar = baris.querySelector('.telah-bayar');
@@ -594,6 +610,44 @@ function kemaskiniPatutBayar(selectElement) {
     if (idSasaran !== "") {
         let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template)');
         
+        // Semak adakah kalkulator yang dipilih wujud dan pengguna telah klik butang kira (data dipaparkan)
+        let kalkulatorWujud = false;
+        let sudahKlikKira = false;
+
+        if (prefix) {
+            for (let kad of semuaKadAktif) {
+                let dataEl = kad.querySelector(`[id="${prefix}Data"], [data-original-id="${prefix}Data"]`);
+                if (dataEl) {
+                    kalkulatorWujud = true;
+                    if (window.getComputedStyle(dataEl).display !== "none") {
+                        sudahKlikKira = true;
+                        break;
+                    }
+                }
+            }
+        } else if (idSasaran === "orpBakiAmount") {
+            for (let kad of semuaKadAktif) {
+                let patutEl = kad.querySelector('[id="orpPatutTerima"], [data-original-id="orpPatutTerima"]');
+                if (patutEl) {
+                    kalkulatorWujud = true;
+                    let dataEl = kad.querySelector('[id="bakiData"], [data-original-id="bakiData"]');
+                    if (dataEl && window.getComputedStyle(dataEl).display !== "none") {
+                        sudahKlikKira = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (kalkulatorWujud && !sudahKlikKira) {
+            alert(`Peringatan: Anda telah memilih jenis bayaran "${selectedOption.text}", tetapi anda belum mengklik butang Kira pada kalkulator tersebut. Sila lengkapkan dan klik Kira terlebih dahulu!`);
+            selectElement.selectedIndex = 0;
+            inputPatutBayar.value = "RM 0.00";
+            if (inputKeterangan) inputKeterangan.value = "-";
+            kiraBakiBaris(selectElement);
+            return;
+        }
+
         if (idSasaran === "orpBakiAmount") {
             let jumlahPatut = 0, jumlahTelah = 0;
             for(let kad of semuaKadAktif) {
