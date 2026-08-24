@@ -2025,6 +2025,7 @@ window.updateGlobalElaunSum = function(el) {
 };
 
 const observerKalkulator = new MutationObserver((mutations) => {
+    let kenaSemakSemula = false;
     mutations.forEach(mutation => {
         mutation.addedNodes.forEach(node => {
             if (node.nodeType === 1 && node.classList && node.classList.contains('calculator-card')) {
@@ -2033,13 +2034,23 @@ const observerKalkulator = new MutationObserver((mutations) => {
         });
         mutation.removedNodes.forEach(node => {
             if (node.nodeType === 1 && (node.querySelector('.dynamic-allowance-wrapper') || node.classList.contains('calculator-card'))) {
-                let bakiElaunWrapper = document.querySelector('.dynamic-allowance-wrapper');
-                if (!bakiElaunWrapper) {
-                    allowanceCardTransformed = false; 
-                }
+                kenaSemakSemula = true;
             }
         });
     });
+
+    if (kenaSemakSemula) {
+        setTimeout(() => {
+            let bakiElaunWrapper = document.querySelector('.dynamic-allowance-wrapper');
+            if (!bakiElaunWrapper) {
+                allowanceCardTransformed = false; 
+                // PENTING: Arahkan sistem pusing dan semak semula kalkulator yang masih tinggal di skrin
+                document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)').forEach(card => {
+                    semakDanTukarElaun(card);
+                });
+            }
+        }, 50);
+    }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
