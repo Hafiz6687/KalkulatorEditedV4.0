@@ -1645,7 +1645,11 @@ function semakLogin() {
 document.addEventListener("DOMContentLoaded", function() { let kotakPassword = document.getElementById("loginPassword"); if (kotakPassword) { kotakPassword.addEventListener("keypress", function(event) { if (event.key === "Enter") semakLogin(); }); } });
 function logKeluar() { let btn = document.getElementById("butangAuth"); if (btn) { btn.innerHTML = "⏻ Log Masuk"; btn.style.background = "#1f4e79"; btn.style.borderColor = "#1f4e79"; btn.setAttribute("onclick", "paparLogMasuk()"); } alert("Anda telah berjaya log keluar dari sistem."); }
 
-function resetSemua() {
+// =====================================================
+// ENJIN RESET (DIKEMASKINI)
+// =====================================================
+
+window.resetSemua = function() {
     let sah = confirm("Adakah anda pasti mahu memadam KESEMUA data pengiraan? Tindakan ini tidak boleh diundur.");
     if (sah) {
         // 1. Buang semua kad kalkulator yang aktif
@@ -1673,9 +1677,11 @@ function resetSemua() {
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-}
+};
 
-function resetKalkulatorIndividu(elementButangReset) {
+window.resetKalkulatorIndividu = function(elementButangReset) {
+    if (!elementButangReset) return;
+    
     // 1. Cari kad kalkulator induk tempat butang reset ditekan
     const kadKalkulator = elementButangReset.closest('.calculator-card');
     if (!kadKalkulator) return;
@@ -1715,6 +1721,13 @@ function resetKalkulatorIndividu(elementButangReset) {
         if (typeof updateGlobalElaunSum === 'function') {
             updateGlobalElaunSum(kontenaElaun);
         }
+    } else {
+        // Jika wrapper dinamik belum wujud, kosongkan terus input elaun asal berdasarkan salaryMap
+        Object.keys(salaryMap).forEach(key => {
+            let allowID = salaryMap[key][0];
+            let allowEl = kadKalkulator.querySelector(`[id="${allowID}"], [data-original-id="${allowID}"]`);
+            if (allowEl) allowEl.value = '';
+        });
     }
 
     // 5. Sembunyikan bahagian data keputusan dan paparkan semula status "pending"
@@ -1738,7 +1751,7 @@ function resetKalkulatorIndividu(elementButangReset) {
             el.innerText = "-";
         }
     });
-}
+};
 
 // =====================================================
 // 7. ENGINE 2026: CLONE & MULTI-INSTANCE
@@ -2119,3 +2132,101 @@ document.addEventListener('DOMContentLoaded', () => {
     
     setTimeout(() => window.semakDanTukarElaun(), 100);
 });
+// =====================================================
+// ENJIN RESET (DIKEMASKINI)
+// =====================================================
+
+window.resetSemua = function() {
+    let sah = confirm("Adakah anda pasti mahu memadam KESEMUA data pengiraan? Tindakan ini tidak boleh diundur.");
+    if (sah) {
+        let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+        semuaKadAktif.forEach(kad => kad.remove());
+        
+        resetRumusan();
+        senaraiElaunGlobal = [];
+        
+        let kadRumusan = document.querySelector('.rumusan-card');
+        if (kadRumusan) {
+            kadRumusan.style.display = "none";
+        }
+        
+        setTimeout(() => {
+            if (typeof window.semakDanTukarElaun === 'function') {
+                window.semakDanTukarElaun();
+            }
+        }, 50);
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+};
+
+window.resetKalkulatorIndividu = function(e) {
+    if (!e) return;
+    
+    // PENTING: Penyelesaian isu enjin klon. 
+    // Kenal pasti sama ada parameter 'e' adalah objek Event atau Elemen HTML.
+    let targetElemen = e.target ? e.target : e;
+    
+    const kadKalkulator = targetElemen.closest('.calculator-card');
+    if (!kadKalkulator) return;
+
+    const senaraiInput = kadKalkulator.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
+    senaraiInput.forEach(input => {
+        if (input.readOnly) {
+            if (input.classList.contains('salary-total') || input.id.includes('Total')) {
+                input.value = "RM 0.00";
+            } else {
+                input.value = "";
+            }
+        } else {
+            input.value = '';
+        }
+    });
+
+    const senaraiSelect = kadKalkulator.querySelectorAll('select');
+    senaraiSelect.forEach(select => {
+        select.selectedIndex = 0;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const kontenaElaun = kadKalkulator.querySelector('.dynamic-allowance-wrapper');
+    if (kontenaElaun) {
+        const senaraiBarisElaun = kontenaElaun.querySelectorAll('.elaun-row-kalkulator');
+        senaraiBarisElaun.forEach((baris, index) => {
+            if (index === 0) {
+                baris.querySelectorAll('input').forEach(inp => inp.value = '');
+            } else {
+                baris.remove();
+            }
+        });
+        if (typeof updateGlobalElaunSum === 'function') {
+            updateGlobalElaunSum(kontenaElaun);
+        }
+    } else {
+        Object.keys(salaryMap).forEach(key => {
+            let allowID = salaryMap[key][0];
+            let allowEl = kadKalkulator.querySelector(`[id="${allowID}"], [data-original-id="${allowID}"]`);
+            if (allowEl) allowEl.value = '';
+        });
+    }
+
+    const prefixList = ['orp', 'baki', 'ot', 'lewat', 'otRH', 'otPH', 'rh', 'rhMore', 'ph', 'sec18A', 'annualLeave', 'sickLeave', 'kelayakanCuti', 'kelayakanSakit', 'resUni', 'tbb'];
+    prefixList.forEach(prefix => {
+        let pending = kadKalkulator.querySelector(`[id="${prefix}Pending"], [data-original-id="${prefix}Pending"]`);
+        let data = kadKalkulator.querySelector(`[id="${prefix}Data"], [data-original-id="${prefix}Data"]`);
+        if (pending && data) {
+            pending.style.display = "block";
+            data.style.display = "none";
+        }
+    });
+
+    const outputStrong = kadKalkulator.querySelectorAll('.result-row strong, [id$="Result"], [id$="Amount"], [id$="ORP"], [id$="Hourly"], [id$="Daily"], [id$="Minutely"], [id$="Hari"], [id$="Tempoh"], [id$="Kadar"]');
+    outputStrong.forEach(el => {
+        if (el.innerText.includes("RM") || el.id.includes('Amount') || el.id.includes('Result') || el.id.includes('ORP') || el.id.includes('Hourly') || el.id.includes('Daily') || el.id.includes('Minutely')) {
+            el.innerText = "RM 0.00";
+            el.style.color = "";
+        } else if (el.id.includes('Tempoh') || el.id.includes('Kadar') || el.id.includes('Hari')) {
+            el.innerText = "-";
+        }
+    });
+};
