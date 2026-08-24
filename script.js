@@ -1723,7 +1723,7 @@ window.tambahKalkulator = function(templateId) {
                 if (rumusanCard) { rumusanCard.style.display = "none"; }
             }
         };
-
+}
     let allElementsWithId = clone.querySelectorAll('[id]');
     allElementsWithId.forEach(el => {
         el.setAttribute('data-original-id', el.id);
