@@ -1662,6 +1662,45 @@ function resetSemua() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
+function resetKalkulatorIndividu(elementButangReset) {
+    // 1. Cari kad kalkulator induk
+    const kadKalkulator = elementButangReset.closest('.calculator-card');
+    if (!kadKalkulator) return;
+
+    // 2. Kosongkan semua input teks & nombor
+    const senaraiInput = kadKalkulator.querySelectorAll('input[type="text"], input[type="number"]');
+    senaraiInput.forEach(input => {
+        input.value = '';
+    });
+
+    // 3. Tetapkan semula semua dropdown pilihan (select)
+    const senaraiSelect = kadKalkulator.querySelectorAll('select');
+    senaraiSelect.forEach(select => {
+        select.selectedIndex = 0;
+    });
+
+    // 4. Padam & kosongkan baris elaun dinamik dalam kad ini
+    const kontenaElaun = kadKalkulator.querySelector('.dynamic-allowance-wrapper');
+    if (kontenaElaun) {
+        const senaraiBarisElaun = kontenaElaun.querySelectorAll('.elaun-row-kalkulator');
+        senaraiBarisElaun.forEach((baris, index) => {
+            if (index === 0) {
+                baris.querySelectorAll('input').forEach(inp => inp.value = '');
+            } else {
+                baris.remove();
+            }
+        });
+        if (typeof updateGlobalElaunSum === 'function') {
+            updateGlobalElaunSum(kontenaElaun);
+        }
+    }
+
+    // 5. Reset paparan keputusan (output) khusus untuk kad ini
+    const pendings = kadKalkulator.querySelectorAll('[id$="Pending"]');
+    const datas = kadKalkulator.querySelectorAll('[id$="Data"]');
+    pendings.forEach(p => p.style.display = "block");
+    datas.forEach(d => d.style.display = "none");
+}
 
 // =====================================================
 // 7. ENGINE 2026: CLONE & MULTI-INSTANCE
