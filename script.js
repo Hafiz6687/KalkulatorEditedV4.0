@@ -549,7 +549,7 @@ function resetTBB() {
 }
 
 // =====================================================
-// 4. ENJIN KALKULATOR RUMUSAN AKHIR (DIKEMASKINI)
+// 4. ENJIN KALKULATOR RUMUSAN AKHIR (LIVE & RE-SYNC)
 // =====================================================
 const senaraiKalkulatorRumusan = [
     { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, 
@@ -609,7 +609,6 @@ function kemaskiniPatutBayar(selectElement) {
     
     if (idSasaran !== "") {
         let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template)');
-        
         let kalkulatorWujud = false;
         let sudahKlikKira = false;
 
@@ -686,7 +685,6 @@ function kemaskiniPatutBayar(selectElement) {
             }
         }
 
-        // Jika kalkulator dipilih/wujud di skrin tapi belum klik Kira (atau belum buat pengiraan)
         if (kalkulatorWujud && !sudahKlikKira) {
             alert(`Peringatan: Anda telah memilih jenis bayaran "${selectedOption.text}", tetapi anda belum mengklik butang Kira pada kalkulator tersebut. Sila lengkapkan dan klik Kira terlebih dahulu!`);
             selectElement.selectedIndex = 0;
@@ -728,14 +726,8 @@ function kiraJumlahKeseluruhanRumusan() {
 }
 
 function autoMasukRumusan(idSasaran, contextCard) {
-    const jadual = document.getElementById('badanJadualRumusan'); const senaraiSelect = jadual.querySelectorAll('select'); let barisWujud = null;
-    senaraiSelect.forEach(select => { if (select.value === idSasaran) barisWujud = select; });
-    let tempContext = activeCardContext; if (contextCard) activeCardContext = contextCard;
-    if (barisWujud) { kemaskiniPatutBayar(barisWujud); } else {
-        tambahBarisRumusan(); let semuaSelectBaru = jadual.querySelectorAll('select'); let selectTerbaru = semuaSelectBaru[semuaSelectBaru.length - 1];
-        selectTerbaru.value = idSasaran; kemaskiniPatutBayar(selectTerbaru);
-    }
-    activeCardContext = tempContext;
+    // Fungsi ini dikekalkan kosong / nyahaktifkan autofill automatik supaya jadual rumusan 
+    // hanya bergantung pada pilihan dropdown manual oleh pengguna seperti yang diminta.
 }
 
 // =====================================================
@@ -2199,11 +2191,7 @@ window.resetSemua = function() {
 
 window.resetKalkulatorIndividu = function(e) {
     if (!e) return;
-    
-    // PENTING: Penyelesaian isu enjin klon. 
-    // Kenal pasti sama ada parameter 'e' adalah objek Event atau Elemen HTML.
     let targetElemen = e.target ? e.target : e;
-    
     const kadKalkulator = targetElemen.closest('.calculator-card');
     if (!kadKalkulator) return;
 
@@ -2264,6 +2252,13 @@ window.resetKalkulatorIndividu = function(e) {
             el.style.color = "";
         } else if (el.id.includes('Tempoh') || el.id.includes('Kadar') || el.id.includes('Hari')) {
             el.innerText = "-";
+        }
+    });
+
+    // KEMAS KINI LIVE JADUAL RUMUSAN SELEPAS RESET KAD
+    document.querySelectorAll('#badanJadualRumusan select').forEach(select => {
+        if (select.value) {
+            kemaskiniPatutBayar(select);
         }
     });
 };
