@@ -1793,17 +1793,61 @@ window.tambahKalkulator = function(templateId) {
         let closeBtn = document.createElement('button');
         closeBtn.className = "close-card-btn";
         closeBtn.innerHTML = "X";
-        closeBtn.onclick = function() { 
-            clone.remove(); 
-            
-            let kadTinggal = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
-            if (kadTinggal.length === 0) {
-                if (rumusanCard) { rumusanCard.style.display = "none"; }
-            } else {
-                // PENYELESAIAN: Paksa sistem pasang dan KLON semula kotak elaun ke kalkulator lain yang tinggal!
-                setTimeout(() => window.semakDanTukarElaun(), 50);
-            }
+// Di dalam fungsi penutupan kad kalkulator (contoh pada butang close / remove kad)
+closeBtn.onclick = function() { 
+    // 1. Kenal pasti jenis kalkulator sebelum kad dibuang
+    let templateId = clone.getAttribute('data-template-id');
+
+    // 2. Buang kad dari paparan
+    clone.remove(); 
+    
+    // =========================================================================
+    // TAMBAHAN BAHARU (LIVE RESET PADA JADUAL RUMUSAN APABILA KAD DI-CANCEL/TUTUP):
+    // =========================================================================
+    let badanRumusan = document.getElementById('badanJadualRumusan');
+    if (badanRumusan && templateId) {
+        let mappingSasaran = {
+            'orp': 'orpBakiAmount',
+            'baki': 'orpBakiAmount',
+            'otBiasa': 'otAmount',
+            'rehatKurang': 'rhAmount',
+            'rehatLebih': 'rhMoreAmount',
+            'sec18A': 'amount18A',
+            'otRehat': 'otRHAmount',
+            'kelepasan': 'phAmount',
+            'otKelepasan': 'otPHAmount',
+            'cutiTahunan': 'annualLeaveAmount',
+            'cutiSakit': 'sickLeaveAmount',
+            'notis': ['resUniMonthAmount', 'resUni18AAmount'],
+            'faedah': 'tbbAmount',
+            'lewat': 'lewatAmount'
         };
+
+        let sasaranId = mappingSasaran[templateId];
+        if (sasaranId) {
+            let barisRumusan = badanRumusan.querySelectorAll('tr');
+            barisRumusan.forEach(tr => {
+                let select = tr.querySelector('select');
+                if (select) {
+                    let nilaiSelect = select.value;
+                    if (Array.isArray(sasaranId) ? sasaranId.includes(nilaiSelect) : nilaiSelect === sasaranId) {
+                        tr.remove(); // Padam baris rumusan secara Live
+                    }
+                }
+            });
+            if (typeof kiraJumlahKeseluruhanRumusan === 'function') {
+                kiraJumlahKeseluruhanRumusan(); // Kemaskini jumlah keseluruhan secara Live
+            }
+        }
+    }
+
+    let kadTinggal = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+    if (kadTinggal.length === 0) {
+        if (rumusanCard) { rumusanCard.style.display = "none"; }
+    } else {
+        setTimeout(() => window.semakDanTukarElaun(), 50);
+    }
+};
         clone.appendChild(closeBtn);
     }
 
