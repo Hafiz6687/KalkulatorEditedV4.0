@@ -1703,15 +1703,19 @@ window.tambahKalkulator = function(templateId) {
     } else {
         clone.id = clone.id + uniqueSuffix;
         clone.style.position = "relative";
-        let closeBtn = document.createElement('button');
+let closeBtn = document.createElement('button');
         closeBtn.className = "close-card-btn";
         closeBtn.innerHTML = "X";
         closeBtn.onclick = function() { 
             clone.remove(); 
             
-            // TAMBAHAN: Reset status transformasi elaun jika kad yang ada elaun ditutup
-            if (clone.querySelector('.dynamic-allowance-wrapper')) {
-                allowanceCardTransformed = false;
+            // SEMAKAN PANTAS: Jika kad yang ditutup ini ada unsur elaun dinamik, 
+            // terus reset kawalan global jika tiada lagi kad lain yang guna elaun dinamik.
+            if (clone.querySelector('.dynamic-allowance-wrapper') || clone.querySelector('.salary-input')) {
+                let bakiKadElaun = document.querySelectorAll('.dynamic-allowance-wrapper');
+                if (bakiKadElaun.length === 0) {
+                    allowanceCardTransformed = false;
+                }
             }
 
             let kadTinggal = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
