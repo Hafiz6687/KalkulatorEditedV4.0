@@ -1712,13 +1712,17 @@ window.tambahKalkulator = function(templateId) {
         closeBtn.innerHTML = "X";
         closeBtn.onclick = function() { 
             clone.remove(); 
+            
+            // TAMBAHAN: Reset status transformasi elaun jika kad yang ada elaun ditutup
+            if (clone.querySelector('.dynamic-allowance-wrapper')) {
+                allowanceCardTransformed = false;
+            }
+
             let kadTinggal = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
             if (kadTinggal.length === 0) {
                 if (rumusanCard) { rumusanCard.style.display = "none"; }
             }
         };
-        clone.appendChild(closeBtn);
-    }
 
     let allElementsWithId = clone.querySelectorAll('[id]');
     allElementsWithId.forEach(el => {
