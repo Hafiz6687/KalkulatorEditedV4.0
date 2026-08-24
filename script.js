@@ -909,7 +909,6 @@ function paparModalLaporan(jenis) {
 
     if (jenis === 'penyata') {
         
-        // ==== KUTIP DATA KELAYAKAN PERKHIDMATAN (PRE-FILL) ====
         let v_ct_layak = "", v_cs_layak = "", v_ch_layak = ""; 
         let v_ct_guna = "", v_cs_guna = "", v_ch_guna = ""; 
         document.querySelectorAll('.calculator-card:not(.hidden-template)').forEach(kad => {
@@ -922,10 +921,9 @@ function paparModalLaporan(jenis) {
             if(!v_ch_guna) v_ch_guna = v("hospGuna"); 
         });
 
-        // ==== ENGINE KIRA BAKI AUTOMATIK ====
         if (!window.autoKiraBakiSvc) {
             window.autoKiraBakiSvc = function() {
-                ['PH', 'AL', 'MC', 'War'].forEach(k => {
+                ['PH', 'AL', 'MC', 'WD'].forEach(k => {
                     let l = document.getElementById('mod' + k + 'Layak');
                     let g = document.getElementById('mod' + k + 'Guna');
                     let b = document.getElementById('mod' + k + 'Baki');
@@ -953,44 +951,33 @@ function paparModalLaporan(jenis) {
             }
         });
 
-        let elaunModalHtml = `
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; box-sizing: border-box;" oninput="this.value = formatTitleCase(this.value)"></div>
-                <div style="flex: 2; display: flex; gap: 5px;">
-                    <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right; box-sizing: border-box;" oninput="autoKiraPotonganBerkanun()">
-                    <button type="button" style="visibility:hidden; width: 30px; flex-shrink: 0; padding:0; border:none;"></button>
-                </div>
-            </div>`;
-
-        let potonganModalHtml = '';
-        if (totalKelewatan > 0) {
-            potonganModalHtml += `
-                <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-                    <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" value="Kelewatan (${minitKelewatan} minit)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
-                    <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
-                        <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
-                        <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
-                    </div>
-                    <div style="flex: 3; display: flex; gap: 5px;">
-                        <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" value="${formatSafeRM(totalKelewatan)}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
-                        <button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
-                    </div>
-                </div>
-            `;
+        // Simpan nilai input dalam pemboleh ubah global modal supaya nilai kekal tidak hilang apabila dipratonton / disimpan
+        if (!window.modalPenyataState) {
+            window.modalPenyataState = {
+                namaMajikan: "", noDaftar: "", tempohUpah: "",
+                namaPekerja: "", icPekerja: "", noPekerja: "",
+                elaun: [], potongan: [], pendahuluan: "",
+                svc: {
+                    phL: "11", alL: v_ct_layak, mcL: v_cs_layak, wdL: v_ch_layak,
+                    phG: "", alG: v_ct_guna, mcG: v_cs_guna, wdG: v_ch_guna
+                }
+            };
         }
-        potonganModalHtml += `
-            <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-                <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
-                <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
-                    <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
-                        <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
-                </div>
-                <div style="flex: 3; display: flex; gap: 5px;">
-                    <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
-                    <button type="button" ${totalKelewatan > 0 ? 'onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;"' : 'style="visibility:hidden; padding:0 10px;"'}>X</button>
-                </div>
-            </div>
-        `;
+
+        let s = window.modalPenyataState;
+
+        let elaunModalHtml = '';
+        let listElaunRender = (s.elaun && s.elaun.length > 0) ? s.elaun : [{jenis: "", nilai: ""}];
+        listElaunRender.forEach(el => {
+            elaunModalHtml += `
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;" class="row-elaun-modal">
+                    <div style="flex: 3;"><input type="text" class="elaun-jenis" value="${el.jenis || ''}" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; box-sizing: border-box;" oninput="this.value = formatTitleCase(this.value)"></div>
+                    <div style="flex: 2; display: flex; gap: 5px;">
+                        <input type="text" class="elaun-nilai number-input salary-input" value="${el.nilai || ''}" placeholder="Nilai (RM)" style="width: 100%; flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right; box-sizing: border-box;" oninput="autoKiraPotonganBerkanun()">
+                        <button type="button" onclick="this.parentElement.parentElement.remove(); autoKiraPotonganBerkanun();" style="width: 30px; flex-shrink: 0; background:#dc3545; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+                    </div>
+                </div>`;
+        });
 
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
@@ -1001,22 +988,27 @@ function paparModalLaporan(jenis) {
                         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Majikan / Syarikat</h3>
                         <div style="margin-bottom: 15px; margin-top: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Majikan/Syarikat/Organisasi:</label>
-                            <input type="text" id="inputNamaMajikan" placeholder="Contoh: SYARIKAT ABC SDN BHD" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
+                            <input type="text" id="inputNamaMajikan" value="${s.namaMajikan}" placeholder="Contoh: SYARIKAT ABC SDN BHD" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Pendaftaran:</label>
-                            <input type="text" id="inputNoDaftarMajikan" placeholder="Contoh: 202301234567" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
+                            <input type="text" id="inputNoDaftarMajikan" value="${s.noDaftar}" placeholder="Contoh: 202301234567" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div style="margin-bottom: 25px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Tempoh Upah:</label>
-                            <input type="text" id="inputTempohUpah" placeholder="Contoh: Mei 2026 / 1 Mei - 31 Mei 2026" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
+                            <input type="text" id="inputTempohUpah" value="${s.tempohUpah}" placeholder="Contoh: Mei 2026 / 1 Mei - 31 Mei 2026" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
                         </div>
 
                         <div id="tourTargetElaunPopup" style="border-radius: 6px; position: relative;">
-                            <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Elaun</h3>
+                            <!-- Align Kanan Sebaris dengan Button + Tambah -->
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">
-                                <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Senarai Elaun</p>
-                                <button type="button" onclick="tambahBarisElaunModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
+                                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                                    <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Senarai Elaun</p>
+                                    <div style="display:flex; align-items:center; gap:15px;">
+                                        <span style="font-size: 12px; font-weight: bold; color: #555;">Nilai (RM)</span>
+                                        <button type="button" onclick="tambahBarisElaunModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
+                                    </div>
+                                </div>
                             </div>
                             <div id="containerElaunModal">
                                 ${elaunModalHtml}
@@ -1026,60 +1018,64 @@ function paparModalLaporan(jenis) {
                         <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pendahuluan</h3>
                         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                             <div style="flex: 3;"><input type="text" value="Pendahuluan" readonly style="width: 100%; padding: 8px; border: 1px solid #eee; border-radius: 5px; font-size: 13px; background: #f9f9f9; color: #777; box-sizing: border-box;"></div>
-                            <div style="flex: 2;"><input type="text" id="inputPendahuluanNilai" class="number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right; box-sizing: border-box;"></div>
+                            <div style="flex: 2;"><input type="text" id="inputPendahuluanNilai" value="${s.pendahuluan}" class="number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right; box-sizing: border-box;"></div>
                         </div>
 
-                        <!-- MAKLUMAT PERKHIDMATAN (BARU) -->
+                        <!-- MAKLUMAT PERKHIDMATAN (DENGAN WAR -> WD & INDICATOR DI BAWAH BAKI) -->
                         <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Perkhidmatan</h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; margin-bottom: 15px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; margin-bottom: 5px;">
                             <thead>
                                 <tr style="background: #f4f6f9; border-bottom: 1px solid #ccc;">
                                     <th style="padding: 8px; text-align: left;">Perkara</th>
                                     <th style="padding: 8px;">PH</th>
                                     <th style="padding: 8px;">AL</th>
                                     <th style="padding: 8px;">MC</th>
-                                    <th style="padding: 8px;">War</th>
+                                    <th style="padding: 8px;">WD</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Kelayakan Tahunan</td>
-                                    <td style="padding: 8px;"><input type="number" id="modPHLayak" value="11" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                    <td style="padding: 8px;"><input type="number" id="modALLayak" value="${v_ct_layak}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                    <td style="padding: 8px;"><input type="number" id="modMCLayak" value="${v_cs_layak}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                    <td style="padding: 8px;"><input type="number" id="modWarLayak" value="${v_ch_layak}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                    <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Layak</td>
+                                    <td style="padding: 8px;"><input type="number" id="modPHLayak" value="${s.svc.phL}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                    <td style="padding: 8px;"><input type="number" id="modALLayak" value="${s.svc.alL}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                    <td style="padding: 8px;"><input type="number" id="modMCLayak" value="${s.svc.mcL}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                    <td style="padding: 8px;"><input type="number" id="modWDLayak" value="${s.svc.wdL}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Telah Digunakan</td>
-                                    <td style="padding: 8px;"><input type="number" id="modPHGuna" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                    <td style="padding: 8px;"><input type="number" id="modALGuna" value="${v_ct_guna}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                    <td style="padding: 8px;"><input type="number" id="modMCGuna" value="${v_cs_guna}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                    <td style="padding: 8px;"><input type="number" id="modWarGuna" value="${v_ch_guna}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                    <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Guna</td>
+                                    <td style="padding: 8px;"><input type="number" id="modPHGuna" value="${s.svc.phG}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                    <td style="padding: 8px;"><input type="number" id="modALGuna" value="${s.svc.alG}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                    <td style="padding: 8px;"><input type="number" id="modMCGuna" value="${s.svc.mcG}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                    <td style="padding: 8px;"><input type="number" id="modWDGuna" value="${s.svc.wdG}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left; color: #1f4e79;">Baki</td>
                                     <td style="padding: 8px;"><input type="text" id="modPHBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
                                     <td style="padding: 8px;"><input type="text" id="modALBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
                                     <td style="padding: 8px;"><input type="text" id="modMCBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
-                                    <td style="padding: 8px;"><input type="text" id="modWarBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
+                                    <td style="padding: 8px;"><input type="text" id="modWDBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
                                 </tr>
                             </tbody>
                         </table>
+                        <!-- INDICATOR DI BAWAH BAKI -->
+                        <div style="font-size: 11px; color: #555; background: #f8f9fa; padding: 8px 10px; border-radius: 4px; border: 1px solid #e9ecef; margin-bottom: 15px; line-height: 1.4;">
+                            PH = Hari Kelepasan<br>AL = Cuti Tahunan<br>MC = Cuti Sakit<br>WD = Hospitalisasi
+                        </div>
                     </div>
 
                     <div>
                         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pekerja</h3>
                         <div style="margin-bottom: 15px; margin-top: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Pekerja:</label>
-                            <input type="text" id="inputNamaLaporan" placeholder="Contoh: Ahmad Bin Abu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
+                            <input type="text" id="inputNamaLaporan" value="${s.namaPekerja}" placeholder="Contoh: Ahmad Bin Abu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Kad Pengenalan / No. Passport:</label>
-                            <input type="text" id="inputICLaporan" placeholder="Contoh: 900101-01-1234 atau A1234567" maxlength="14" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
+                            <input type="text" id="inputICLaporan" value="${s.icPekerja}" placeholder="Contoh: 900101-01-1234 atau A1234567" maxlength="14" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
                         </div>
                         <div style="margin-bottom: 25px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Pekerja:</label>
-                            <input type="text" id="inputNoPekerjaLaporan" placeholder="Contoh: EMP001" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
+                            <input type="text" id="inputNoPekerjaLaporan" value="${s.noPekerja}" placeholder="Contoh: EMP001" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                         </div>
 
                         <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Potongan</h3>
@@ -1115,7 +1111,7 @@ function paparModalLaporan(jenis) {
                     
                     <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
                         <button onclick="document.getElementById('modalLaporanPenuh').remove()" style="background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Batal</button>
-                        <button onclick="teruskanJanaLaporan('${jenis}')" style="background: #1f4e79; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Jana Cetakan</button>
+                        <button onclick="teruskanJanaLaporanPenyataGajiValid()" style="background: #1f4e79; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Jana Cetakan</button>
                     </div>
 
                 </div>
@@ -1154,6 +1150,52 @@ function paparModalLaporan(jenis) {
         </div>`;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
+}
+
+function teruskanJanaLaporanPenyataGajiValid() {
+    // 1. Simpan State Semasa ke Memory Supaya Kekal Tidak Hilang
+    let getV = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : "";
+    
+    let s = window.modalPenyataState;
+    s.namaMajikan = getV('inputNamaMajikan');
+    s.noDaftar = getV('inputNoDaftarMajikan');
+    s.tempohUpah = getV('inputTempohUpah');
+    s.namaPekerja = getV('inputNamaLaporan');
+    s.icPekerja = getV('inputICLaporan');
+    s.noPekerja = getV('inputNoPekerjaLaporan');
+    s.pendahuluan = getV('inputPendahuluanNilai');
+
+    s.elaun = [];
+    document.querySelectorAll('#containerElaunModal > div').forEach(row => {
+        let j = row.querySelector('.elaun-jenis') ? row.querySelector('.elaun-jenis').value.trim() : "";
+        let n = row.querySelector('.elaun-nilai') ? row.querySelector('.elaun-nilai').value.trim() : "";
+        if (j || n) s.elaun.push({ jenis: j, nilai: n });
+    });
+
+    s.svc = {
+        phL: getV('modPHLayak'), alL: getV('modALLayak'), mcL: getV('modMCLayak'), wdL: getV('modWDLayak'),
+        phG: getV('modPHGuna'), alG: getV('modALGuna'), mcG: getV('modMCGuna'), wdG: getV('modWDGuna')
+    };
+
+    // 2. Semak Validasi Maklumat Perkhidmatan (Row Layak & Guna Wajib Dilengkapkan / Minima 0)
+    let keys = ['PH', 'AL', 'MC', 'WD'];
+    for (let k of keys) {
+        let lVal = getV('mod' + k + 'Layak');
+        let gVal = getV('mod' + k + 'Guna');
+        if (lVal === "" || gVal === "") {
+            // Tunjuk Pop-up Alert
+            let labelCuti = k === 'PH' ? 'Hari Kelepasan (PH)' : k === 'AL' ? 'Cuti Tahunan (AL)' : k === 'MC' ? 'Cuti Sakit (MC)' : 'Hospitalisasi (WD)';
+            alert(`Sila lengkapkan ruangan 'Layak' dan 'Guna' bagi maklumat ${labelCuti}.\n(Sila masukkan angka 0 jika tiada nilai).`);
+            
+            // Fokuskan cursor pada ruangan yang kosong
+            let targetInp = lVal === "" ? document.getElementById('mod' + k + 'Layak') : document.getElementById('mod' + k + 'Guna');
+            if(targetInp) targetInp.focus();
+            return;
+        }
+    }
+
+    // 3. Teruskan Proses Jana Cetakan Asal
+    teruskanJanaLaporan('penyata');
 }
 
 function teruskanJanaLaporan(jenis) {
