@@ -1215,11 +1215,12 @@ function teruskanJanaLaporan(jenis) {
         sipP = getV('inputSIPPeratus'); sipN = getV('inputSIPNilai');
         pendahuluanN = getV('inputPendahuluanNilai');
 
+        // PEMBETULAN: Menukar modWarLayak -> modWDLayak selaras dengan pop-up modal
         svcData = {
             phL: getV('modPHLayak'), phG: getV('modPHGuna'), phB: getV('modPHBaki'),
             alL: getV('modALLayak'), alG: getV('modALGuna'), alB: getV('modALBaki'),
             mcL: getV('modMCLayak'), mcG: getV('modMCGuna'), mcB: getV('modMCBaki'),
-            warL: getV('modWarLayak'), warG: getV('modWarGuna'), warB: getV('modWarBaki')
+            wdL: getV('modWDLayak'), wdG: getV('modWDGuna'), wdB: getV('modWDBaki')
         };
 
         document.querySelectorAll('#containerElaunModal > div').forEach(row => {
@@ -1247,36 +1248,6 @@ function teruskanJanaLaporan(jenis) {
     prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenis, { 
         senaraiElaun, senaraiPotongan, kwspP, kwspN, perkesoP, perkesoN, sipP, sipN, pendahuluanN, svcData 
     });
-}
-
-function tambahRekodKeMaklumatGaji(jenis, namaPekerja, majikan, tempoh) {
-    let tbody = document.querySelector('#card-maklumatGaji tbody');
-    if (!tbody) return;
-
-    let jenisTeks = jenis === 'penyata' ? 'Penyata Gaji' : 'Laporan';
-    let warnaTeks = jenis === 'penyata' ? '#198754' : '#0d6efd'; 
-    let warnaBg   = jenis === 'penyata' ? '#d1e7dd' : '#cfe2ff';
-
-    let tr = document.createElement('tr');
-    tr.style.borderBottom = "1px solid #eee";
-    
-    tr.innerHTML = `
-        <td style="padding: 15px; font-size: 13px; font-weight: bold; color: ${warnaTeks};">
-            <span style="background: ${warnaBg}; padding: 4px 8px; border-radius: 4px;">${jenisTeks}</span>
-        </td>
-        <td style="padding: 15px; font-size: 13px;"><strong style="color: #333;">${namaPekerja || '-'}</strong></td>
-        <td style="padding: 15px; font-size: 13px;"><strong style="color: #333;">${majikan || '-'}</strong></td>
-        <td style="padding: 15px; text-align: center; font-size: 13px; color: #444;">${tempoh || '-'}</td>
-        <td style="padding: 15px; text-align: center;">
-            <button style="background: #0d6efd; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📂 Buka</button>
-            <button onclick="this.closest('tr').remove()" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🗑️ Hapus</button>
-        </td>
-    `;
-    
-    let firstRow = tbody.querySelector('tr');
-    if (firstRow && firstRow.innerHTML.includes('KBR/10103')) firstRow.remove();
-
-    tbody.prepend(tr);
 }
 
 function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenisCetak, xtra) { 
@@ -1582,46 +1553,51 @@ function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPe
         `;
 
         // KUTIP DATA KELAYAKAN DARI XTRA (POP-UP MODAL)
+        // PEMBETULAN: Menukar paparan War kepada WD (Hospitalisasi)
         let svc = xtra.svcData || {};
         let fDay = (val) => (val && val !== "-" && val !== "") ? val : "-";
 
         let htmlMaklumatPerkhidmatan = `
             <div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;">
                 <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT BERKAITAN PERKHIDMATAN</div>
-                <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; margin-bottom: 5px;">
                     <thead>
                         <tr style="background: #f4f6f9; border-bottom: 1px solid #ccc;">
                             <th style="padding: 8px; text-align: left;">Perkara</th>
                             <th style="padding: 8px;">PH</th>
                             <th style="padding: 8px;">AL</th>
                             <th style="padding: 8px;">MC</th>
-                            <th style="padding: 8px;">War</th>
+                            <th style="padding: 8px;">WD</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr style="border-bottom: 1px dashed #eee;">
-                            <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Kelayakan Tahunan</td>
+                            <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Layak</td>
                             <td style="padding: 8px; font-weight: bold;">${fDay(svc.phL)}</td>
                             <td style="padding: 8px; font-weight: bold;">${fDay(svc.alL)}</td>
                             <td style="padding: 8px; font-weight: bold;">${fDay(svc.mcL)}</td>
-                            <td style="padding: 8px; font-weight: bold;">${fDay(svc.warL)}</td>
+                            <td style="padding: 8px; font-weight: bold;">${fDay(svc.wdL)}</td>
                         </tr>
                         <tr style="border-bottom: 1px dashed #eee;">
-                            <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Telah Digunakan</td>
+                            <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Guna</td>
                             <td style="padding: 8px; font-weight: bold;">${fDay(svc.phG)}</td>
                             <td style="padding: 8px; font-weight: bold;">${fDay(svc.alG)}</td>
                             <td style="padding: 8px; font-weight: bold;">${fDay(svc.mcG)}</td>
-                            <td style="padding: 8px; font-weight: bold;">${fDay(svc.warG)}</td>
+                            <td style="padding: 8px; font-weight: bold;">${fDay(svc.wdG)}</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left; color:#1f4e79;">Baki</td>
                             <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.phB)}</td>
                             <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.alB)}</td>
                             <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.mcB)}</td>
-                            <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.warB)}</td>
+                            <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.wdB)}</td>
                         </tr>
                     </tbody>
                 </table>
+                <!-- INDICATOR DI BAWAH BAKI -->
+                <div style="font-size: 11px; color: #555; background: #f8f9fa; padding: 8px 10px; border-radius: 4px; border: 1px solid #e9ecef; margin-bottom: 0; line-height: 1.4;">
+                    PH = Hari Kelepasan<br>AL = Cuti Tahunan<br>MC = Cuti Sakit<br>WD = Hospitalisasi
+                </div>
             </div>
         `;
 
