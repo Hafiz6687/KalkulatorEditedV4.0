@@ -988,28 +988,23 @@ function tunjukTourMaklumatPerkhidmatan() {
 function paparModalLaporan(jenis) {
     let existingModal = document.getElementById('modalLaporanPenuh'); 
     
-// PERUBAHAN: Pengekalan Data Modal (Persist)
     if(existingModal) {
-        // PENAMBAHBAIKAN: Guna 'inputTempohUpah' untuk bezakan Penyata dan Laporan
         let isPenyata = existingModal.querySelector('#inputTempohUpah') !== null;
         if ((jenis === 'penyata' && isPenyata) || (jenis === 'penuh' && !isPenyata)) {
             existingModal.style.display = 'flex';
             if (jenis === 'penyata') {
                 autoKiraPotonganBerkanun();
                 if (window.autoKiraBakiSvc) window.autoKiraBakiSvc();
-                
-                // 👇 TAMBAH KOD INI DI SINI UNTUK KALI KEDUA DAN SETERUSNYA
                 setTimeout(() => tunjukTourElaunPopup(), 400);
             }
             return;
         } else {
-            existingModal.remove(); // Remove jika switch format modal yang berbeza
+            existingModal.remove(); 
         }
     }
     
     if (jenis === 'penyata') {
         
-        // ==== KUTIP DATA KELAYAKAN PERKHIDMATAN (PRE-FILL) ====
         let v_ct_layak = "", v_cs_layak = "", v_ch_layak = ""; 
         let v_ct_guna = "", v_cs_guna = "", v_ch_guna = ""; 
         document.querySelectorAll('.calculator-card:not(.hidden-template)').forEach(kad => {
@@ -1022,7 +1017,7 @@ function paparModalLaporan(jenis) {
             if(!v_ch_guna) v_ch_guna = v("hospGuna"); 
         });
 
-        // ==== ENGINE KIRA BAKI AUTOMATIK ====
+        // ENJIN MATEMATIK PINTAR (Baki & Auto Tambah Semasa -> Guna)
         if (!window.autoKiraBakiSvc) {
             window.autoKiraBakiSvc = function() {
                 ['PH', 'AL', 'MC', 'WD'].forEach(k => {
@@ -1038,45 +1033,52 @@ function paparModalLaporan(jenis) {
                 });
             };
         }
+        if (!window.kemaskiniGunaAsal) {
+            window.kemaskiniGunaAsal = function(k) {
+                let g = document.getElementById('mod' + k + 'Guna');
+                let s = document.getElementById('input' + k + 'Semasa');
+                if (g) {
+                    let sVal = s ? (parseFloat(s.value) || 0) : 0;
+                    let newGuna = parseFloat(g.value) || 0;
+                    g.setAttribute('data-asal', Math.max(0, newGuna - sVal));
+                }
+            };
+        }
+        if (!window.tambahCutiSemasa) {
+            window.tambahCutiSemasa = function(k) {
+                let g = document.getElementById('mod' + k + 'Guna');
+                let s = document.getElementById('input' + k + 'Semasa');
+                if (g && s) {
+                    if(!g.hasAttribute('data-asal')) g.setAttribute('data-asal', g.value || 0);
+                    let asal = parseFloat(g.getAttribute('data-asal')) || 0;
+                    let semasa = parseFloat(s.value) || 0;
+                    g.value = Math.max(0, asal + semasa);
+                    if (window.autoKiraBakiSvc) window.autoKiraBakiSvc();
+                }
+            };
+        }
 
-        let totalKelewatan = 0;
-        let minitKelewatan = 0;
+        let totalKelewatan = 0; let minitKelewatan = 0;
         document.querySelectorAll('.calculator-card:not(.hidden-template)').forEach(kad => {
             let amtEl = kad.querySelector('[id="lewatAmount"], [data-original-id="lewatAmount"]');
             if (amtEl && amtEl.innerText && amtEl.innerText.trim() !== "RM 0.00" && amtEl.innerText.trim() !== "-") {
                 let num = evaluateSmartMath(amtEl.innerText);
-                if (num > 0) {
-                    totalKelewatan += num;
-                    let minEl = kad.querySelector('[id="lewatMinit"], [data-original-id="lewatMinit"]');
-                    if (minEl) minitKelewatan += Number(minEl.value) || 0;
-                }
+                if (num > 0) { totalKelewatan += num; let minEl = kad.querySelector('[id="lewatMinit"], [data-original-id="lewatMinit"]'); if (minEl) minitKelewatan += Number(minEl.value) || 0; }
             }
         });
 
-// ==== KUTIP MAKLUMAT ELAUN DARI KALKULATOR UTK POP-UP (PRE-FILL) ====
         let senaraiElaunPreFill = [];
         document.querySelectorAll('.calculator-card:not(.hidden-template) .elaun-row-kalkulator').forEach(row => {
-            let jEl = row.querySelector('.global-elaun-jenis');
-            let nEl = row.querySelector('.global-elaun-nilai');
-            if (jEl && nEl) {
-                let j = jEl.value.trim();
-                let n = evaluateSmartMath(nEl.value);
-                if (j || n > 0) senaraiElaunPreFill.push({ jenis: j, nilai: n > 0 ? n : "" });
-            }
+            let jEl = row.querySelector('.global-elaun-jenis'); let nEl = row.querySelector('.global-elaun-nilai');
+            if (jEl && nEl) { let j = jEl.value.trim(); let n = evaluateSmartMath(nEl.value); if (j || n > 0) senaraiElaunPreFill.push({ jenis: j, nilai: n > 0 ? n : "" }); }
         });
-
-        if (senaraiElaunPreFill.length === 0 && typeof senaraiElaunGlobal !== 'undefined' && senaraiElaunGlobal.length > 0) {
-            senaraiElaunPreFill = senaraiElaunGlobal;
-        }
+        if (senaraiElaunPreFill.length === 0 && typeof senaraiElaunGlobal !== 'undefined' && senaraiElaunGlobal.length > 0) { senaraiElaunPreFill = senaraiElaunGlobal; }
 
         let elaunModalHtml = '';
         if (senaraiElaunPreFill.length > 0) {
             senaraiElaunPreFill.forEach((elaun, i) => {
                 let nFormatted = elaun.nilai ? formatSafeRM(elaun.nilai) : '';
-                let btnHtml = i === 0 
-                    ? `<button type="button" style="visibility:hidden; width: 30px; flex-shrink: 0; padding:0; border:none;"></button>`
-                    : `<button type="button" onclick="this.parentElement.parentElement.remove(); autoKiraPotonganBerkanun();" style="width: 30px; flex-shrink: 0; background:#dc3545; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
-                
+                let btnHtml = i === 0 ? `<button type="button" style="visibility:hidden; width: 30px; flex-shrink: 0; padding:0; border:none;"></button>` : `<button type="button" onclick="this.parentElement.parentElement.remove(); autoKiraPotonganBerkanun();" style="width: 30px; flex-shrink: 0; background:#dc3545; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>`;
                 elaunModalHtml += `
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                     <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" value="${elaun.jenis || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; box-sizing: border-box;" oninput="this.value = formatTitleCase(this.value)"></div>
@@ -1087,45 +1089,14 @@ function paparModalLaporan(jenis) {
                 </div>`;
             });
         } else {
-            elaunModalHtml = `
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; box-sizing: border-box;" oninput="this.value = formatTitleCase(this.value)"></div>
-                <div style="flex: 2; display: flex; gap: 5px;">
-                    <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right; box-sizing: border-box;" oninput="autoKiraPotonganBerkanun()">
-                    <button type="button" style="visibility:hidden; width: 30px; flex-shrink: 0; padding:0; border:none;"></button>
-                </div>
-            </div>`;
+            elaunModalHtml = `<div style="display: flex; gap: 10px; margin-bottom: 10px;"><div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; box-sizing: border-box;" oninput="this.value = formatTitleCase(this.value)"></div><div style="flex: 2; display: flex; gap: 5px;"><input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right; box-sizing: border-box;" oninput="autoKiraPotonganBerkanun()"><button type="button" style="visibility:hidden; width: 30px; flex-shrink: 0; padding:0; border:none;"></button></div></div>`;
         }
 
         let potonganModalHtml = '';
         if (totalKelewatan > 0) {
-            potonganModalHtml += `
-                <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-                    <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" value="Kelewatan (${minitKelewatan} minit)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
-                    <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
-                        <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
-                        <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
-                    </div>
-                    <div style="flex: 3; display: flex; gap: 5px;">
-                        <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" value="${formatSafeRM(totalKelewatan)}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
-                        <button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
-                    </div>
-                </div>
-            `;
+            potonganModalHtml += `<div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;"><div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" value="Kelewatan (${minitKelewatan} minit)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div><div style="flex: 1; display: flex; align-items: center; gap: 5px;"><input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;"><span style="font-weight: bold; font-size: 14px; color: #333;">%</span></div><div style="flex: 3; display: flex; gap: 5px;"><input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" value="${formatSafeRM(totalKelewatan)}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"><button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button></div></div>`;
         }
-        potonganModalHtml += `
-            <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-                <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
-                <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
-                    <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
-                        <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
-                </div>
-                <div style="flex: 3; display: flex; gap: 5px;">
-                    <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
-                    <button type="button" ${totalKelewatan > 0 ? 'onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;"' : 'style="visibility:hidden; padding:0 10px;"'}>X</button>
-                </div>
-            </div>
-        `;
+        potonganModalHtml += `<div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;"><div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div><div style="flex: 1; display: flex; align-items: center; gap: 5px;"><input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;"><span style="font-weight: bold; font-size: 14px; color: #333;">%</span></div><div style="flex: 3; display: flex; gap: 5px;"><input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;"><button type="button" ${totalKelewatan > 0 ? 'onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;"' : 'style="visibility:hidden; padding:0 10px;"'}>X</button></div></div>`;
 
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
@@ -1149,20 +1120,14 @@ function paparModalLaporan(jenis) {
 
                         <div id="tourTargetElaunPopup" style="border-radius: 6px; position: relative;">
                             <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Elaun</h3>
-                            
                             <div style="display: flex; gap: 10px; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc; align-items: center;">
-                                <div style="flex: 3;">
-                                    <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Senarai Elaun</p>
-                                </div>
+                                <div style="flex: 3;"><p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Senarai Elaun</p></div>
                                 <div style="flex: 2; display: flex; gap: 5px; align-items: center; justify-content: flex-end;">
                                     <span style="font-size: 12px; font-weight: bold; color: #555; flex: 1; text-align: right; padding-right: 5px;">Nilai (RM)</span>
                                     <button type="button" onclick="tambahBarisElaunModal()" style="width: 70px; flex-shrink: 0; background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
                                 </div>
                             </div>
-
-                            <div id="containerElaunModal">
-                                ${elaunModalHtml}
-                            </div>
+                            <div id="containerElaunModal">${elaunModalHtml}</div>
                         </div>
 
                         <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pendahuluan</h3>
@@ -1171,7 +1136,6 @@ function paparModalLaporan(jenis) {
                             <div style="flex: 2;"><input type="text" id="inputPendahuluanNilai" class="number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right; box-sizing: border-box;"></div>
                         </div>
 
-                        <!-- MAKLUMAT PERKHIDMATAN (DIKEMASKINI) -->
                         <div id="tourTargetMaklumatPerkhidmatan" style="border-radius: 6px; position: relative;">
                             <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Perkhidmatan</h3>
                             <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; margin-bottom: 5px;">
@@ -1194,10 +1158,10 @@ function paparModalLaporan(jenis) {
                                     </tr>
                                     <tr>
                                         <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Guna</td>
-                                        <td style="padding: 8px;"><input type="number" id="modPHGuna" value="0" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                        <td style="padding: 8px;"><input type="number" id="modALGuna" value="${v_ct_guna !== '' ? v_ct_guna : '0'}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                        <td style="padding: 8px;"><input type="number" id="modMCGuna" value="${v_cs_guna !== '' ? v_cs_guna : '0'}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                        <td style="padding: 8px;"><input type="number" id="modWDGuna" value="${v_ch_guna !== '' ? v_ch_guna : '0'}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modPHGuna" value="0" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="kemaskiniGunaAsal('PH'); autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modALGuna" value="${v_ct_guna !== '' ? v_ct_guna : '0'}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="kemaskiniGunaAsal('AL'); autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modMCGuna" value="${v_cs_guna !== '' ? v_cs_guna : '0'}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="kemaskiniGunaAsal('MC'); autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modWDGuna" value="${v_ch_guna !== '' ? v_ch_guna : '0'}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="kemaskiniGunaAsal('WD'); autoKiraBakiSvc()"></td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left; color: #1f4e79;">Baki</td>
@@ -1210,10 +1174,7 @@ function paparModalLaporan(jenis) {
                             </table>
                             <div style="font-size: 10px; color: #555; text-align: left; background: #f9f9f9; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-bottom: 15px;">
                                 <span style="font-weight: bold; color: #1f4e79;">Petunjuk:</span><br>
-                                <strong>PH</strong> = Hari Kelepasan &nbsp;|&nbsp; 
-                                <strong>AL</strong> = Cuti Tahunan &nbsp;|&nbsp; 
-                                <strong>MC</strong> = Cuti Sakit &nbsp;|&nbsp; 
-                                <strong>WD</strong> = Hospitalisasi
+                                <strong>PH</strong> = Hari Kelepasan &nbsp;|&nbsp; <strong>AL</strong> = Cuti Tahunan &nbsp;|&nbsp; <strong>MC</strong> = Cuti Sakit &nbsp;|&nbsp; <strong>WD</strong> = Hospitalisasi
                             </div>
                         </div>
                     </div>
@@ -1234,7 +1195,6 @@ function paparModalLaporan(jenis) {
                         </div>
 
                         <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Potongan</h3>
-                        
                         <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">Potongan Berkanun</p>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">KWSP</label>
@@ -1255,7 +1215,6 @@ function paparModalLaporan(jenis) {
                             <input type="text" id="inputSIPNilai" placeholder="Nilai (RM)" class="number-input salary-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
 
-                        <!-- TAMBAHAN BARU: Tidak Hadir (Absent) -->
                         <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">Tidak Hadir (Absent)</p>
                         <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
                             <label style="width: 60px; font-size: 13px; font-weight: bold;">Bil. Hari</label>
@@ -1268,9 +1227,35 @@ function paparModalLaporan(jenis) {
                             <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Lain-lain Potongan</p>
                             <button type="button" onclick="tambahBarisPotonganModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
                         </div>
-                        <div id="containerPotonganModal" style="margin-bottom: 25px;">
+                        <div id="containerPotonganModal" style="margin-bottom: 10px;">
                             ${potonganModalHtml}
                         </div>
+
+                        <!-- TAMBAHAN BARU: Rekod Cuti Bulan Semasa -->
+                        <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Rekod Cuti Bulan Semasa</h3>
+                        <p style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 15px; background: #e8f0fe; padding: 8px; border-radius: 4px;">Cuti yang dimasukkan di sini akan ditambah secara automatik ke ruangan 'Guna' di Jadual Maklumat Perkhidmatan.</p>
+                        
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                            <label style="width: 120px; font-size: 13px; font-weight: bold;">Hari Kelepasan (PH)</label>
+                            <input type="number" id="inputPHSemasa" placeholder="0" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="tambahCutiSemasa('PH')">
+                            <span style="font-weight: bold; font-size: 13px; color: #333;">hari</span>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                            <label style="width: 120px; font-size: 13px; font-weight: bold;">Cuti Tahunan (AL)</label>
+                            <input type="number" id="inputALSemasa" placeholder="0" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="tambahCutiSemasa('AL')">
+                            <span style="font-weight: bold; font-size: 13px; color: #333;">hari</span>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                            <label style="width: 120px; font-size: 13px; font-weight: bold;">Cuti Sakit (MC)</label>
+                            <input type="number" id="inputMCSemasa" placeholder="0" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="tambahCutiSemasa('MC')">
+                            <span style="font-weight: bold; font-size: 13px; color: #333;">hari</span>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 25px; align-items: center;">
+                            <label style="width: 120px; font-size: 13px; font-weight: bold;">Hospitalisasi (WD)</label>
+                            <input type="number" id="inputWDSemasa" placeholder="0" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="tambahCutiSemasa('WD')">
+                            <span style="font-weight: bold; font-size: 13px; color: #333;">hari</span>
+                        </div>
+
                     </div>
                     
                     <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
@@ -1285,10 +1270,10 @@ function paparModalLaporan(jenis) {
 
         autoKiraPotonganBerkanun();
         setTimeout(() => { if (window.autoKiraBakiSvc) window.autoKiraBakiSvc(); }, 100);
-
         setTimeout(() => tunjukTourElaunPopup(), 400);
         
-} else {
+    } else {
+        // [Kod Laporan Penuh di sini kekal sama - abaikan ubah yang tidak berkaitan]
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
             <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
@@ -1302,12 +1287,10 @@ function paparModalLaporan(jenis) {
                     <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Kad Pengenalan / No. Passport:</label>
                     <input type="text" id="inputICLaporan" placeholder="Contoh: 900101-01-1234 atau A1234567" maxlength="14" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
                 </div>
-                <!-- TAMBAHAN BARU: NAMA MAJIKAN -->
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Majikan/Syarikat/Organisasi:</label>
                     <input type="text" id="inputNamaMajikan" placeholder="Contoh: SYARIKAT ABC SDN BHD" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                 </div>
-
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
                     <button onclick="document.getElementById('modalLaporanPenuh').style.display='none'" style="background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Batal</button>
                     <button onclick="teruskanJanaLaporan('${jenis}')" style="background: #1f4e79; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Jana Cetakan</button>
@@ -1352,11 +1335,11 @@ function teruskanJanaLaporan(jenis) {
         pendahuluanN = getV('inputPendahuluanNilai');
         absentH = getV('inputAbsentHari'); absentN = getV('inputAbsentNilai');
 
-        svcData = {
-            phL: getV('modPHLayak'), phG: getV('modPHGuna'), phB: getV('modPHBaki'),
-            alL: getV('modALLayak'), alG: getV('modALGuna'), alB: getV('modALBaki'),
-            mcL: getV('modMCLayak'), mcG: getV('modMCGuna'), mcB: getV('modMCBaki'),
-            wdL: getV('modWDLayak'), wdG: getV('modWDGuna'), wdB: getV('modWDBaki')
+svcData = {
+            phL: getV('modPHLayak'), phG: getV('modPHGuna'), phB: getV('modPHBaki'), phS: getV('inputPHSemasa'),
+            alL: getV('modALLayak'), alG: getV('modALGuna'), alB: getV('modALBaki'), alS: getV('inputALSemasa'),
+            mcL: getV('modMCLayak'), mcG: getV('modMCGuna'), mcB: getV('modMCBaki'), mcS: getV('inputMCSemasa'),
+            wdL: getV('modWDLayak'), wdG: getV('modWDGuna'), wdB: getV('modWDBaki'), wdS: getV('inputWDSemasa')
         };
 
         document.querySelectorAll('#containerElaunModal > div').forEach(row => {
@@ -1836,53 +1819,68 @@ let htmlPotonganDalaman = "";
             </div>
         `;
 
-        // KUTIP DATA KELAYAKAN DARI XTRA (MODAL POP-UP)
+// KUTIP DATA KELAYAKAN DARI XTRA (MODAL POP-UP)
         let svc = xtra.svcData || {};
-        let fDay = (val) => (val && val !== "-" && val !== "") ? val : "-";
+        let fDay = (val) => (val && val !== "-" && val !== "") ? val : "0";
 
+        // TAMBAHAN BARU: JADUAL REKOD CUTI BULAN SEMASA (40% RUANG KANAN)
+        let htmlCutiSemasa = `
+            <div class="report-box" style="padding: 0; border: 1px solid #aaa; display: flex; flex-direction: column; height: 100%;">
+                <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px; margin: 0; border-radius: 0; border-bottom: 1px solid #aaa;">CUTI BULAN SEMASA</div>
+                <div style="flex-grow: 1; padding: 10px 0;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; width: 60%; text-align: left;">Hari Kelepasan (PH)</td><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; text-align: right; width: 40%; font-weight: bold;">${fDay(svc.phS)} hari</td></tr>
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; width: 60%; text-align: left;">Cuti Tahunan (AL)</td><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; text-align: right; width: 40%; font-weight: bold;">${fDay(svc.alS)} hari</td></tr>
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; width: 60%; text-align: left;">Cuti Sakit (MC)</td><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; text-align: right; width: 40%; font-weight: bold;">${fDay(svc.mcS)} hari</td></tr>
+                        <tr><td style="padding: 8px 12px; width: 60%; text-align: left;">Hospitalisasi (WD)</td><td style="padding: 8px 12px; text-align: right; width: 40%; font-weight: bold;">${fDay(svc.wdS)} hari</td></tr>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        // DIKEMASKINI: JADUAL MAKLUMAT PERKHIDMATAN (60% RUANG KIRI)
         let htmlMaklumatPerkhidmatan = `
-            <div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;">
-                <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT BERKAITAN PERKHIDMATAN</div>
-                <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center;">
-                    <thead>
-                        <tr style="background: #f4f6f9; border-bottom: 1px solid #ccc;">
-                            <th style="padding: 8px; text-align: left;">Perkara</th>
-                            <th style="padding: 8px;">PH</th>
-                            <th style="padding: 8px;">AL</th>
-                            <th style="padding: 8px;">MC</th>
-                            <th style="padding: 8px;">WD</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr style="border-bottom: 1px dashed #eee;">
-                            <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Layak</td>
-                            <td style="padding: 8px; font-weight: bold;">${fDay(svc.phL)}</td>
-                            <td style="padding: 8px; font-weight: bold;">${fDay(svc.alL)}</td>
-                            <td style="padding: 8px; font-weight: bold;">${fDay(svc.mcL)}</td>
-                            <td style="padding: 8px; font-weight: bold;">${fDay(svc.wdL)}</td>
-                        </tr>
-                        <tr style="border-bottom: 1px dashed #eee;">
-                            <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Guna</td>
-                            <td style="padding: 8px; font-weight: bold;">${fDay(svc.phG)}</td>
-                            <td style="padding: 8px; font-weight: bold;">${fDay(svc.alG)}</td>
-                            <td style="padding: 8px; font-weight: bold;">${fDay(svc.mcG)}</td>
-                            <td style="padding: 8px; font-weight: bold;">${fDay(svc.wdG)}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left; color:#1f4e79;">Baki</td>
-                            <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.phB)}</td>
-                            <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.alB)}</td>
-                            <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.mcB)}</td>
-                            <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.wdB)}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div style="font-size: 10px; color: #555; text-align: left; padding: 8px; border-top: 1px dashed #ccc; margin-top: 5px;">
-                    <span style="font-weight: bold; color: #1f4e79;">Petunjuk:</span><br>
-                    <strong>PH</strong> = Hari Kelepasan &nbsp;|&nbsp; 
-                    <strong>AL</strong> = Cuti Tahunan &nbsp;|&nbsp; 
-                    <strong>MC</strong> = Cuti Sakit &nbsp;|&nbsp; 
-                    <strong>WD</strong> = Hospitalisasi
+            <div class="report-box" style="padding: 0; border: 1px solid #aaa; display: flex; flex-direction: column; height: 100%; border-left: 5px solid #1f4e79;">
+                <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px; margin: 0; border-radius: 0; border-bottom: 1px solid #aaa;">MAKLUMAT BERKAITAN PERKHIDMATAN</div>
+                <div style="padding: 10px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center;">
+                        <thead>
+                            <tr style="background: #f4f6f9; border-bottom: 1px solid #ccc;">
+                                <th style="padding: 8px; text-align: left;">Perkara</th>
+                                <th style="padding: 8px;">PH</th>
+                                <th style="padding: 8px;">AL</th>
+                                <th style="padding: 8px;">MC</th>
+                                <th style="padding: 8px;">WD</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px dashed #eee;">
+                                <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Layak</td>
+                                <td style="padding: 8px; font-weight: bold;">${fDay(svc.phL)}</td>
+                                <td style="padding: 8px; font-weight: bold;">${fDay(svc.alL)}</td>
+                                <td style="padding: 8px; font-weight: bold;">${fDay(svc.mcL)}</td>
+                                <td style="padding: 8px; font-weight: bold;">${fDay(svc.wdL)}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px dashed #eee;">
+                                <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Guna</td>
+                                <td style="padding: 8px; font-weight: bold;">${fDay(svc.phG)}</td>
+                                <td style="padding: 8px; font-weight: bold;">${fDay(svc.alG)}</td>
+                                <td style="padding: 8px; font-weight: bold;">${fDay(svc.mcG)}</td>
+                                <td style="padding: 8px; font-weight: bold;">${fDay(svc.wdG)}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left; color:#1f4e79;">Baki</td>
+                                <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.phB)}</td>
+                                <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.alB)}</td>
+                                <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.mcB)}</td>
+                                <td style="padding: 8px; font-weight: bold; color:#1f4e79;">${fDay(svc.wdB)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="font-size: 10px; color: #555; text-align: left; padding: 6px; border-top: 1px dashed #ccc; margin-top: 5px;">
+                        <span style="font-weight: bold; color: #1f4e79;">Petunjuk:</span>
+                        <strong>PH</strong>=Hari Kelepasan | <strong>AL</strong>=Cuti Tahunan | <strong>MC</strong>=Cuti Sakit | <strong>WD</strong>=Hospitalisasi
+                    </div>
                 </div>
             </div>
         `;
@@ -1899,7 +1897,12 @@ let htmlPotonganDalaman = "";
             </div>
         </div>
         ${bersihHtml}
-        ${htmlMaklumatPerkhidmatan}
+        
+        <!-- DIKEMASKINI: GRID LAYOUT 60(3) : 40(2) SEPERTI YANG DIMINTA -->
+        <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 15px; margin-bottom: 15px; grid-column: 1 / -1; align-items: stretch;">
+            ${htmlMaklumatPerkhidmatan}
+            ${htmlCutiSemasa}
+        </div>
         `;
 
         contentSeterusnya = penyataGajiHTML; 
