@@ -2024,29 +2024,35 @@ window.tambahKalkulator = function(templateId) {
     let rumusanCard = document.querySelector('.rumusan-card');
     let warningBox = document.querySelector('.warning-box');
 
-if (templateId === 'maklumatGaji') {
-    // 1. TAMBAHAN BARU: Padamkan kad Maklumat Gaji sedia ada (jika ada) untuk elak duplikasi
-    let existingMg = document.querySelectorAll('#active-maklumatGaji');
-    existingMg.forEach(mg => mg.remove());
+    if (templateId === 'maklumatGaji') {
+        // 1. Padamkan kad Maklumat Gaji sedia ada (jika ada) untuk elak duplikasi
+        let existingMg = document.querySelectorAll('#active-maklumatGaji');
+        existingMg.forEach(mg => mg.remove());
 
-    // 2. KOD ASAL ANDA
-    let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
-    semuaKadAktif.forEach(kad => {
-        kad.classList.add('sementara-sembunyi');
-        kad.style.display = 'none';
-    });
-    if (rumusanCard) rumusanCard.style.display = "none";
-    if (warningBox) warningBox.style.display = "none";
-} else {
+        // 2. Sembunyikan kad aktif sementara
+        let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+        semuaKadAktif.forEach(kad => {
+            kad.classList.add('sementara-sembunyi');
+            kad.style.display = 'none';
+        });
+        if (rumusanCard) rumusanCard.style.display = "none";
+        if (warningBox) warningBox.style.display = "none";
+    } else {
         if (warningBox) warningBox.style.display = "block";
         let existingMg = document.getElementById('active-maklumatGaji');
         if (existingMg) {
             existingMg.remove();
-            // PENAMBAHBAIKAN: Jika pengguna buka menu kalkulator lain, tunjukkan semula kalkulator yang disorok
+            
+            // PENAMBAHBAIKAN UTAMA: Jika pilih kalkulator baharu semasa di paparan Maklumat Gaji,
+            // anggap sebagai MULA PROSES BARU. Padam semua kad yang disorok, reset rumusan & elaun.
             document.querySelectorAll('.sementara-sembunyi').forEach(kad => {
-                kad.style.display = '';
-                kad.classList.remove('sementara-sembunyi');
+                kad.remove();
             });
+            
+            if (typeof resetRumusan === 'function') resetRumusan();
+            if (typeof senaraiElaunGlobal !== 'undefined') senaraiElaunGlobal = [];
+            if (rumusanCard) rumusanCard.style.display = "none";
+            setTimeout(() => { if (typeof window.semakDanTukarElaun === 'function') window.semakDanTukarElaun(); }, 50);
         }
     }
 
