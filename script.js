@@ -2588,115 +2588,129 @@ function fungsiBaruRumusan(e) {
 // 9. MENU FLYOUT SEKSYEN 18A & ENJIN DINAMIK (ISOLATED)
 // =====================================================
 function binaMenuSeksyen18A() {
-    // Halang daripada terbina 2 kali jika fungsi dipanggil berulang
-    if (document.getElementById('flyoutMenu18ACustom')) return;
+    // 1. Semak jika flyout dah wujud, hentikan fungsi (elak duplikasi)
+    if (document.getElementById('flyoutMenu18ACustom')) return true; 
 
-    // 1. Cari butang "Maklumat Gaji" di menu sisi untuk dijadikan rujukan posisi
-    let menuBtns = document.querySelectorAll('.menu-btn');
+    // 2. Cari butang Maklumat Gaji secara paksa (Guna teks sebagai rujukan paling kebal)
     let maklumatGajiBtn = null;
+    let semuaButang = document.querySelectorAll('button, a, div');
     
-    menuBtns.forEach(btn => {
-        let onclickAttr = btn.getAttribute('onclick');
-        if (onclickAttr && onclickAttr.includes('maklumatGaji')) {
-            maklumatGajiBtn = btn;
+    for (let i = 0; i < semuaButang.length; i++) {
+        let btn = semuaButang[i];
+        let onclickVal = btn.getAttribute('onclick') || "";
+        let teksVal = btn.innerText || "";
+        
+        if (onclickVal.includes("maklumatGaji") || teksVal.toUpperCase().includes("MAKLUMAT GAJI")) {
+            // Pastikan ia bukan sekadar tajuk, tetapi elemen yang boleh diklik
+            if (onclickVal.includes("tambahKalkulator") || btn.tagName === 'BUTTON' || btn.classList.length > 0) {
+                maklumatGajiBtn = btn;
+                break;
+            }
         }
-    });
+    }
 
     if (maklumatGajiBtn) {
-        // 2. Wujudkan Kontena untuk butang baru supaya kedudukan flyout kemas
+        // 3. Bina Kontena (Wrapper) supaya layout menu sisi tidak terganggu
         let container = document.createElement('div');
         container.style.position = 'relative';
+        container.style.width = '100%';
         container.style.marginTop = '5px'; 
         
-        // 3. Wujudkan Butang "Seksyen 18A"
-        let btn18A = document.createElement('button');
-        btn18A.className = maklumatGajiBtn.className;
-        btn18A.innerHTML = "⚖️ Seksyen 18A";
-        btn18A.style.width = "100%";
+        // 4. Klon butang Maklumat Gaji supaya mewarisi semua design/CSS asalnya 100%
+        let btn18A = maklumatGajiBtn.cloneNode(true);
+        btn18A.removeAttribute('id');
+        btn18A.classList.remove('active'); // Buang warna aktif jika terbawa
+        btn18A.innerHTML = "⚖️ SEKSYEN 18A"; // Gantikan teksnya
+        btn18A.style.display = "block"; // Paksa ia muncul
+        
         btn18A.onclick = function(e) {
+            e.preventDefault();
             e.stopPropagation();
             let flyout = document.getElementById('flyoutMenu18ACustom');
             if (flyout) flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
         };
 
-        // 4. Wujudkan Flyout Menu
+        // 5. Wujudkan Flyout Menu
         let flyout = document.createElement('div');
         flyout.id = "flyoutMenu18ACustom";
-        // Letak di sebelah kanan butang
-        flyout.style.cssText = "display: none; position: absolute; left: 105%; top: 0; background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-radius: 8px; width: 280px; z-index: 99999; border: 1px solid #ddd; max-height: 80vh; overflow-y: auto; text-align: left;";
+        flyout.style.cssText = "display: none; position: absolute; left: 105%; top: 0; background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border-radius: 8px; width: 280px; z-index: 999999; border: 2px solid #d9534f; max-height: 80vh; overflow-y: auto; text-align: left;";
         
-        let htmlLinks = '<div style="background:#d9534f; color:white; padding:12px; font-weight:bold; font-size:13px; position:sticky; top:0; z-index:10; border-radius: 8px 8px 0 0;">PILIH KALKULATOR (MOD 18A):</div><div style="padding: 10px;">';
+        let htmlLinks = '<div style="background:#d9534f; color:white; padding:12px; font-weight:bold; font-size:13px; position:sticky; top:0; z-index:10; border-radius: 6px 6px 0 0;">PILIH KALKULATOR (MOD 18A):</div><div style="padding: 10px;">';
         
-        // Hanya masukkan senarai kalkulator yang asalnya menggunakan formula bahagi 26
         const validTemplates = ['orp', 'otBiasa', 'otRehat', 'otKelepasan', 'rehatKurang', 'rehatLebih', 'kelepasan', 'cutiTahunan', 'cutiSakit', 'lewat'];
+        let added = [];
         
-        menuBtns.forEach(b => {
-            let onclickAttr = b.getAttribute('onclick');
-            if (onclickAttr && onclickAttr.includes('tambahKalkulator')) {
-                let match = onclickAttr.match(/'([^']+)'/);
-                if (match && validTemplates.includes(match[1])) {
-                    let templateId = match[1];
-                    let text = b.innerText.trim();
-                    // Link ini akan memanggil enjin khas 'tambahKalkulator18ACustom'
-                    htmlLinks += `<a href="#" onclick="tambahKalkulator18ACustom('${templateId}'); document.getElementById('flyoutMenu18ACustom').style.display='none'; return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px dashed #eee; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">${text}</a>`;
-                }
+        // Ekstrak nama-nama kalkulator dari butang sedia ada untuk dibina dalam flyout
+        semuaButang.forEach(b => {
+            let oc = b.getAttribute('onclick') || "";
+            let match = oc.match(/tambahKalkulator\('([^']+)'\)/);
+            if (match && validTemplates.includes(match[1]) && !added.includes(match[1])) {
+                added.push(match[1]);
+                let textClean = b.innerText.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').trim(); 
+                if (!textClean) textClean = match[1].toUpperCase();
+                
+                htmlLinks += `<a href="#" onclick="tambahKalkulator18ACustom('${match[1]}'); document.getElementById('flyoutMenu18ACustom').style.display='none'; return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px dashed #eee; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">⚖️ ${textClean}</a>`;
             }
         });
         htmlLinks += '</div>';
         flyout.innerHTML = htmlLinks;
 
+        // 6. Cantum dan letak tepat di bawah Maklumat Gaji
         container.appendChild(btn18A);
         container.appendChild(flyout);
         maklumatGajiBtn.parentNode.insertBefore(container, maklumatGajiBtn.nextSibling);
 
-        // Auto-tutup flyout apabila klik di tempat lain
+        // Tutup flyout jika pengguna klik di luar
         document.addEventListener('click', function(e) {
-            if (!container.contains(e.target)) {
-                flyout.style.display = 'none';
-            }
+            if (!container.contains(e.target)) flyout.style.display = 'none';
         });
+        
+        return true; 
     }
+    return false; 
 }
 
-// Arahan paksaan supaya butang sentiasa di-render tidak kira masa loading
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', binaMenuSeksyen18A);
-} else {
-    binaMenuSeksyen18A();
-}
-// Backup paksaan selepas 0.5 saat sekiranya UI dilukis lambat
-setTimeout(binaMenuSeksyen18A, 500);
+// =========================================================
+// ENJIN PAKSAAN: Loop periksa DOM sehingga butang muncul
+// (Cuba maksimum 20 kali iaitu 10 saat)
+// =========================================================
+let cubaan = 0;
+let pemerhatiDOM = setInterval(() => {
+    let berjaya = binaMenuSeksyen18A();
+    cubaan++;
+    if (berjaya || cubaan > 20) clearInterval(pemerhatiDOM);
+}, 500);
 
-
-// 5. Enjin Khas Mengklon Kalkulator dan Menukar Formula ke Mod Bulan Semasa
+// =========================================================
+// ENJIN KHAS: Mengklon kalkulator dan tukar Mod Formula
+// =========================================================
 window.tambahKalkulator18ACustom = function(templateId) {
-    // Panggil enjin asal untuk buat klon standard (supaya UI 100% sama)
     window.tambahKalkulator(templateId);
     
     setTimeout(() => {
-        // Tangkap kalkulator yang baru sahaja diklon
         let semuaKad = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
         let newCard = semuaKad[semuaKad.length - 1]; 
-        
         if (!newCard) return;
 
-        // Berikan identiti visual warna merah untuk membezakannya dengan kalkulator biasa
+        // Ubah UI menjadi Merah untuk tandakan Mod 18A
         newCard.style.borderTop = "5px solid #d9534f";
         let h2 = newCard.querySelector('h2');
         if(h2) {
-            h2.innerHTML = h2.innerHTML + ` <br><span style="font-size:12px; color:#d9534f; background:#ffe8e8; padding:3px 8px; border-radius:4px;">Mod Seksyen 18A (Bahagi Hari Dalam Bulan)</span>`;
+            h2.innerHTML = h2.innerHTML + ` <br><span style="font-size:12px; color:#d9534f; background:#ffe8e8; padding:3px 8px; border-radius:4px; display:inline-block; margin-top:5px;">Mod Seksyen 18A (Bahagi Hari Dalam Bulan)</span>`;
         }
 
-        // Suntik input baharu untuk pengguna masukkan jumlah hari bagi bulan tersebut
+        // Tambah Input "Hari Dalam Bulan"
         let formGroups = newCard.querySelectorAll('.form-group');
         if (formGroups.length > 0) {
             let divHari = document.createElement('div');
             divHari.className = "form-group";
-            divHari.innerHTML = `<label style="color:#d9534f; font-weight:bold;">Bilangan Hari Dalam Bulan</label><input type="number" class="hari-bulan-18a" placeholder="Contoh: 28, 30, 31" value="30" style="border: 2px solid #d9534f; border-radius: 4px; padding: 10px; width: 100%; box-sizing: border-box; background: #fffaf9;">`;
+            divHari.style.width = "100%";
+            divHari.style.marginBottom = "15px";
+            divHari.innerHTML = `<label style="color:#d9534f; font-weight:bold; display:block; margin-bottom:5px;">Bilangan Hari Dalam Bulan</label><input type="number" class="hari-bulan-18a" placeholder="Contoh: 28, 30, 31" value="30" style="border: 2px solid #d9534f; border-radius: 4px; padding: 10px; width: 100%; box-sizing: border-box; background: #fffaf9; font-size:14px; font-weight:bold;">`;
             formGroups[0].parentNode.insertBefore(divHari, formGroups[0]);
         }
 
-        // Rampas butang 'Kira' asal dan gantikan dengan enjin formula baharu
+        // Rampas butang 'Kira' dan letak formula bahagi 'hari semasa'
         let btnKira = newCard.querySelector('button[data-action-func*="calculate"], button[onclick*="calculate"]');
         if (btnKira) {
             let newBtnKira = btnKira.cloneNode(true);
@@ -2707,14 +2721,12 @@ window.tambahKalkulator18ACustom = function(templateId) {
             newBtnKira.innerHTML = "Kira (Mod 18A)";
             btnKira.parentNode.replaceChild(newBtnKira, btnKira);
 
-            // LOGIK MATEMATIK MOD 18A (Formula Bahagi Hari Semasa ganti 26)
             newBtnKira.addEventListener('click', function(e) {
                 let tempContext = activeCardContext;
                 activeCardContext = newCard;
-                
                 try {
                     let hariBulanInput = newCard.querySelector('.hari-bulan-18a');
-                    let hariBulan = hariBulanInput ? (Number(hariBulanInput.value) || 26) : 26; // Jika kosong, set default 26
+                    let hariBulan = hariBulanInput ? (Number(hariBulanInput.value) || 26) : 26; 
                     let totalSalary = 0, ORP = 0, amount = 0, hourly = 0, daily = 0;
 
                     if (templateId === 'orp') {
