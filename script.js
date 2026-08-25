@@ -2584,107 +2584,32 @@ document.addEventListener('DOMContentLoaded', () => {
 function fungsiBaruRumusan(e) {
     if (e) e.preventDefault();
 }
-// =====================================================
-// 9. MENU FLYOUT SEKSYEN 18A & ENJIN DINAMIK (ISOLATED)
-// =====================================================
-function binaMenuSeksyen18A() {
-    // 1. Semak jika flyout dah wujud, hentikan fungsi (elak duplikasi)
-    if (document.getElementById('flyoutMenu18ACustom')) return true; 
+// =========================================================
+// 9. ENJIN KHAS SEKSYEN 18A (MOD BULAN SEMASA)
+// =========================================================
 
-    // 2. Cari butang Maklumat Gaji secara paksa (Guna teks sebagai rujukan paling kebal)
-    let maklumatGajiBtn = null;
-    let semuaButang = document.querySelectorAll('button, a, div');
-    
-    for (let i = 0; i < semuaButang.length; i++) {
-        let btn = semuaButang[i];
-        let onclickVal = btn.getAttribute('onclick') || "";
-        let teksVal = btn.innerText || "";
-        
-        if (onclickVal.includes("maklumatGaji") || teksVal.toUpperCase().includes("MAKLUMAT GAJI")) {
-            // Pastikan ia bukan sekadar tajuk, tetapi elemen yang boleh diklik
-            if (onclickVal.includes("tambahKalkulator") || btn.tagName === 'BUTTON' || btn.classList.length > 0) {
-                maklumatGajiBtn = btn;
-                break;
-            }
-        }
-    }
-
-    if (maklumatGajiBtn) {
-        // 3. Bina Kontena (Wrapper) supaya layout menu sisi tidak terganggu
-        let container = document.createElement('div');
-        container.style.position = 'relative';
-        container.style.width = '100%';
-        container.style.marginTop = '5px'; 
-        
-        // 4. Klon butang Maklumat Gaji supaya mewarisi semua design/CSS asalnya 100%
-        let btn18A = maklumatGajiBtn.cloneNode(true);
-        btn18A.removeAttribute('id');
-        btn18A.classList.remove('active'); // Buang warna aktif jika terbawa
-        btn18A.innerHTML = "⚖️ SEKSYEN 18A"; // Gantikan teksnya
-        btn18A.style.display = "block"; // Paksa ia muncul
-        
-        btn18A.onclick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            let flyout = document.getElementById('flyoutMenu18ACustom');
-            if (flyout) flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
-        };
-
-        // 5. Wujudkan Flyout Menu
-        let flyout = document.createElement('div');
-        flyout.id = "flyoutMenu18ACustom";
-        flyout.style.cssText = "display: none; position: absolute; left: 105%; top: 0; background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border-radius: 8px; width: 280px; z-index: 999999; border: 2px solid #d9534f; max-height: 80vh; overflow-y: auto; text-align: left;";
-        
-        let htmlLinks = '<div style="background:#d9534f; color:white; padding:12px; font-weight:bold; font-size:13px; position:sticky; top:0; z-index:10; border-radius: 6px 6px 0 0;">PILIH KALKULATOR (MOD 18A):</div><div style="padding: 10px;">';
-        
-        const validTemplates = ['orp', 'otBiasa', 'otRehat', 'otKelepasan', 'rehatKurang', 'rehatLebih', 'kelepasan', 'cutiTahunan', 'cutiSakit', 'lewat'];
-        let added = [];
-        
-        // Ekstrak nama-nama kalkulator dari butang sedia ada untuk dibina dalam flyout
-        semuaButang.forEach(b => {
-            let oc = b.getAttribute('onclick') || "";
-            let match = oc.match(/tambahKalkulator\('([^']+)'\)/);
-            if (match && validTemplates.includes(match[1]) && !added.includes(match[1])) {
-                added.push(match[1]);
-                let textClean = b.innerText.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').trim(); 
-                if (!textClean) textClean = match[1].toUpperCase();
-                
-                htmlLinks += `<a href="#" onclick="tambahKalkulator18ACustom('${match[1]}'); document.getElementById('flyoutMenu18ACustom').style.display='none'; return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px dashed #eee; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">⚖️ ${textClean}</a>`;
-            }
-        });
-        htmlLinks += '</div>';
-        flyout.innerHTML = htmlLinks;
-
-        // 6. Cantum dan letak tepat di bawah Maklumat Gaji
-        container.appendChild(btn18A);
-        container.appendChild(flyout);
-        maklumatGajiBtn.parentNode.insertBefore(container, maklumatGajiBtn.nextSibling);
-
-        // Tutup flyout jika pengguna klik di luar
-        document.addEventListener('click', function(e) {
-            if (!container.contains(e.target)) flyout.style.display = 'none';
-        });
-        
-        return true; 
-    }
-    return false; 
+// Fungsi untuk buka/tutup Flyout Menu
+function toggleFlyout18A(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    let flyout = document.getElementById('flyoutMenu18ACustom');
+    if (flyout) flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
 }
 
-// =========================================================
-// ENJIN PAKSAAN: Loop periksa DOM sehingga butang muncul
-// (Cuba maksimum 20 kali iaitu 10 saat)
-// =========================================================
-let cubaan = 0;
-let pemerhatiDOM = setInterval(() => {
-    let berjaya = binaMenuSeksyen18A();
-    cubaan++;
-    if (berjaya || cubaan > 20) clearInterval(pemerhatiDOM);
-}, 500);
+// Tutup flyout jika klik di tempat lain
+document.addEventListener('click', function(e) {
+    let flyout = document.getElementById('flyoutMenu18ACustom');
+    if (flyout && flyout.style.display === 'block' && !e.target.closest('#flyoutMenu18ACustom') && !e.target.closest('button[onclick*="toggleFlyout18A"]')) {
+        flyout.style.display = 'none';
+    }
+});
 
-// =========================================================
-// ENJIN KHAS: Mengklon kalkulator dan tukar Mod Formula
-// =========================================================
+// Enjin Mengklon kalkulator dan tukar Mod Formula
 window.tambahKalkulator18ACustom = function(templateId) {
+    // Tutup flyout menu
+    document.getElementById('flyoutMenu18ACustom').style.display = 'none';
+    
+    // Panggil fungsi asal untuk salin UI
     window.tambahKalkulator(templateId);
     
     setTimeout(() => {
