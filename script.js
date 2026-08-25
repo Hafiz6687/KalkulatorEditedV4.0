@@ -759,6 +759,22 @@ window.autoKiraPotonganBerkanun = function() {
         if(perkesoNilai && document.activeElement !== perkesoNilai) perkesoNilai.value = (pctPERKESO > 0 && totalGajiElaun > 0) ? formatSafeRM(totalGajiElaun * (pctPERKESO / 100)) : "";
         if(sipNilai && document.activeElement !== sipNilai) sipNilai.value = (pctSIP > 0 && totalGajiElaun > 0) ? formatSafeRM(totalGajiElaun * (pctSIP / 100)) : "";
     }
+
+    // PENAMBAHBAIKAN: Kiraan Tidak Hadir (Absent) menggunakan formula ORP (Jumlah Gaji / 26) * Bil. Hari
+    let absentHariInput = document.getElementById('inputAbsentHari');
+    let absentNilaiInput = document.getElementById('inputAbsentNilai');
+    if(absentHariInput && absentNilaiInput) {
+        let hari = parseFloat(absentHariInput.value) || 0;
+        let ORP = totalGajiElaun / 26;
+        
+        if(document.activeElement !== absentNilaiInput) {
+            if (hari > 0 && ORP > 0) {
+                absentNilaiInput.value = formatSafeRM(ORP * hari);
+            } else if (absentHariInput.value.trim() === "") {
+                absentNilaiInput.value = "";
+            }
+        }
+    }
 };
 
 function janaLaporanPenuh() { paparModalLaporan('penuh'); }
@@ -1172,16 +1188,16 @@ function paparModalLaporan(jenis) {
                                     <tr>
                                         <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Layak</td>
                                         <td style="padding: 8px;"><input type="number" id="modPHLayak" value="11" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                        <td style="padding: 8px;"><input type="number" id="modALLayak" value="${v_ct_layak}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                        <td style="padding: 8px;"><input type="number" id="modMCLayak" value="${v_cs_layak}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                        <td style="padding: 8px;"><input type="number" id="modWDLayak" value="${v_ch_layak}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modALLayak" value="${v_ct_layak !== '' ? v_ct_layak : '8'}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modMCLayak" value="${v_cs_layak !== '' ? v_cs_layak : '14'}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modWDLayak" value="${v_ch_layak !== '' ? v_ch_layak : '60'}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Guna</td>
-                                        <td style="padding: 8px;"><input type="number" id="modPHGuna" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                        <td style="padding: 8px;"><input type="number" id="modALGuna" value="${v_ct_guna}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                        <td style="padding: 8px;"><input type="number" id="modMCGuna" value="${v_cs_guna}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                        <td style="padding: 8px;"><input type="number" id="modWDGuna" value="${v_ch_guna}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modPHGuna" value="0" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modALGuna" value="${v_ct_guna !== '' ? v_ct_guna : '0'}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modMCGuna" value="${v_cs_guna !== '' ? v_cs_guna : '0'}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modWDGuna" value="${v_ch_guna !== '' ? v_ch_guna : '0'}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left; color: #1f4e79;">Baki</td>
@@ -1237,6 +1253,15 @@ function paparModalLaporan(jenis) {
                             <input type="text" id="inputSIPPeratus" value="0.2" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="autoKiraPotonganBerkanun()">
                             <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
                             <input type="text" id="inputSIPNilai" placeholder="Nilai (RM)" class="number-input salary-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                        </div>
+
+                        <!-- TAMBAHAN BARU: Tidak Hadir (Absent) -->
+                        <p style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">Tidak Hadir (Absent)</p>
+                        <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: center;">
+                            <label style="width: 60px; font-size: 13px; font-weight: bold;">Bil. Hari</label>
+                            <input type="text" id="inputAbsentHari" placeholder="0" style="width: 40px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="autoKiraPotonganBerkanun()">
+                            <span style="font-weight: bold; font-size: 14px; color: #333;">hari</span>
+                            <input type="text" id="inputAbsentNilai" placeholder="Nilai (RM)" class="number-input salary-input" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
                         </div>
 
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">
@@ -1295,7 +1320,7 @@ function paparModalLaporan(jenis) {
 
 function teruskanJanaLaporan(jenis) {
     let noDaftarMajikan = ""; let tempohUpah = "";
-    let kwspP="", kwspN="", perkesoP="", perkesoN="", sipP="", sipN="", pendahuluanN="";
+    let kwspP="", kwspN="", perkesoP="", perkesoN="", sipP="", sipN="", pendahuluanN="", absentH="", absentN=""; 
     let senaraiElaun = []; let senaraiPotongan = [];
     let svcData = {};
 
@@ -1325,6 +1350,7 @@ function teruskanJanaLaporan(jenis) {
         perkesoP = getV('inputPERKESOPeratus'); perkesoN = getV('inputPERKESONilai');
         sipP = getV('inputSIPPeratus'); sipN = getV('inputSIPNilai');
         pendahuluanN = getV('inputPendahuluanNilai');
+        absentH = getV('inputAbsentHari'); absentN = getV('inputAbsentNilai');
 
         svcData = {
             phL: getV('modPHLayak'), phG: getV('modPHGuna'), phB: getV('modPHBaki'),
@@ -1368,12 +1394,11 @@ let namaPekerja = getV('inputNamaLaporan');
     // KEKALKAN DATA MODAL (Hanya hide, jangan remove)
     document.getElementById('modalLaporanPenuh').style.display = 'none'; 
     
-    // TAMBAH unikId DI HUJUNG PARAMETER
+// TAMBAH unikId DI HUJUNG PARAMETER
     prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenis, { 
-        senaraiElaun, senaraiPotongan, kwspP, kwspN, perkesoP, perkesoN, sipP, sipN, pendahuluanN, svcData 
+        senaraiElaun, senaraiPotongan, kwspP, kwspN, perkesoP, perkesoN, sipP, sipN, pendahuluanN, absentH, absentN, svcData 
     }, unikId);
 }
-
 window.simpananHTMLGlobal = window.simpananHTMLGlobal || {};
 
 window.bukaRekodSimpanan = function(e) {
@@ -1767,10 +1792,11 @@ function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPe
             </table>
         `;
 
-        let htmlPotonganDalaman = "";
+let htmlPotonganDalaman = "";
         if (xtra) {
             let itemsPotongan = [
                 { label: "Pendahuluan", amt: xtra.pendahuluanN },
+                { label: xtra.absentH ? `Tidak Hadir (${xtra.absentH} hari)` : "Tidak Hadir", amt: xtra.absentN },
                 { label: labelWithPct("KWSP", xtra.kwspP), amt: xtra.kwspN },
                 { label: labelWithPct("PERKESO", xtra.perkesoP), amt: xtra.perkesoN },
                 { label: labelWithPct("SIP/EIS", xtra.sipP), amt: xtra.sipN }
