@@ -9,6 +9,7 @@
 let activeCardContext = null;
 const originalGetElement = document.getElementById.bind(document);
 
+// UPGRADE: Global Context Manager (Capture Phase)
 ['click', 'input', 'change', 'focusin'].forEach(eventType => {
     document.addEventListener(eventType, function(e) {
         if (e && e.target && typeof e.target.closest === 'function') {
@@ -902,11 +903,93 @@ function tunjukTourElaunPopup() {
     document.getElementById('btnTutupTourPopup').addEventListener('click', tutupTourPopup);
 }
 
+function tunjukTourMaklumatPerkhidmatan() {
+    let targetContainer = document.getElementById('tourTargetMaklumatPerkhidmatan');
+    let whiteBox = document.getElementById('modalPenyataWhiteBox');
+    if (!targetContainer || !whiteBox) return;
+    
+    targetContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    let existingOverlay = document.getElementById('tourSvcPopupOverlay');
+    if(existingOverlay) existingOverlay.remove();
+    
+    let overlay = document.createElement('div');
+    overlay.id = 'tourSvcPopupOverlay';
+    overlay.style.cssText = `position: absolute; top: 0; left: 0; width: 100%; height: ${whiteBox.scrollHeight}px; background: rgba(0,0,0,0.75); z-index: 100; border-radius: 10px; transition: opacity 0.3s;`;
+    whiteBox.appendChild(overlay);
+
+    let originalPos = targetContainer.style.position;
+    let originalZ = targetContainer.style.zIndex;
+    let originalBg = targetContainer.style.background;
+    let originalPadding = targetContainer.style.padding;
+    
+    targetContainer.style.position = 'relative';
+    targetContainer.style.zIndex = '101'; 
+    targetContainer.style.background = '#fff';
+    targetContainer.style.padding = '15px';
+    targetContainer.style.borderRadius = '8px';
+    targetContainer.style.boxShadow = '0 0 0 4px #fff, 0 0 0 6px #d9534f, 0 15px 35px rgba(0,0,0,0.5)';
+
+    let popover = document.createElement('div');
+    popover.id = 'tourSvcPopover';
+    popover.innerHTML = `
+        <div class="tour-popover-box" style="position: absolute; bottom: calc(100% + 15px); left: 0; background: white; border-radius: 8px; width: 100%; min-width: 320px; max-width: 380px; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 20px; border-bottom: 6px solid #d9534f; color: #333; font-family: sans-serif; cursor: default; animation: floatDown 0.4s ease-out; z-index: 102; text-align: left;">
+            <div style="position: absolute; top: 100%; left: 30px; border-width: 10px; border-style: solid; border-color: #d9534f transparent transparent transparent;"></div>
+            <div style="position: absolute; top: calc(100% - 6px); left: 30px; border-width: 10px; border-style: solid; border-color: #fff transparent transparent transparent;"></div>
+            
+            <h4 style="margin: 0 0 10px 0; color: #d9534f; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <span style="background: #d9534f; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px;">⚠️</span>
+                Maklumat Tidak Lengkap
+            </h4>
+            
+            <p style="margin: 0 0 15px 0; font-size: 11.5px; font-weight: bold; color: #1f4e79; background: #e8eaed; padding: 10px; border-radius: 4px; line-height: 1.5;">
+                Sila lengkapkan semua ruangan 'Layak' dan 'Guna' pada Maklumat Perkhidmatan. Masukkan 0 jika tiada nilai.
+            </p>
+            
+            <button id="btnTutupTourSvc" style="width: 100%; background: #d9534f; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s;">OK, SAYA FAHAM</button>
+        </div>
+        <style>
+            @keyframes floatDown { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
+            #btnTutupTourSvc:hover { background: #c9302c !important; }
+        </style>
+    `;
+    targetContainer.appendChild(popover);
+
+    const tutupTourSvc = () => {
+        if(overlay) overlay.remove();
+        if(popover) popover.remove();
+        targetContainer.style.position = originalPos;
+        targetContainer.style.zIndex = originalZ;
+        targetContainer.style.background = originalBg;
+        targetContainer.style.padding = originalPadding;
+        targetContainer.style.boxShadow = 'none';
+    };
+
+    overlay.addEventListener('click', tutupTourSvc);
+    document.getElementById('btnTutupTourSvc').addEventListener('click', tutupTourSvc);
+}
+
 function paparModalLaporan(jenis) {
     let existingModal = document.getElementById('modalLaporanPenuh'); 
-    if(existingModal) existingModal.remove();
+    
+    // PERUBAHAN: Pengekalan Data Modal (Persist)
+    if(existingModal) {
+        let isPenyata = existingModal.querySelector('#inputNamaMajikan') !== null;
+        if ((jenis === 'penyata' && isPenyata) || (jenis === 'penuh' && !isPenyata)) {
+            existingModal.style.display = 'flex';
+            if (jenis === 'penyata') {
+                autoKiraPotonganBerkanun();
+                if (window.autoKiraBakiSvc) window.autoKiraBakiSvc();
+            }
+            return;
+        } else {
+            existingModal.remove(); // Remove jika switch format modal yang berbeza
+        }
+    }
 
     if (jenis === 'penyata') {
+        
+        // ==== KUTIP DATA KELAYAKAN PERKHIDMATAN (PRE-FILL) ====
         let v_ct_layak = "", v_cs_layak = "", v_ch_layak = ""; 
         let v_ct_guna = "", v_cs_guna = "", v_ch_guna = ""; 
         document.querySelectorAll('.calculator-card:not(.hidden-template)').forEach(kad => {
@@ -919,6 +1002,7 @@ function paparModalLaporan(jenis) {
             if(!v_ch_guna) v_ch_guna = v("hospGuna"); 
         });
 
+        // ==== ENGINE KIRA BAKI AUTOMATIK ====
         if (!window.autoKiraBakiSvc) {
             window.autoKiraBakiSvc = function() {
                 ['PH', 'AL', 'MC', 'WD'].forEach(k => {
@@ -949,34 +1033,44 @@ function paparModalLaporan(jenis) {
             }
         });
 
-        if (!window.modalPenyataState) {
-            window.modalPenyataState = {
-                namaMajikan: "", noDaftar: "", tempohUpah: "",
-                namaPekerja: "", icPekerja: "", noPekerja: "",
-                elaun: [], potongan: [], pendahuluan: "",
-                svc: {
-                    phL: "11", alL: v_ct_layak, mcL: v_cs_layak, wdL: v_ch_layak,
-                    phG: "", alG: v_ct_guna, mcG: v_cs_guna, wdG: v_ch_guna
-                }
-            };
-        }
+        let elaunModalHtml = `
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <div style="flex: 3;"><input type="text" class="elaun-jenis" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; box-sizing: border-box;" oninput="this.value = formatTitleCase(this.value)"></div>
+                <div style="flex: 2; display: flex; gap: 5px;">
+                    <input type="text" class="elaun-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right; box-sizing: border-box;" oninput="autoKiraPotonganBerkanun()">
+                    <button type="button" style="visibility:hidden; width: 30px; flex-shrink: 0; padding:0; border:none;"></button>
+                </div>
+            </div>`;
 
-        let s = window.modalPenyataState;
-
-        let elaunModalHtml = '';
-        let listElaunRender = (s.elaun && s.elaun.length > 0) ? s.elaun : [{jenis: "", nilai: ""}];
-        listElaunRender.forEach(el => {
-            elaunModalHtml += `
-                <div style="display: flex; gap: 10px; margin-bottom: 10px;" class="row-elaun-modal">
-                    <div style="flex: 3;"><input type="text" class="elaun-jenis" value="${el.jenis || ''}" placeholder="Jenis Elaun" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; box-sizing: border-box;" oninput="this.value = formatTitleCase(this.value)"></div>
-                    <div style="flex: 2; display: flex; gap: 5px;">
-                        <input type="text" class="elaun-nilai number-input salary-input" value="${el.nilai || ''}" placeholder="Nilai (RM)" style="width: 100%; flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right; box-sizing: border-box;" oninput="autoKiraPotonganBerkanun()">
-                        <button type="button" onclick="this.parentElement.parentElement.remove(); autoKiraPotonganBerkanun();" style="width: 30px; flex-shrink: 0; background:#dc3545; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+        let potonganModalHtml = '';
+        if (totalKelewatan > 0) {
+            potonganModalHtml += `
+                <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                    <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" value="Kelewatan (${minitKelewatan} minit)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
+                    <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
+                        <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                        <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
                     </div>
-                </div>`;
-        });
-
-        let potonganModalHtml = ''; 
+                    <div style="flex: 3; display: flex; gap: 5px;">
+                        <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" value="${formatSafeRM(totalKelewatan)}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                        <button type="button" onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;">X</button>
+                    </div>
+                </div>
+            `;
+        }
+        potonganModalHtml += `
+            <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                <div style="flex: 4;"><input type="text" class="potong-jenis" placeholder="Jenis Potongan" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px;" oninput="this.value = formatTitleCase(this.value)"></div>
+                <div style="flex: 1; display: flex; align-items: center; gap: 5px;">
+                    <input type="text" class="potong-pct" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;">
+                        <span style="font-weight: bold; font-size: 14px; color: #333;">%</span>
+                </div>
+                <div style="flex: 3; display: flex; gap: 5px;">
+                    <input type="text" class="potong-nilai number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right;">
+                    <button type="button" ${totalKelewatan > 0 ? 'onclick="this.parentElement.parentElement.remove()" style="background:#dc3545; color:white; border:none; padding:0 10px; border-radius:5px; font-weight:bold; cursor:pointer;"' : 'style="visibility:hidden; padding:0 10px;"'}>X</button>
+                </div>
+            </div>
+        `;
 
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
@@ -987,27 +1081,30 @@ function paparModalLaporan(jenis) {
                         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Majikan / Syarikat</h3>
                         <div style="margin-bottom: 15px; margin-top: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Majikan/Syarikat/Organisasi:</label>
-                            <input type="text" id="inputNamaMajikan" value="${s.namaMajikan}" placeholder="Contoh: SYARIKAT ABC SDN BHD" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
+                            <input type="text" id="inputNamaMajikan" placeholder="Contoh: SYARIKAT ABC SDN BHD" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Pendaftaran:</label>
-                            <input type="text" id="inputNoDaftarMajikan" value="${s.noDaftar}" placeholder="Contoh: 202301234567" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
+                            <input type="text" id="inputNoDaftarMajikan" placeholder="Contoh: 202301234567" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div style="margin-bottom: 25px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Tempoh Upah:</label>
-                            <input type="text" id="inputTempohUpah" value="${s.tempohUpah}" placeholder="Contoh: Mei 2026 / 1 Mei - 31 Mei 2026" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
+                            <input type="text" id="inputTempohUpah" placeholder="Contoh: Mei 2026 / 1 Mei - 31 Mei 2026" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
                         </div>
 
                         <div id="tourTargetElaunPopup" style="border-radius: 6px; position: relative;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Elaun</h3>
+                            
+                            <div style="display: flex; gap: 10px; margin-bottom: 8px; padding-top: 15px; border-top: 1px dashed #ccc; align-items: center;">
+                                <div style="flex: 3;">
                                     <p style="font-size: 12px; font-weight: bold; color: #555; margin:0;">Senarai Elaun</p>
-                                    <div style="display:flex; align-items:center; gap:15px;">
-                                        <span style="font-size: 12px; font-weight: bold; color: #555;">Nilai (RM)</span>
-                                        <button type="button" onclick="tambahBarisElaunModal()" style="background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
-                                    </div>
+                                </div>
+                                <div style="flex: 2; display: flex; gap: 5px; align-items: center; justify-content: flex-end;">
+                                    <span style="font-size: 12px; font-weight: bold; color: #555; flex: 1; text-align: right; padding-right: 5px;">Nilai (RM)</span>
+                                    <button type="button" onclick="tambahBarisElaunModal()" style="width: 70px; flex-shrink: 0; background:#198754; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">+ Tambah</button>
                                 </div>
                             </div>
+
                             <div id="containerElaunModal">
                                 ${elaunModalHtml}
                             </div>
@@ -1016,46 +1113,53 @@ function paparModalLaporan(jenis) {
                         <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pendahuluan</h3>
                         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                             <div style="flex: 3;"><input type="text" value="Pendahuluan" readonly style="width: 100%; padding: 8px; border: 1px solid #eee; border-radius: 5px; font-size: 13px; background: #f9f9f9; color: #777; box-sizing: border-box;"></div>
-                            <div style="flex: 2;"><input type="text" id="inputPendahuluanNilai" value="${s.pendahuluan}" class="number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right; box-sizing: border-box;"></div>
+                            <div style="flex: 2;"><input type="text" id="inputPendahuluanNilai" class="number-input salary-input" placeholder="Nilai (RM)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: right; box-sizing: border-box;"></div>
                         </div>
 
-                        <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Perkhidmatan</h3>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; margin-bottom: 5px;">
-                            <thead>
-                                <tr style="background: #f4f6f9; border-bottom: 1px solid #ccc;">
-                                    <th style="padding: 8px; text-align: left;">Perkara</th>
-                                    <th style="padding: 8px;">PH</th>
-                                    <th style="padding: 8px;">AL</th>
-                                    <th style="padding: 8px;">MC</th>
-                                    <th style="padding: 8px;">WD</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Layak</td>
-                                    <td style="padding: 8px;"><input type="number" id="modPHLayak" value="${s.svc.phL}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                    <td style="padding: 8px;"><input type="number" id="modALLayak" value="${s.svc.alL}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                    <td style="padding: 8px;"><input type="number" id="modMCLayak" value="${s.svc.mcL}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                    <td style="padding: 8px;"><input type="number" id="modWDLayak" value="${s.svc.wdL}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Guna</td>
-                                    <td style="padding: 8px;"><input type="number" id="modPHGuna" value="${s.svc.phG}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                    <td style="padding: 8px;"><input type="number" id="modALGuna" value="${s.svc.alG}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                    <td style="padding: 8px;"><input type="number" id="modMCGuna" value="${s.svc.mcG}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                    <td style="padding: 8px;"><input type="number" id="modWDGuna" value="${s.svc.wdG}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left; color: #1f4e79;">Baki</td>
-                                    <td style="padding: 8px;"><input type="text" id="modPHBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
-                                    <td style="padding: 8px;"><input type="text" id="modALBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
-                                    <td style="padding: 8px;"><input type="text" id="modMCBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
-                                    <td style="padding: 8px;"><input type="text" id="modWDBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div style="font-size: 11px; color: #555; background: #f8f9fa; padding: 8px 10px; border-radius: 4px; border: 1px solid #e9ecef; margin-bottom: 15px; line-height: 1.4;">
-                            PH = Hari Kelepasan<br>AL = Cuti Tahunan<br>MC = Cuti Sakit<br>WD = Hospitalisasi
+                        <!-- MAKLUMAT PERKHIDMATAN (DIKEMASKINI) -->
+                        <div id="tourTargetMaklumatPerkhidmatan" style="border-radius: 6px; position: relative;">
+                            <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Perkhidmatan</h3>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; margin-bottom: 5px;">
+                                <thead>
+                                    <tr style="background: #f4f6f9; border-bottom: 1px solid #ccc;">
+                                        <th style="padding: 8px; text-align: left;">Perkara</th>
+                                        <th style="padding: 8px;">PH</th>
+                                        <th style="padding: 8px;">AL</th>
+                                        <th style="padding: 8px;">MC</th>
+                                        <th style="padding: 8px;">WD</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Layak</td>
+                                        <td style="padding: 8px;"><input type="number" id="modPHLayak" value="11" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modALLayak" value="${v_ct_layak}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modMCLayak" value="${v_cs_layak}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modWDLayak" value="${v_ch_layak}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left;">Guna</td>
+                                        <td style="padding: 8px;"><input type="number" id="modPHGuna" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modALGuna" value="${v_ct_guna}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modMCGuna" value="${v_cs_guna}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                        <td style="padding: 8px;"><input type="number" id="modWDGuna" value="${v_ch_guna}" style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" oninput="autoKiraBakiSvc()"></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; font-weight: bold; background: #fafafa; text-align: left; color: #1f4e79;">Baki</td>
+                                        <td style="padding: 8px;"><input type="text" id="modPHBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
+                                        <td style="padding: 8px;"><input type="text" id="modALBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
+                                        <td style="padding: 8px;"><input type="text" id="modMCBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
+                                        <td style="padding: 8px;"><input type="text" id="modWDBaki" readonly style="width: 100%; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; color: #1f4e79; background: #e8f0fe; box-sizing: border-box;"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div style="font-size: 10px; color: #555; text-align: left; background: #f9f9f9; padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-bottom: 15px;">
+                                <span style="font-weight: bold; color: #1f4e79;">Petunjuk:</span><br>
+                                <strong>PH</strong> = Hari Kelepasan &nbsp;|&nbsp; 
+                                <strong>AL</strong> = Cuti Tahunan &nbsp;|&nbsp; 
+                                <strong>MC</strong> = Cuti Sakit &nbsp;|&nbsp; 
+                                <strong>WD</strong> = Hospitalisasi
+                            </div>
                         </div>
                     </div>
 
@@ -1063,15 +1167,15 @@ function paparModalLaporan(jenis) {
                         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pekerja</h3>
                         <div style="margin-bottom: 15px; margin-top: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Pekerja:</label>
-                            <input type="text" id="inputNamaLaporan" value="${s.namaPekerja}" placeholder="Contoh: Ahmad Bin Abu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
+                            <input type="text" id="inputNamaLaporan" placeholder="Contoh: Ahmad Bin Abu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Kad Pengenalan / No. Passport:</label>
-                            <input type="text" id="inputICLaporan" value="${s.icPekerja}" placeholder="Contoh: 900101-01-1234 atau A1234567" maxlength="14" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
+                            <input type="text" id="inputICLaporan" placeholder="Contoh: 900101-01-1234 atau A1234567" maxlength="14" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
                         </div>
                         <div style="margin-bottom: 25px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Pekerja:</label>
-                            <input type="text" id="inputNoPekerjaLaporan" value="${s.noPekerja}" placeholder="Contoh: EMP001" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
+                            <input type="text" id="inputNoPekerjaLaporan" placeholder="Contoh: EMP001" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                         </div>
 
                         <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Potongan</h3>
@@ -1106,8 +1210,8 @@ function paparModalLaporan(jenis) {
                     </div>
                     
                     <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                        <button onclick="document.getElementById('modalLaporanPenuh').remove()" style="background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Batal</button>
-                        <button onclick="teruskanJanaLaporanPenyataGajiValid()" style="background: #1f4e79; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Jana Cetakan</button>
+                        <button onclick="document.getElementById('modalLaporanPenuh').style.display='none'" style="background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Batal</button>
+                        <button onclick="teruskanJanaLaporan('${jenis}')" style="background: #1f4e79; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Jana Cetakan</button>
                     </div>
 
                 </div>
@@ -1139,52 +1243,13 @@ function paparModalLaporan(jenis) {
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
-                    <button onclick="document.getElementById('modalLaporanPenuh').remove()" style="background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Batal</button>
+                    <button onclick="document.getElementById('modalLaporanPenuh').style.display='none'" style="background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Batal</button>
                     <button onclick="teruskanJanaLaporan('${jenis}')" style="background: #1f4e79; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Jana Cetakan</button>
                 </div>
             </div>
         </div>`;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
-}
-
-function teruskanJanaLaporanPenyataGajiValid() {
-    let getV = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : "";
-    
-    let s = window.modalPenyataState;
-    s.namaMajikan = getV('inputNamaMajikan');
-    s.noDaftar = getV('inputNoDaftarMajikan');
-    s.tempohUpah = getV('inputTempohUpah');
-    s.namaPekerja = getV('inputNamaLaporan');
-    s.icPekerja = getV('inputICLaporan');
-    s.noPekerja = getV('inputNoPekerjaLaporan');
-    s.pendahuluan = getV('inputPendahuluanNilai');
-
-    s.elaun = [];
-    document.querySelectorAll('#containerElaunModal > div').forEach(row => {
-        let j = row.querySelector('.elaun-jenis') ? row.querySelector('.elaun-jenis').value.trim() : "";
-        let n = row.querySelector('.elaun-nilai') ? row.querySelector('.elaun-nilai').value.trim() : "";
-        if (j || n) s.elaun.push({ jenis: j, nilai: n });
-    });
-
-    s.svc = {
-        phL: getV('modPHLayak'), alL: getV('modALLayak'), mcL: getV('modMCLayak'), wdL: getV('modWDLayak'),
-        phG: getV('modPHGuna'), alG: getV('modALGuna'), mcG: getV('modMCGuna'), wdG: getV('modWDGuna')
-    };
-
-    let keys = ['PH', 'AL', 'MC', 'WD'];
-    for (let k of keys) {
-        let lVal = getV('mod' + k + 'Layak');
-        let gVal = getV('mod' + k + 'Guna');
-        if (lVal === "" || gVal === "") {
-            let labelCuti = k === 'PH' ? 'Hari Kelepasan (PH)' : k === 'AL' ? 'Cuti Tahunan (AL)' : k === 'MC' ? 'Cuti Sakit (MC)' : 'Hospitalisasi (WD)';
-            alert(`Sila lengkapkan ruangan 'Layak' dan 'Guna' bagi maklumat ${labelCuti}.\n(Sila masukkan angka 0 jika tiada nilai).`);
-            let targetInp = lVal === "" ? document.getElementById('mod' + k + 'Layak') : document.getElementById('mod' + k + 'Guna');
-            if(targetInp) targetInp.focus();
-            return;
-        }
-    }
-    teruskanJanaLaporan('penyata');
 }
 
 function teruskanJanaLaporan(jenis) {
@@ -1197,6 +1262,22 @@ function teruskanJanaLaporan(jenis) {
     let namaMajikan = getV('inputNamaMajikan');
 
     if (jenis === 'penyata') {
+        
+        // VALIDASI: Semak Jika Maklumat Perkhidmatan Dikosongkan
+        let msLayak = ['modPHLayak', 'modALLayak', 'modMCLayak', 'modWDLayak'];
+        let msGuna = ['modPHGuna', 'modALGuna', 'modMCGuna', 'modWDGuna'];
+        let isIncomplete = false;
+        
+        msLayak.concat(msGuna).forEach(id => {
+            let el = document.getElementById(id);
+            if (el && el.value.trim() === "") isIncomplete = true;
+        });
+
+        if (isIncomplete) {
+            if(typeof tunjukTourMaklumatPerkhidmatan === 'function') tunjukTourMaklumatPerkhidmatan();
+            return; // Hentikan janaan
+        }
+
         noDaftarMajikan = getV('inputNoDaftarMajikan');
         tempohUpah = getV('inputTempohUpah');
         kwspP = getV('inputKWSPPeratus'); kwspN = getV('inputKWSPNilai');
@@ -1229,16 +1310,44 @@ function teruskanJanaLaporan(jenis) {
     let icPekerja = getV('inputICLaporan');
     let noPekerja = getV('inputNoPekerjaLaporan');
 
-    if (typeof tambahRekodKeMaklumatGaji === 'function') {
-        tambahRekodKeMaklumatGaji(jenis, namaPekerja, namaMajikan, tempohUpah);
-    }
+    tambahRekodKeMaklumatGaji(jenis, namaPekerja, namaMajikan, tempohUpah);
 
-    let existingModal = document.getElementById('modalLaporanPenuh'); 
-    if(existingModal) existingModal.remove(); 
+    // KEKALKAN DATA MODAL (Hanya hide, jangan remove)
+    document.getElementById('modalLaporanPenuh').style.display = 'none'; 
     
     prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenis, { 
         senaraiElaun, senaraiPotongan, kwspP, kwspN, perkesoP, perkesoN, sipP, sipN, pendahuluanN, svcData 
     });
+}
+
+function tambahRekodKeMaklumatGaji(jenis, namaPekerja, majikan, tempoh) {
+    let tbody = document.querySelector('#card-maklumatGaji tbody');
+    if (!tbody) return;
+
+    let jenisTeks = jenis === 'penyata' ? 'Penyata Gaji' : 'Laporan';
+    let warnaTeks = jenis === 'penyata' ? '#198754' : '#0d6efd'; 
+    let warnaBg   = jenis === 'penyata' ? '#d1e7dd' : '#cfe2ff';
+
+    let tr = document.createElement('tr');
+    tr.style.borderBottom = "1px solid #eee";
+    
+    tr.innerHTML = `
+        <td style="padding: 15px; font-size: 13px; font-weight: bold; color: ${warnaTeks};">
+            <span style="background: ${warnaBg}; padding: 4px 8px; border-radius: 4px;">${jenisTeks}</span>
+        </td>
+        <td style="padding: 15px; font-size: 13px;"><strong style="color: #333;">${namaPekerja || '-'}</strong></td>
+        <td style="padding: 15px; font-size: 13px;"><strong style="color: #333;">${majikan || '-'}</strong></td>
+        <td style="padding: 15px; text-align: center; font-size: 13px; color: #444;">${tempoh || '-'}</td>
+        <td style="padding: 15px; text-align: center;">
+            <button style="background: #0d6efd; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📂 Buka</button>
+            <button onclick="this.closest('tr').remove()" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🗑️ Hapus</button>
+        </td>
+    `;
+    
+    let firstRow = tbody.querySelector('tr');
+    if (firstRow && firstRow.innerHTML.includes('KBR/10103')) firstRow.remove();
+
+    tbody.prepend(tr);
 }
 
 function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenisCetak, xtra) { 
@@ -1540,13 +1649,14 @@ function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPe
             </div>
         `;
 
+        // KUTIP DATA KELAYAKAN DARI XTRA (MODAL POP-UP)
         let svc = xtra.svcData || {};
         let fDay = (val) => (val && val !== "-" && val !== "") ? val : "-";
 
         let htmlMaklumatPerkhidmatan = `
             <div class="report-box" style="grid-column: 1 / -1; margin-bottom: 15px; border-left: 5px solid #1f4e79;">
                 <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT BERKAITAN PERKHIDMATAN</div>
-                <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; margin-bottom: 5px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: center;">
                     <thead>
                         <tr style="background: #f4f6f9; border-bottom: 1px solid #ccc;">
                             <th style="padding: 8px; text-align: left;">Perkara</th>
@@ -1580,8 +1690,12 @@ function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPe
                         </tr>
                     </tbody>
                 </table>
-                <div style="font-size: 11px; color: #555; background: #f8f9fa; padding: 8px 10px; border-radius: 4px; border: 1px solid #e9ecef; margin-bottom: 0; line-height: 1.4;">
-                    PH = Hari Kelepasan<br>AL = Cuti Tahunan<br>MC = Cuti Sakit<br>WD = Hospitalisasi
+                <div style="font-size: 10px; color: #555; text-align: left; padding: 8px; border-top: 1px dashed #ccc; margin-top: 5px;">
+                    <span style="font-weight: bold; color: #1f4e79;">Petunjuk:</span><br>
+                    <strong>PH</strong> = Hari Kelepasan &nbsp;|&nbsp; 
+                    <strong>AL</strong> = Cuti Tahunan &nbsp;|&nbsp; 
+                    <strong>MC</strong> = Cuti Sakit &nbsp;|&nbsp; 
+                    <strong>WD</strong> = Hospitalisasi
                 </div>
             </div>
         `;
@@ -1626,7 +1740,7 @@ function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPe
 
 let cssBaru = `.floating-action-bar { position: fixed; top: 25px; right: 25px; display: flex; z-index: 9999; align-items: center; } .kebab-btn { background: #0d6efd; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 24px; cursor: pointer; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: 0.2s; display: flex; justify-content: center; align-items: center; line-height: 1; padding-bottom: 5px; } .kebab-btn:hover { background: #0b5ed7; transform: scale(1.05); } .kebab-dropdown { display: none; position: absolute; right: 0; top: 115%; background-color: white; min-width: 170px; box-shadow: 0px 4px 15px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; border: 1px solid #ddd; text-align: left; } .kebab-dropdown a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; font-weight: bold; transition: 0.2s; } .kebab-dropdown a:hover { background-color: #f4f6f9; } .kebab-dropdown a:first-child { border-bottom: 1px solid #eee; } @media print { .floating-action-bar, .print-btn-container { display: none !important; } }`;
     
-    let cetakHTML = `<!DOCTYPE html><html lang="ms"><head><meta charset="UTF-8"><title>Laporan Pengiraan Akta Kerja 1955</title><style>* { font-family: 'Segoe UI', Arial, sans-serif; box-sizing: border-box; } body { color: #111; line-height: 1.35; padding: 20px; font-size: 11px; background: #fdfdfd; margin-bottom: 80px; } .main-title { text-align: center; margin-bottom: 2px; font-size: 18px; font-weight: bold; border-bottom: 2px solid #222; padding-bottom: 6px; text-transform: uppercase; color: #000; letter-spacing: 1px; } .subtitle { text-align: center; color: #555; margin-top: 5px; margin-bottom: 25px; font-size: 11px; } .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; align-items: start; } .report-box { border: 1px solid #aaa; padding: 12px; border-radius: 6px; page-break-inside: avoid; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); } .report-header { font-size: 13px; font-weight: 800; text-align: center; background: #e8eaed; padding: 8px; border-bottom: 1px solid #aaa; margin: -12px -12px 12px -12px; border-radius: 6px 6px 0 0; text-transform: uppercase; color: #1a1a1a; letter-spacing: 0.5px; } .report-section-title { font-size: 10px; font-weight: bold; color: #1f4e79; letter-spacing: 0.5px; border-bottom: 1px dashed #ccc; padding-bottom: 3px; margin-bottom: 6px; text-transform: uppercase; } .param-table { width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 12px; } .param-label { padding: 3px 0; color: #444; width: 55%; } .param-value { padding: 3px 0; text-align: right; font-weight: 700; color: #000; } .formula-box { background-color: #f4f6f9; border-left: 3px solid #1f4e79; padding: 10px 12px; margin: 12px 0; font-size: 11px; color: #222; border-radius: 0 4px 4px 0; } .formula-title { font-weight: bold; font-size: 10px; color: #1f4e79; margin-bottom: 6px; letter-spacing: 0.5px; } .compact-result .result-row { display: flex; justify-content: space-between; margin-bottom: 5px; align-items: center; flex-wrap: wrap; } .compact-result .result-row span { font-size: 11px; color: #333; } .compact-result .result-row strong, #orpBakiAmount { font-size: 12px; color: #000; white-space: nowrap; } .compact-result hr { display: none !important; } .clean-table { width: 100%; border-collapse: collapse; font-size: 11px; border: none; margin-bottom: 5px; } .clean-table td { padding: 4px 2px; border: none; color: #222; } .highlight-row, .result-row[style*="background"] { background: transparent !important; border: 1.5px solid #1f4e79; padding: 8px !important; border-radius: 4px; margin-top: 10px; } .highlight-row span, .result-row[style*="background"] span { color: #1f4e79 !important; font-weight: bold; } .highlight-row strong, .result-row[style*="background"] strong { color: #1f4e79 !important; font-size: 14px !important; } @media print { body { padding: 0; background: #fff; margin-bottom: 0; } .report-box { border: 1px solid #aaa; box-shadow: none; } .report-header, .formula-box, .highlight-row, .result-row[style*="background"] { -webkit-print-color-adjust: exact; print-color-adjust: exact; } } ${cssBaru} </style></head><body><div class="floating-action-bar"><div style="position: relative;"><button class="kebab-btn" onclick="var d = document.getElementById('kebabDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block';">&#8942;</button><div id="kebabDropdown" class="kebab-dropdown"><a href="#" onclick="window.close(); return false;">✏️ Kemaskini</a><a href="#" onclick="window.print(); return false;">🖨️ Cetak Laporan</a><a href="#" onclick="if(window.opener){if(typeof window.opener.tambahKalkulator === 'function') {window.opener.tambahKalkulator('maklumatGaji');}} window.close(); return false;">💾 Simpan</a></div></div></div>${tajukHeaderHTML}<div class="grid-container">${maklumatSyarikatPekerjaHTML}${contentSeterusnya}</div><div class="print-btn-container" style="text-align: center; margin-top: 30px; grid-column: 1 / -1;"><p style="font-size: 11px; color:#666; font-style: italic;">*Untuk simpan dalam peranti, sila pilih <b>'Save as PDF'</b> pada tetingkap pencetak (Destination).</p></div></body></html>`;
+    let cetakHTML = `<!DOCTYPE html><html lang="ms"><head><meta charset="UTF-8"><title>Laporan Pengiraan Akta Kerja 1955</title><style>* { font-family: 'Segoe UI', Arial, sans-serif; box-sizing: border-box; } body { color: #111; line-height: 1.35; padding: 20px; font-size: 11px; background: #fdfdfd; margin-bottom: 80px; } .main-title { text-align: center; margin-bottom: 2px; font-size: 18px; font-weight: bold; border-bottom: 2px solid #222; padding-bottom: 6px; text-transform: uppercase; color: #000; letter-spacing: 1px; } .subtitle { text-align: center; color: #555; margin-top: 5px; margin-bottom: 25px; font-size: 11px; } .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; align-items: start; } .report-box { border: 1px solid #aaa; padding: 12px; border-radius: 6px; page-break-inside: avoid; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); } .report-header { font-size: 13px; font-weight: 800; text-align: center; background: #e8eaed; padding: 8px; border-bottom: 1px solid #aaa; margin: -12px -12px 12px -12px; border-radius: 6px 6px 0 0; text-transform: uppercase; color: #1a1a1a; letter-spacing: 0.5px; } .report-section-title { font-size: 10px; font-weight: bold; color: #1f4e79; letter-spacing: 0.5px; border-bottom: 1px dashed #ccc; padding-bottom: 3px; margin-bottom: 6px; text-transform: uppercase; } .param-table { width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 12px; } .param-label { padding: 3px 0; color: #444; width: 55%; } .param-value { padding: 3px 0; text-align: right; font-weight: 700; color: #000; } .formula-box { background-color: #f4f6f9; border-left: 3px solid #1f4e79; padding: 10px 12px; margin: 12px 0; font-size: 11px; color: #222; border-radius: 0 4px 4px 0; } .formula-title { font-weight: bold; font-size: 10px; color: #1f4e79; margin-bottom: 6px; letter-spacing: 0.5px; } .compact-result .result-row { display: flex; justify-content: space-between; margin-bottom: 5px; align-items: center; flex-wrap: wrap; } .compact-result .result-row span { font-size: 11px; color: #333; } .compact-result .result-row strong, #orpBakiAmount { font-size: 12px; color: #000; white-space: nowrap; } .compact-result hr { display: none !important; } .clean-table { width: 100%; border-collapse: collapse; font-size: 11px; border: none; margin-bottom: 5px; } .clean-table td { padding: 4px 2px; border: none; color: #222; } .highlight-row, .result-row[style*="background"] { background: transparent !important; border: 1.5px solid #1f4e79; padding: 8px !important; border-radius: 4px; margin-top: 10px; } .highlight-row span, .result-row[style*="background"] span { color: #1f4e79 !important; font-weight: bold; } .highlight-row strong, .result-row[style*="background"] strong { color: #1f4e79 !important; font-size: 14px !important; } @media print { body { padding: 0; background: #fff; margin-bottom: 0; } .report-box { border: 1px solid #aaa; box-shadow: none; } .report-header, .formula-box, .highlight-row, .result-row[style*="background"] { -webkit-print-color-adjust: exact; print-color-adjust: exact; } } ${cssBaru} </style></head><body><div class="floating-action-bar"><div style="position: relative;"><button class="kebab-btn" onclick="var d = document.getElementById('kebabDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block';">&#8942;</button><div id="kebabDropdown" class="kebab-dropdown"><a href="#" onclick="window.close(); return false;">✏️ Kemaskini</a><a href="#" onclick="window.print(); return false;">🖨️ Cetak Laporan</a><a href="#" onclick="if(window.opener){window.opener.tambahKalkulator('maklumatGaji');} window.close(); return false;">💾 Simpan</a></div></div></div>${tajukHeaderHTML}<div class="grid-container">${maklumatSyarikatPekerjaHTML}${contentSeterusnya}</div><div class="print-btn-container" style="text-align: center; margin-top: 30px; grid-column: 1 / -1;"><p style="font-size: 11px; color:#666; font-style: italic;">*Untuk simpan dalam peranti, sila pilih <b>'Save as PDF'</b> pada tetingkap pencetak (Destination).</p></div></body></html>`;
     let tetingkapCetak = window.open('', '_blank'); 
     if (!tetingkapCetak) { alert("Pop-up disekat oleh pelayar web (browser) anda. Sila benarkan 'Pop-ups and redirects' untuk laman ini bagi melihat laporan."); return; }
     tetingkapCetak.document.write(cetakHTML); tetingkapCetak.document.close(); tetingkapCetak.focus(); 
@@ -1648,7 +1762,7 @@ document.addEventListener("DOMContentLoaded", function() { let kotakPassword = d
 function logKeluar() { let btn = document.getElementById("butangAuth"); if (btn) { btn.innerHTML = "⏻ Log Masuk"; btn.style.background = "#1f4e79"; btn.style.borderColor = "#1f4e79"; btn.setAttribute("onclick", "paparLogMasuk()"); } alert("Anda telah berjaya log keluar dari sistem."); }
 
 // =====================================================
-// 7. ENJIN RESET (DIKEMASKINI)
+// ENJIN RESET (DIKEMASKINI)
 // =====================================================
 
 window.resetSemua = function() {
@@ -1783,7 +1897,7 @@ window.resetKalkulatorIndividu = function(e) {
 };
 
 // =====================================================
-// 8. ENGINE 2026: CLONE & MULTI-INSTANCE
+// 7. ENGINE 2026: CLONE & MULTI-INSTANCE
 // =====================================================
 window.tambahKalkulator = function(templateId) {
     document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
@@ -1973,7 +2087,7 @@ window.tambahKalkulator = function(templateId) {
 };
 
 // =====================================================
-// 9. ENJIN ELAUN DINAMIK GLOBAL & ONBOARDING TOUR
+// 8. ENJIN ELAUN DINAMIK GLOBAL & ONBOARDING TOUR
 // =====================================================
 let senaraiElaunGlobal = [];
 let elaunTourDitunjuk = false; 
@@ -2052,13 +2166,16 @@ function tunjukTourElaun(targetContainer) {
     let popover = document.createElement('div');
     popover.innerHTML = `
         <div class="tour-popover-box" style="position: absolute; top: calc(100% + 15px); left: 15px; background: white; border-radius: 8px; width: 330px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 20px; border-top: 6px solid #d9534f; color: #333; font-family: sans-serif; cursor: default; animation: floatUp 0.4s ease-out; z-index: 100000; text-align: left;">
+            
             <div style="position: absolute; bottom: 100%; left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #d9534f transparent;"></div>
             <div style="position: absolute; bottom: calc(100% - 6px); left: 30px; border-width: 10px; border-style: solid; border-color: transparent transparent #fff transparent;"></div>
+            
             <h4 style="margin: 0 0 10px 0; color: #1f4e79; font-size: 15px; display: flex; align-items: center; gap: 8px;">
                 <span style="background: #1f4e79; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px;">💡</span>
                 Panduan Maklumat Elaun
             </h4>
             <p style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; color: #333;">Maklumat Elaun adalah Elaun yang <span style="color:#d9534f;">SELAIN / TIDAK TERMASUK:</span></p>
+            
             <ul style="margin: 0 0 12px 0; padding-left: 20px; font-size: 11.5px; color: #555; line-height: 1.45;">
                 <li>NILAI tempat tinggal, bekalan makanan, minyak, lampu, air, rawatan perubatan atau yang diluluskan JTK;</li>
                 <li>Bayaran CARUMAN;</li>
@@ -2067,7 +2184,9 @@ function tunjukTourElaun(targetContainer) {
                 <li>Bayaran persaraan/pemberhentian/pampasan;</li>
                 <li>Bonus tahunan.</li>
             </ul>
+            
             <p style="margin: 0 0 15px 0; font-size: 11px; font-weight: bold; color: #d9534f; background: #fff0f0; padding: 6px 8px; border-radius: 4px; border-left: 3px solid #d9534f;">* DAN TIDAK TERMASUK bayaran yang dibayar di luar waktu kerja normal.</p>
+            
             <button id="btnTutupTour" style="width: 100%; background: #1f4e79; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s;">OK, SAYA FAHAM</button>
         </div>
         <style>
@@ -2187,10 +2306,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => window.semakDanTukarElaun(), 100);
 });
 
-// =====================================================
-// 10. FUNGSI BAHARU RUMUSAN & CUSTOM
-// =====================================================
 function fungsiBaruRumusan(e) {
     if (e) e.preventDefault();
-    console.log("Fungsi baharu dipanggil dengan jayanya!");
 }
