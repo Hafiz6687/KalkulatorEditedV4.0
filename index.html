@@ -119,11 +119,39 @@
         <span style="font-size: 14px; text-transform: uppercase; font-weight: bold;">Jana Penyata Gaji</span>
       </button>
 
-      <!-- Butang 3: Maklumat Gaji (BARU) -->
+<!-- Butang 3: Maklumat Gaji (BARU) -->
       <button class="menu-btn" onclick="tambahKalkulator('maklumatGaji')" style="width: 100%; box-sizing: border-box; background: linear-gradient(to left, #c6d8f9 0%, #e8f0fe 35%, #ffffff 50%, #e8f0fe 65%, #c6d8f9 100%); color: #1f4e79; border-radius: 8px; box-shadow: 0 4px 10px rgba(31, 78, 121, 0.15), inset 0 2px 3px rgba(255, 255, 255, 0.8); border: 1px solid #1f4e79; transform: translateY(-2px); transition: transform 0.2s ease;">
         <span class="icon" style="font-size: 16px;">💳</span> 
         <span style="font-size: 14px; text-transform: uppercase; font-weight: bold;">Maklumat Gaji</span>
       </button>
+
+      <!-- ============================================== -->
+      <!-- TAMBAHAN BARU: BUTANG SEKSYEN 18A & FLYOUT MENU -->
+      <!-- ============================================== -->
+      <div style="position: relative; width: 100%; margin-top: 10px;">
+        <button class="menu-btn" onclick="toggleFlyout18A(event)" style="width: 100%; box-sizing: border-box; background: linear-gradient(to right, #ffe8e8 0%, #ffffff 50%, #ffe8e8 100%); color: #d9534f; border-radius: 8px; box-shadow: 0 4px 10px rgba(217, 83, 79, 0.15), inset 0 2px 3px rgba(255, 255, 255, 0.8); border: 1px solid #d9534f; transform: translateY(-2px); transition: transform 0.2s ease;">
+          <span class="icon" style="font-size: 16px;">⚖️</span> 
+          <span style="font-size: 14px; text-transform: uppercase; font-weight: bold;">Seksyen 18A</span>
+        </button>
+
+        <!-- Menu Flyout 18A -->
+        <div id="flyoutMenu18ACustom" style="display: none; position: absolute; left: 105%; bottom: 0; background: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border-radius: 8px; width: 280px; z-index: 999999; border: 2px solid #d9534f; max-height: 70vh; overflow-y: auto; text-align: left;">
+            <div style="background:#d9534f; color:white; padding:12px; font-weight:bold; font-size:13px; position:sticky; top:0; z-index:10; border-radius: 6px 6px 0 0;">PILIH KALKULATOR (MOD 18A):</div>
+            <div style="padding: 10px;">
+                <a href="#" onclick="tambahKalkulator18ACustom('orp'); return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px dashed #eee; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">⚖️ KADAR UPAH BIASA (ORP)</a>
+                <a href="#" onclick="tambahKalkulator18ACustom('otBiasa'); return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px dashed #eee; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">⚖️ OT HARI BIASA</a>
+                <a href="#" onclick="tambahKalkulator18ACustom('lewat'); return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px dashed #eee; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">⚖️ KADAR LEWAT SEMINIT</a>
+                <a href="#" onclick="tambahKalkulator18ACustom('rehatKurang'); return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px dashed #eee; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">⚖️ HARI REHAT (½ HARI @ KURANG)</a>
+                <a href="#" onclick="tambahKalkulator18ACustom('rehatLebih'); return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px dashed #eee; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">⚖️ HARI REHAT (LEBIH ½ HARI)</a>
+                <a href="#" onclick="tambahKalkulator18ACustom('otRehat'); return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px dashed #eee; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">⚖️ OT HARI REHAT</a>
+                <a href="#" onclick="tambahKalkulator18ACustom('kelepasan'); return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px dashed #eee; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">⚖️ HARI KELEPASAN</a>
+                <a href="#" onclick="tambahKalkulator18ACustom('otKelepasan'); return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px dashed #eee; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">⚖️ OT HARI KELEPASAN</a>
+                <a href="#" onclick="tambahKalkulator18ACustom('cutiTahunan'); return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 1px dashed #eee; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">⚖️ CUTI TAHUNAN</a>
+                <a href="#" onclick="tambahKalkulator18ACustom('cutiSakit'); return false;" style="display: block; padding: 10px 12px; color: #333; text-decoration: none; border-bottom: 0; font-size: 12px; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#ffe8e8'; this.style.color='#d9534f'; this.style.paddingLeft='15px';" onmouseout="this.style.background='transparent'; this.style.color='#333'; this.style.paddingLeft='12px';">⚖️ CUTI SAKIT</a>
+            </div>
+        </div>
+      </div>
+      <!-- ============================================== -->
 
     </div>
   </aside>
