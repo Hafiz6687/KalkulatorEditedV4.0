@@ -2025,15 +2025,19 @@ window.tambahKalkulator = function(templateId) {
     let warningBox = document.querySelector('.warning-box');
 
 if (templateId === 'maklumatGaji') {
-        let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
-        // PENAMBAHBAIKAN: Sembunyikan kad sementara (jangan remove) supaya data terjaga untuk Kemaskini
-        semuaKadAktif.forEach(kad => {
-            kad.classList.add('sementara-sembunyi');
-            kad.style.display = 'none';
-        });
-        if (rumusanCard) rumusanCard.style.display = "none";
-        if (warningBox) warningBox.style.display = "none";
-    } else {
+    // 1. TAMBAHAN BARU: Padamkan kad Maklumat Gaji sedia ada (jika ada) untuk elak duplikasi
+    let existingMg = document.querySelectorAll('#active-maklumatGaji');
+    existingMg.forEach(mg => mg.remove());
+
+    // 2. KOD ASAL ANDA
+    let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+    semuaKadAktif.forEach(kad => {
+        kad.classList.add('sementara-sembunyi');
+        kad.style.display = 'none';
+    });
+    if (rumusanCard) rumusanCard.style.display = "none";
+    if (warningBox) warningBox.style.display = "none";
+} else {
         if (warningBox) warningBox.style.display = "block";
         let existingMg = document.getElementById('active-maklumatGaji');
         if (existingMg) {
