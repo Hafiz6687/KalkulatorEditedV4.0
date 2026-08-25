@@ -974,7 +974,8 @@ function paparModalLaporan(jenis) {
     
 // PERUBAHAN: Pengekalan Data Modal (Persist)
     if(existingModal) {
-        let isPenyata = existingModal.querySelector('#inputNamaMajikan') !== null;
+        // PENAMBAHBAIKAN: Guna 'inputTempohUpah' untuk bezakan Penyata dan Laporan
+        let isPenyata = existingModal.querySelector('#inputTempohUpah') !== null;
         if ((jenis === 'penyata' && isPenyata) || (jenis === 'penuh' && !isPenyata)) {
             existingModal.style.display = 'flex';
             if (jenis === 'penyata') {
@@ -1262,12 +1263,12 @@ function paparModalLaporan(jenis) {
 
         setTimeout(() => tunjukTourElaunPopup(), 400);
         
-    } else {
+} else {
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
             <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
                 
-                <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pekerja</h3>
+                <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pekerja & Syarikat</h3>
                 <div style="margin-bottom: 15px; margin-top: 15px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Pekerja:</label>
                     <input type="text" id="inputNamaLaporan" placeholder="Contoh: Ahmad Bin Abu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
@@ -1275,6 +1276,11 @@ function paparModalLaporan(jenis) {
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Kad Pengenalan / No. Passport:</label>
                     <input type="text" id="inputICLaporan" placeholder="Contoh: 900101-01-1234 atau A1234567" maxlength="14" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
+                </div>
+                <!-- TAMBAHAN BARU: NAMA MAJIKAN -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Majikan/Syarikat/Organisasi:</label>
+                    <input type="text" id="inputNamaMajikan" placeholder="Contoh: SYARIKAT ABC SDN BHD" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
@@ -1439,18 +1445,62 @@ function tambahRekodKeMaklumatGaji(jenis, namaPekerja, majikan, tempoh, unikId) 
     let warnaTeks = jenis === 'penyata' ? '#198754' : '#0d6efd'; 
     let warnaBg   = jenis === 'penyata' ? '#d1e7dd' : '#cfe2ff';
 
+    // Pastikan tiada ruang kosong (space) yang berlebihan merosakkan semakan
+    let safeNama = (namaPekerja || '-').trim();
+    let safeMajikan = (majikan || '-').trim();
+
+    // PENAMBAHBAIKAN: Semakan pintar menyokong rekod lama dan baru
+    let semuaBaris = tbody.querySelectorAll('tr');
+    semuaBaris.forEach(baris => {
+        let isMatch = false;
+        let oldJenis = baris.getAttribute('data-jenis');
+        
+        if (oldJenis) {
+            // Jika rekod dicipta menggunakan kod versi baharu (ada data-attribute)
+            let oldPekerja = baris.getAttribute('data-pekerja');
+            let oldMajikan = baris.getAttribute('data-majikan');
+            if (oldJenis === jenisTeks && oldPekerja === safeNama && oldMajikan === safeMajikan) {
+                isMatch = true;
+            }
+        } else {
+            // Fallback: Jika rekod lama dicipta sebelum ini (tiada data-attribute)
+            let tds = baris.querySelectorAll('td');
+            if (tds.length >= 3) {
+                let textJenis = tds[0].innerText.includes('Penyata Gaji') ? 'Penyata Gaji' : (tds[0].innerText.includes('Laporan') ? 'Laporan' : '');
+                let textPekerja = tds[1].innerText.trim();
+                let textMajikan = tds[2].innerText.trim();
+                if (textJenis === jenisTeks && textPekerja === safeNama && textMajikan === safeMajikan) {
+                    isMatch = true;
+                }
+            }
+        }
+
+        // Padam label BARU pada rekod lama yang dijumpai
+        if (isMatch) {
+            let labelLama = baris.querySelector('.label-rekod-baru');
+            if (labelLama) labelLama.remove();
+        }
+    });
+
     let tr = document.createElement('tr');
     tr.style.borderBottom = "1px solid #eee";
     
-    // PERHATIKAN: ID kini disorokkan dalam data-id="${unikId}" untuk elak dipotong sistem lama
+    // Tanam identiti untuk mudah dikesan kelak
+    tr.setAttribute('data-jenis', jenisTeks);
+    tr.setAttribute('data-pekerja', safeNama);
+    tr.setAttribute('data-majikan', safeMajikan);
+    
     tr.innerHTML = `
-        <td style="padding: 15px; font-size: 13px; font-weight: bold; color: ${warnaTeks};">
-            <span style="background: ${warnaBg}; padding: 4px 8px; border-radius: 4px;">${jenisTeks}</span>
+        <td style="padding: 15px; font-size: 13px; font-weight: bold; color: ${warnaTeks}; vertical-align: middle;">
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+                <span style="background: ${warnaBg}; padding: 4px 8px; border-radius: 4px;">${jenisTeks}</span>
+                <span class="label-rekod-baru" style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.2);">BARU</span>
+            </div>
         </td>
-        <td style="padding: 15px; font-size: 13px;"><strong style="color: #333;">${namaPekerja || '-'}</strong></td>
-        <td style="padding: 15px; font-size: 13px;"><strong style="color: #333;">${majikan || '-'}</strong></td>
-        <td style="padding: 15px; text-align: center; font-size: 13px; color: #444;">${tempoh || '-'}</td>
-        <td style="padding: 15px; text-align: center;">
+        <td style="padding: 15px; font-size: 13px; vertical-align: middle;"><strong style="color: #333;">${safeNama}</strong></td>
+        <td style="padding: 15px; font-size: 13px; vertical-align: middle;"><strong style="color: #333;">${safeMajikan}</strong></td>
+        <td style="padding: 15px; text-align: center; font-size: 13px; color: #444; vertical-align: middle;">${tempoh || '-'}</td>
+        <td style="padding: 15px; text-align: center; vertical-align: middle;">
             <button data-id="${unikId}" onclick="bukaRekodSimpanan(event)" style="background: #0d6efd; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📂 Buka</button>
             <button data-id="${unikId}" onclick="hapusRekodSimpanan(event)" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🗑️ Hapus</button>
         </td>
@@ -1459,7 +1509,7 @@ function tambahRekodKeMaklumatGaji(jenis, namaPekerja, majikan, tempoh, unikId) 
     let firstRow = tbody.querySelector('tr');
     if (firstRow && firstRow.innerHTML.includes('KBR/10103')) firstRow.remove();
 
-    tbody.prepend(tr);
+    tbody.appendChild(tr);
 }
 function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenisCetak, xtra, unikId) {
     const senaraiKalkulator = [
@@ -1837,10 +1887,11 @@ function prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPe
     }
 
 let maklumatSyarikatPekerjaHTML = "";
-    if (namaPekerja !== "" || icPekerja !== "" || noPekerja !== "") {
+    if (namaPekerja !== "" || icPekerja !== "" || noPekerja !== "" || namaMajikan !== "") {
         maklumatSyarikatPekerjaHTML = `<div class="report-box" style="grid-column: 1 / -1; margin-bottom: 3pt; border-left: 5px solid #1f4e79;">
-            <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT PEKERJA</div>
+            <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px;">MAKLUMAT PEKERJA & SYARIKAT</div>
             <table class="param-table" style="margin-bottom: 0;">
+                ${namaMajikan ? `<tr><td class="param-label" style="width: 25%; font-weight: bold;">Nama Majikan/Syarikat</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${namaMajikan}</td></tr>` : ''}
                 ${namaPekerja ? `<tr><td class="param-label" style="width: 25%; font-weight: bold;">Nama Pekerja</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${namaPekerja}</td></tr>` : ''}
                 ${icPekerja ? `<tr><td class="param-label" style="width: 25%; font-weight: bold;">No. Kad Pengenalan / No. Passport</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${icPekerja}</td></tr>` : ''}
                 ${noPekerja ? `<tr><td class="param-label" style="width: 25%; font-weight: bold;">No. Pekerja</td><td class="param-value" style="text-align: left; font-weight: normal; color: #111;">: ${noPekerja}</td></tr>` : ''}
