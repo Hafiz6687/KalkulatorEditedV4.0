@@ -551,7 +551,22 @@ function resetTBB() {
 // 4. ENJIN KALKULATOR RUMUSAN AKHIR
 // =====================================================
 const senaraiKalkulatorRumusan = [
-    { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)" }, { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)" }, { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)" }, { nilai: "tbbAmount", teks: "Faedah Penamatan" }, { nilai: "otAmount", teks: "OT Hari Biasa" }, { nilai: "otRHAmount", teks: "OT Hari Rehat" }, { nilai: "otPHAmount", teks: "OT Hari Kelepasan" }, { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)" }, { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)" }, { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan" }, { nilai: "amount18A", teks: "Seksyen 18A (Bulan Tidak Lengkap)" }, { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan" }, { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit" }, { nilai: "lewatAmount", teks: "Potongan Lewat Seminit" }
+    { nilai: "", teks: "- Sila Pilih Jenis Bayaran -" }, 
+    { nilai: "orpBakiAmount", teks: "Baki Upah / Gaji (ORP)" }, 
+    { nilai: "resUniMonthAmount", teks: "Gaji Ganti Notis (Bulan)" }, 
+    { nilai: "resUni18AAmount", teks: "Gaji Ganti Notis (Hari / Minggu)" }, 
+    { nilai: "tbbAmount", teks: "Faedah Penamatan" }, 
+    { nilai: "otAmount", teks: "OT Hari Biasa" }, 
+    { nilai: "otRHAmount", teks: "OT Hari Rehat" }, 
+    { nilai: "otPHAmount", teks: "OT Hari Kelepasan" }, 
+    { nilai: "rhAmount", teks: "Kerja Hari Rehat (½ Hari @ Kurang)" }, 
+    { nilai: "rhMoreAmount", teks: "Kerja Hari Rehat (Lebih ½ Hari)" }, 
+    { nilai: "phAmount", teks: "Kerja Pada Hari Kelepasan" }, 
+    { nilai: "amount18A", teks: "Seksyen 18A (Bulan Tidak Lengkap)" }, 
+    { nilai: "annualLeaveAmount", teks: "Bayaran Cuti Tahunan" }, 
+    { nilai: "sickLeaveAmount", teks: "Bayaran Cuti Sakit" }, 
+    { nilai: "lewatAmount", teks: "Potongan Lewat Seminit" },
+    { nilai: "lainLain", teks: "Lain-lain" }
 ];
 
 function formatRMRumusan(amount) { if (isNaN(amount) || amount === "") return "RM0.00"; return "RM " + parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -777,8 +792,51 @@ window.autoKiraPotonganBerkanun = function() {
     }
 };
 
-function janaLaporanPenuh() { paparModalLaporan('penuh'); }
+function semakKalkulatorTakLengkap() {
+    let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+    for (let kad of semuaKadAktif) {
+        if(kad.id === 'active-maklumatGaji') continue;
+
+        let isLengkap = false;
+        let dataDivs = kad.querySelectorAll('[id$="Data"], [data-original-id$="Data"]');
+        let pendingGGN = kad.querySelector('[id="ggnResPending"], [data-original-id="ggnResPending"]');
+        
+        if (pendingGGN) {
+            if (window.getComputedStyle(pendingGGN).display === 'none') isLengkap = true;
+        } else if (dataDivs.length > 0) {
+            dataDivs.forEach(div => {
+                if (window.getComputedStyle(div).display !== 'none') isLengkap = true;
+            });
+        } else {
+            isLengkap = true; 
+        }
+
+        if (!isLengkap) {
+            let tajuk = "Kalkulator";
+            let h2 = kad.querySelector('h2');
+            if (h2) tajuk = h2.innerText.replace(/\n/g, ' ').trim();
+            return tajuk;
+        }
+    }
+    return null;
+}
+
+function janaLaporanPenuh() { 
+    let takLengkap = semakKalkulatorTakLengkap();
+    if (takLengkap) {
+        alert("Kalkulator (" + takLengkap + ") tidak lengkap. Sila lengkapkan atau padam kalkulator tersebut.");
+        return;
+    }
+    paparModalLaporan('penuh'); 
+}
+
 function janaPenyataGaji() { 
+    let takLengkap = semakKalkulatorTakLengkap();
+    if (takLengkap) {
+        alert("Kalkulator (" + takLengkap + ") tidak lengkap. Sila lengkapkan atau padam kalkulator tersebut.");
+        return;
+    }
+
     let orpCardLengkap = false;
     let orpCardWujud = null;
     let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template)');
@@ -1236,22 +1294,22 @@ function paparModalLaporan(jenis) {
                         <p style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 15px; background: #e8f0fe; padding: 8px; border-radius: 4px;">Cuti yang dimasukkan di sini akan ditambah secara automatik ke ruangan 'Guna' di Jadual Maklumat Perkhidmatan.</p>
                         
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-                            <label style="width: 120px; font-size: 13px; font-weight: bold;">Hari Kelepasan (PH)</label>
+                            <label style="width: 150px; font-size: 13px; font-weight: bold; white-space: nowrap;">Hari Kelepasan (PH)</label>
                             <input type="number" id="inputPHSemasa" placeholder="0" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="tambahCutiSemasa('PH')">
                             <span style="font-weight: bold; font-size: 13px; color: #333;">hari</span>
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-                            <label style="width: 120px; font-size: 13px; font-weight: bold;">Cuti Tahunan (AL)</label>
+                            <label style="width: 150px; font-size: 13px; font-weight: bold; white-space: nowrap;">Cuti Tahunan (AL)</label>
                             <input type="number" id="inputALSemasa" placeholder="0" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="tambahCutiSemasa('AL')">
                             <span style="font-weight: bold; font-size: 13px; color: #333;">hari</span>
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-                            <label style="width: 120px; font-size: 13px; font-weight: bold;">Cuti Sakit (MC)</label>
+                            <label style="width: 150px; font-size: 13px; font-weight: bold; white-space: nowrap;">Cuti Sakit (MC)</label>
                             <input type="number" id="inputMCSemasa" placeholder="0" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="tambahCutiSemasa('MC')">
                             <span style="font-weight: bold; font-size: 13px; color: #333;">hari</span>
                         </div>
                         <div style="display: flex; gap: 10px; margin-bottom: 25px; align-items: center;">
-                            <label style="width: 120px; font-size: 13px; font-weight: bold;">Hospitalisasi (WD)</label>
+                            <label style="width: 150px; font-size: 13px; font-weight: bold; white-space: nowrap;">Hospitalisasi (WD)</label>
                             <input type="number" id="inputWDSemasa" placeholder="0" style="width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; text-align: center;" oninput="tambahCutiSemasa('WD')">
                             <span style="font-weight: bold; font-size: 13px; color: #333;">hari</span>
                         </div>
@@ -1823,16 +1881,16 @@ let htmlPotonganDalaman = "";
         let svc = xtra.svcData || {};
         let fDay = (val) => (val && val !== "-" && val !== "") ? val : "0";
 
-        // TAMBAHAN BARU: JADUAL REKOD CUTI BULAN SEMASA (40% RUANG KANAN)
+// TAMBAHAN BARU: JADUAL REKOD CUTI BULAN SEMASA (40% RUANG KANAN)
         let htmlCutiSemasa = `
             <div class="report-box" style="padding: 0; border: 1px solid #aaa; display: flex; flex-direction: column; height: 100%;">
                 <div class="report-header" style="background:#e8eaed; color:#1a1a1a; text-align: left; padding-left: 10px; margin: 0; border-radius: 0; border-bottom: 1px solid #aaa;">CUTI BULAN SEMASA</div>
                 <div style="flex-grow: 1; padding: 10px 0;">
                     <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-                        <tr><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; width: 60%; text-align: left;">Hari Kelepasan (PH)</td><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; text-align: right; width: 40%; font-weight: bold;">${fDay(svc.phS)} hari</td></tr>
-                        <tr><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; width: 60%; text-align: left;">Cuti Tahunan (AL)</td><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; text-align: right; width: 40%; font-weight: bold;">${fDay(svc.alS)} hari</td></tr>
-                        <tr><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; width: 60%; text-align: left;">Cuti Sakit (MC)</td><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; text-align: right; width: 40%; font-weight: bold;">${fDay(svc.mcS)} hari</td></tr>
-                        <tr><td style="padding: 8px 12px; width: 60%; text-align: left;">Hospitalisasi (WD)</td><td style="padding: 8px 12px; text-align: right; width: 40%; font-weight: bold;">${fDay(svc.wdS)} hari</td></tr>
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; width: 75%; text-align: left; white-space: nowrap;">Hari Kelepasan (PH)</td><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; text-align: right; width: 25%; font-weight: bold;">${fDay(svc.phS)} hari</td></tr>
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; width: 75%; text-align: left; white-space: nowrap;">Cuti Tahunan (AL)</td><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; text-align: right; width: 25%; font-weight: bold;">${fDay(svc.alS)} hari</td></tr>
+                        <tr><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; width: 75%; text-align: left; white-space: nowrap;">Cuti Sakit (MC)</td><td style="padding: 8px 12px; border-bottom: 1px dashed #eee; text-align: right; width: 25%; font-weight: bold;">${fDay(svc.mcS)} hari</td></tr>
+                        <tr><td style="padding: 8px 12px; width: 75%; text-align: left; white-space: nowrap;">Hospitalisasi (WD)</td><td style="padding: 8px 12px; text-align: right; width: 25%; font-weight: bold;">${fDay(svc.wdS)} hari</td></tr>
                     </table>
                 </div>
             </div>
