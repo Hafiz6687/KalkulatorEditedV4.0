@@ -2587,13 +2587,17 @@ function fungsiBaruRumusan(e) {
 // =====================================================
 // 9. MENU FLYOUT SEKSYEN 18A & ENJIN DINAMIK (ISOLATED)
 // =====================================================
-document.addEventListener("DOMContentLoaded", function() {
+function binaMenuSeksyen18A() {
+    // Halang daripada terbina 2 kali jika fungsi dipanggil berulang
+    if (document.getElementById('flyoutMenu18ACustom')) return;
+
     // 1. Cari butang "Maklumat Gaji" di menu sisi untuk dijadikan rujukan posisi
     let menuBtns = document.querySelectorAll('.menu-btn');
     let maklumatGajiBtn = null;
     
     menuBtns.forEach(btn => {
-        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes('maklumatGaji')) {
+        let onclickAttr = btn.getAttribute('onclick');
+        if (onclickAttr && onclickAttr.includes('maklumatGaji')) {
             maklumatGajiBtn = btn;
         }
     });
@@ -2652,7 +2656,17 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     }
-});
+}
+
+// Arahan paksaan supaya butang sentiasa di-render tidak kira masa loading
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', binaMenuSeksyen18A);
+} else {
+    binaMenuSeksyen18A();
+}
+// Backup paksaan selepas 0.5 saat sekiranya UI dilukis lambat
+setTimeout(binaMenuSeksyen18A, 500);
+
 
 // 5. Enjin Khas Mengklon Kalkulator dan Menukar Formula ke Mod Bulan Semasa
 window.tambahKalkulator18ACustom = function(templateId) {
