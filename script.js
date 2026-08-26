@@ -173,11 +173,19 @@ document.addEventListener("input", function(e) {
 // =====================================================
 // 3. KALKULATOR TERAS (FORMULA ASAL DIKEKALKAN)
 // =====================================================
+function getORP(customDivisor = null) { 
+    let divisor = customDivisor || 26;
+    let totalSalary = updateSalaryTotal("orpBasicSalary", "orpAllowance", "orpTotalSalary");
+    if(totalSalary === 0) {
+        let orpTotalEl = document.querySelector('[data-original-id="orpTotalSalary"]');
+        if(orpTotalEl) totalSalary = evaluateSmartMath(orpTotalEl.value);
+    }
+    return totalSalary / divisor; 
+}
 
-function getORP() { return updateSalaryTotal("orpBasicSalary", "orpAllowance", "orpTotalSalary") / 26; }
-
-function calculateORP(e) {
-    setContext(e); let totalSalary = updateSalaryTotal("orpBasicSalary", "orpAllowance", "orpTotalSalary"); let ORP = totalSalary / 26;
+function calculateORP(e, customDivisor = null) {
+    setContext(e); let totalSalary = updateSalaryTotal("orpBasicSalary", "orpAllowance", "orpTotalSalary"); 
+    let divisor = customDivisor || 26; let ORP = totalSalary / divisor;
     setText("orpResultTotal", formatRM(totalSalary)); setText("orpResult", formatRM(ORP)); toggleResult("orp", true);
 }
 function resetORP() {
@@ -201,11 +209,12 @@ function resetBakiUpah() {
     let el = getElement("orpBakiAmount"); if(el) { el.innerText = "RM 0.00"; el.style.color = ""; } toggleResult("baki", false);
 }
 
-function calculateOTBiasa(e) {
+function calculateOTBiasa(e, customDivisor = null) {
     setContext(e); let totalSalary = updateSalaryTotal("otBasicSalary", "otAllowance", "otTotalSalary");
     let hours = Number(getElement("otHours").value); let workingHours = Number(getElement("normalWorkingHours").value);
     if (!workingHours) { alert("Sila pilih jam kerja normal sehari."); return; }
-    let ORP = totalSalary / 26; let hourly = (ORP / workingHours) * 1.5; let amount = hourly * hours;
+    let divisor = customDivisor || 26; let ORP = totalSalary / divisor; 
+    let hourly = (ORP / workingHours) * 1.5; let amount = hourly * hours;
     setText("otResultTotal", formatRM(totalSalary)); setText("otORP", formatRM(ORP));
     setText("otHourly", formatRM(hourly)); setText("otAmount", formatRM(amount)); toggleResult("ot", true); autoMasukRumusan('otAmount', activeCardContext);
 }
@@ -214,12 +223,13 @@ function resetOTBiasa() {
     ["otResultTotal", "otORP", "otHourly", "otAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("ot", false);
 }
 
-function calculateLewat(e) {
+function calculateLewat(e, customDivisor = null) {
     if(e && e.target) setContext(e); else if(e && e.closest) activeCardContext = e.closest('.calculator-card');
     let totalSalary = updateSalaryTotal("lewatBasicSalary", "lewatAllowance", "lewatTotalSalary");
     let minutes = Number(getElement("lewatMinit").value); let workingHours = Number(getElement("lewatNormalWorkingHours").value);
     if (!workingHours) { alert("Sila pilih jam kerja normal sehari."); return; }
-    let ORP = totalSalary / 26; let hourly = ORP / workingHours; let minutely = hourly / 60; let amount = minutely * minutes;
+    let divisor = customDivisor || 26; let ORP = totalSalary / divisor; 
+    let hourly = ORP / workingHours; let minutely = hourly / 60; let amount = minutely * minutes;
     setText("lewatResultTotal", formatRM(totalSalary)); setText("lewatORP", formatRM(ORP));
     setText("lewatMinutely", formatRM(minutely)); setText("lewatAmount", formatRM(amount)); toggleResult("lewat", true); autoMasukRumusan('lewatAmount', activeCardContext);
 }
@@ -229,11 +239,12 @@ function resetLewat(e) {
     ["lewatResultTotal", "lewatORP", "lewatMinutely", "lewatAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("lewat", false);
 }
 
-function calculateOTRH(e) {
+function calculateOTRH(e, customDivisor = null) {
     setContext(e); let totalSalary = updateSalaryTotal("otRHBasicSalary", "otRHAllowance", "otRHTotalSalary");
     let hours = Number(getElement("otRHHours").value); let workingHours = Number(getElement("otRHNormalWorkingHours").value);
     if (!workingHours) { alert("Sila pilih jam kerja normal sehari."); return; }
-    let ORP = totalSalary / 26; let hourly = (ORP / workingHours) * 2.0; let amount = hourly * hours;
+    let divisor = customDivisor || 26; let ORP = totalSalary / divisor; 
+    let hourly = (ORP / workingHours) * 2.0; let amount = hourly * hours;
     setText("otRHResultTotal", formatRM(totalSalary)); setText("otRHORP", formatRM(ORP));
     setText("otRHHourly", formatRM(hourly)); setText("otRHAmount", formatRM(amount)); toggleResult("otRH", true); autoMasukRumusan('otRHAmount', activeCardContext);
 }
@@ -242,11 +253,12 @@ function resetOTRH() {
     ["otRHResultTotal", "otRHORP", "otRHHourly", "otRHAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("otRH", false);
 }
 
-function calculateOTPH(e) {
+function calculateOTPH(e, customDivisor = null) {
     setContext(e); let totalSalary = updateSalaryTotal("otPHBasicSalary", "otPHAllowance", "otPHTotalSalary");
     let hours = Number(getElement("otPHHours").value); let workingHours = Number(getElement("otPHWorkingHours").value);
     if (!workingHours) { alert("Sila pilih jam kerja normal sehari."); return; }
-    let ORP = totalSalary / 26; let hourly = (ORP / workingHours) * 3.0; let amount = hourly * hours;
+    let divisor = customDivisor || 26; let ORP = totalSalary / divisor; 
+    let hourly = (ORP / workingHours) * 3.0; let amount = hourly * hours;
     setText("otPHResultTotal", formatRM(totalSalary)); setText("otPHORP", formatRM(ORP));
     setText("otPHHourly", formatRM(hourly)); setText("otPHAmount", formatRM(amount)); toggleResult("otPH", true); autoMasukRumusan('otPHAmount', activeCardContext);
 }
@@ -255,9 +267,11 @@ function resetOTPH() {
     ["otPHResultTotal", "otPHORP", "otPHHourly", "otPHAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("otPH", false);
 }
 
-function calculateHariRehat(e) {
+function calculateHariRehat(e, customDivisor = null) {
     setContext(e); let totalSalary = updateSalaryTotal("rhBasicSalary", "rhAllowance", "rhTotalSalary");
-    let days = Number(getElement("rhDays").value); let ORP = totalSalary / 26; let daily = ORP * 0.5; let amount = daily * days;
+    let days = Number(getElement("rhDays").value); 
+    let divisor = customDivisor || 26; let ORP = totalSalary / divisor; 
+    let daily = ORP * 0.5; let amount = daily * days;
     setText("rhResultTotal", formatRM(totalSalary)); setText("rhORP", formatRM(ORP));
     setText("rhDaily", formatRM(daily)); setText("rhAmount", formatRM(amount)); toggleResult("rh", true); autoMasukRumusan('rhAmount', activeCardContext);
 }
@@ -266,9 +280,11 @@ function resetHariRehat() {
     ["rhResultTotal", "rhORP", "rhDaily", "rhAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("rh", false);
 }
 
-function calculateHariRehatLebih(e) {
+function calculateHariRehatLebih(e, customDivisor = null) {
     setContext(e); let totalSalary = updateSalaryTotal("rhMoreBasicSalary", "rhMoreAllowance", "rhMoreTotalSalary");
-    let days = Number(getElement("rhMoreDays").value); let ORP = totalSalary / 26; let daily = ORP; let amount = daily * days;
+    let days = Number(getElement("rhMoreDays").value); 
+    let divisor = customDivisor || 26; let ORP = totalSalary / divisor; 
+    let daily = ORP; let amount = daily * days;
     setText("rhMoreResultTotal", formatRM(totalSalary)); setText("rhMoreORP", formatRM(ORP));
     setText("rhMoreDaily", formatRM(daily)); setText("rhMoreAmount", formatRM(amount)); toggleResult("rhMore", true); autoMasukRumusan('rhMoreAmount', activeCardContext);
 }
@@ -277,9 +293,11 @@ function resetHariRehatLebih() {
     ["rhMoreResultTotal", "rhMoreORP", "rhMoreDaily", "rhMoreAmount"].forEach(id => setText(id, "RM 0.00")); toggleResult("rhMore", false);
 }
 
-function calculatePH(e) {
+function calculatePH(e, customDivisor = null) {
     setContext(e); let totalSalary = updateSalaryTotal("phBasicSalary", "phAllowance", "phTotalSalary");
-    let days = Number(getElement("phDays").value); let ORP = totalSalary / 26; let daily = ORP * 2; let amount = daily * days;
+    let days = Number(getElement("phDays").value); 
+    let divisor = customDivisor || 26; let ORP = totalSalary / divisor; 
+    let daily = ORP * 2; let amount = daily * days;
     setText("phResultTotal", formatRM(totalSalary)); setText("phORP", formatRM(ORP));
     setText("phDaily", formatRM(daily)); setText("phAmount", formatRM(amount)); toggleResult("ph", true); autoMasukRumusan('phAmount', activeCardContext);
 }
@@ -328,8 +346,8 @@ function resetSeksyen18A() {
     ["month1Title", "month2Title", "month1Days", "month2Days"].forEach(id => setText(id, "-")); toggleResult("sec18A", false);
 }
 
-function calculateCutiTahunan(e) {
-    setContext(e); let ORP = getORP(); let days = Number(getElement("annualLeaveDays").value); let amount = ORP * days;
+function calculateCutiTahunan(e, customDivisor = null) {
+    setContext(e); let ORP = getORP(customDivisor); let days = Number(getElement("annualLeaveDays").value); let amount = ORP * days;
     setText("annualLeaveORP", formatRM(ORP)); setText("annualLeaveAmount", formatRM(amount)); toggleResult("annualLeave", true); autoMasukRumusan('annualLeaveAmount', activeCardContext);
 }
 function resetCutiTahunan() {
@@ -343,8 +361,8 @@ function autoKiraBakiCuti() {
     getElement('annualLeaveDays').value = baki < 0 ? 0 : baki;
 }
 
-function calculateCutiSakit(e) {
-    setContext(e); let ORP = getORP(); let days = Number(getElement("sickLeaveDays").value); let amount = ORP * days;
+function calculateCutiSakit(e, customDivisor = null) {
+    setContext(e); let ORP = getORP(customDivisor); let days = Number(getElement("sickLeaveDays").value); let amount = ORP * days;
     setText("sickLeaveORP", formatRM(ORP)); setText("sickLeaveAmount", formatRM(amount)); toggleResult("sickLeave", true); autoMasukRumusan('sickLeaveAmount', activeCardContext);
 }
 function resetCutiSakit() {
@@ -2652,118 +2670,19 @@ window.tambahKalkulator18ACustom = function(templateId) {
                 try {
                     let hariBulanInput = newCard.querySelector('.hari-bulan-18a');
                     let hariBulan = hariBulanInput ? (Number(hariBulanInput.value) || 26) : 26; 
-                    let totalSalary = 0, ORP = 0, amount = 0, hourly = 0, daily = 0;
 
-                    if (templateId === 'orp') {
-                        totalSalary = updateSalaryTotal("orpBasicSalary", "orpAllowance", "orpTotalSalary");
-                        ORP = totalSalary / hariBulan;
-                        setText("orpResultTotal", formatRM(totalSalary));
-                        setText("orpResult", formatRM(ORP));
-                        toggleResult("orp", true);
-                    } 
-                    else if (templateId === 'otBiasa') {
-                        totalSalary = updateSalaryTotal("otBasicSalary", "otAllowance", "otTotalSalary");
-                        let hours = Number(getElement("otHours").value); 
-                        let workingHours = Number(getElement("normalWorkingHours").value);
-                        if (!workingHours) return alert("Sila pilih jam kerja normal sehari.");
-                        ORP = totalSalary / hariBulan;
-                        hourly = (ORP / workingHours) * 1.5;
-                        amount = hourly * hours;
-                        setText("otResultTotal", formatRM(totalSalary)); setText("otORP", formatRM(ORP));
-                        setText("otHourly", formatRM(hourly)); setText("otAmount", formatRM(amount)); toggleResult("ot", true);
-                        if(typeof autoMasukRumusan === 'function') autoMasukRumusan('otAmount', activeCardContext);
-                    }
-                    else if (templateId === 'lewat') {
-                        totalSalary = updateSalaryTotal("lewatBasicSalary", "lewatAllowance", "lewatTotalSalary");
-                        let minutes = Number(getElement("lewatMinit").value); 
-                        let workingHours = Number(getElement("lewatNormalWorkingHours").value);
-                        if (!workingHours) return alert("Sila pilih jam kerja normal sehari.");
-                        ORP = totalSalary / hariBulan; 
-                        hourly = ORP / workingHours; 
-                        let minutely = hourly / 60; 
-                        amount = minutely * minutes;
-                        setText("lewatResultTotal", formatRM(totalSalary)); setText("lewatORP", formatRM(ORP));
-                        setText("lewatMinutely", formatRM(minutely)); setText("lewatAmount", formatRM(amount)); toggleResult("lewat", true);
-                        if(typeof autoMasukRumusan === 'function') autoMasukRumusan('lewatAmount', activeCardContext);
-                    }
-                    else if (templateId === 'otRehat') {
-                        totalSalary = updateSalaryTotal("otRHBasicSalary", "otRHAllowance", "otRHTotalSalary");
-                        let hours = Number(getElement("otRHHours").value); 
-                        let workingHours = Number(getElement("otRHNormalWorkingHours").value);
-                        if (!workingHours) return alert("Sila pilih jam kerja normal sehari.");
-                        ORP = totalSalary / hariBulan; 
-                        hourly = (ORP / workingHours) * 2.0; 
-                        amount = hourly * hours;
-                        setText("otRHResultTotal", formatRM(totalSalary)); setText("otRHORP", formatRM(ORP));
-                        setText("otRHHourly", formatRM(hourly)); setText("otRHAmount", formatRM(amount)); toggleResult("otRH", true);
-                        if(typeof autoMasukRumusan === 'function') autoMasukRumusan('otRHAmount', activeCardContext);
-                    }
-                    else if (templateId === 'otKelepasan') {
-                        totalSalary = updateSalaryTotal("otPHBasicSalary", "otPHAllowance", "otPHTotalSalary");
-                        let hours = Number(getElement("otPHHours").value); 
-                        let workingHours = Number(getElement("otPHWorkingHours").value);
-                        if (!workingHours) return alert("Sila pilih jam kerja normal sehari.");
-                        ORP = totalSalary / hariBulan; 
-                        hourly = (ORP / workingHours) * 3.0; 
-                        amount = hourly * hours;
-                        setText("otPHResultTotal", formatRM(totalSalary)); setText("otPHORP", formatRM(ORP));
-                        setText("otPHHourly", formatRM(hourly)); setText("otPHAmount", formatRM(amount)); toggleResult("otPH", true);
-                        if(typeof autoMasukRumusan === 'function') autoMasukRumusan('otPHAmount', activeCardContext);
-                    }
-                    else if (templateId === 'rehatKurang') {
-                        totalSalary = updateSalaryTotal("rhBasicSalary", "rhAllowance", "rhTotalSalary");
-                        let days = Number(getElement("rhDays").value); 
-                        ORP = totalSalary / hariBulan; 
-                        daily = ORP * 0.5; 
-                        amount = daily * days;
-                        setText("rhResultTotal", formatRM(totalSalary)); setText("rhORP", formatRM(ORP));
-                        setText("rhDaily", formatRM(daily)); setText("rhAmount", formatRM(amount)); toggleResult("rh", true);
-                        if(typeof autoMasukRumusan === 'function') autoMasukRumusan('rhAmount', activeCardContext);
-                    }
-                    else if (templateId === 'rehatLebih') {
-                        totalSalary = updateSalaryTotal("rhMoreBasicSalary", "rhMoreAllowance", "rhMoreTotalSalary");
-                        let days = Number(getElement("rhMoreDays").value); 
-                        ORP = totalSalary / hariBulan; 
-                        daily = ORP; 
-                        amount = daily * days;
-                        setText("rhMoreResultTotal", formatRM(totalSalary)); setText("rhMoreORP", formatRM(ORP));
-                        setText("rhMoreDaily", formatRM(daily)); setText("rhMoreAmount", formatRM(amount)); toggleResult("rhMore", true);
-                        if(typeof autoMasukRumusan === 'function') autoMasukRumusan('rhMoreAmount', activeCardContext);
-                    }
-                    else if (templateId === 'kelepasan') {
-                        totalSalary = updateSalaryTotal("phBasicSalary", "phAllowance", "phTotalSalary");
-                        let days = Number(getElement("phDays").value); 
-                        ORP = totalSalary / hariBulan; 
-                        daily = ORP * 2; 
-                        amount = daily * days;
-                        setText("phResultTotal", formatRM(totalSalary)); setText("phORP", formatRM(ORP));
-                        setText("phDaily", formatRM(daily)); setText("phAmount", formatRM(amount)); toggleResult("ph", true);
-                        if(typeof autoMasukRumusan === 'function') autoMasukRumusan('phAmount', activeCardContext);
-                    }
-                    else if (templateId === 'cutiTahunan') {
-                        totalSalary = updateSalaryTotal("orpBasicSalary", "orpAllowance", "orpTotalSalary");
-                        if(totalSalary === 0) {
-                            let orpTotalEl = document.querySelector('[data-original-id="orpTotalSalary"]');
-                            if(orpTotalEl) totalSalary = evaluateSmartMath(orpTotalEl.value);
-                        }
-                        ORP = totalSalary / hariBulan; 
-                        let days = Number(getElement("annualLeaveDays").value); 
-                        amount = ORP * days;
-                        setText("annualLeaveORP", formatRM(ORP)); setText("annualLeaveAmount", formatRM(amount)); toggleResult("annualLeave", true);
-                        if(typeof autoMasukRumusan === 'function') autoMasukRumusan('annualLeaveAmount', activeCardContext);
-                    }
-                    else if (templateId === 'cutiSakit') {
-                        totalSalary = updateSalaryTotal("orpBasicSalary", "orpAllowance", "orpTotalSalary");
-                        if(totalSalary === 0) {
-                            let orpTotalEl = document.querySelector('[data-original-id="orpTotalSalary"]');
-                            if(orpTotalEl) totalSalary = evaluateSmartMath(orpTotalEl.value);
-                        }
-                        ORP = totalSalary / hariBulan; 
-                        let days = Number(getElement("sickLeaveDays").value); 
-                        amount = ORP * days;
-                        setText("sickLeaveORP", formatRM(ORP)); setText("sickLeaveAmount", formatRM(amount)); toggleResult("sickLeave", true);
-                        if(typeof autoMasukRumusan === 'function') autoMasukRumusan('sickLeaveAmount', activeCardContext);
-                    }
+                    // Panggil fungsi asal dengan menghantar hariBulan sebagai parameter kedua
+                    if (templateId === 'orp') calculateORP(e, hariBulan);
+                    else if (templateId === 'otBiasa') calculateOTBiasa(e, hariBulan);
+                    else if (templateId === 'lewat') calculateLewat(e, hariBulan);
+                    else if (templateId === 'otRehat') calculateOTRH(e, hariBulan);
+                    else if (templateId === 'otKelepasan') calculateOTPH(e, hariBulan);
+                    else if (templateId === 'rehatKurang') calculateHariRehat(e, hariBulan);
+                    else if (templateId === 'rehatLebih') calculateHariRehatLebih(e, hariBulan);
+                    else if (templateId === 'kelepasan') calculatePH(e, hariBulan);
+                    else if (templateId === 'cutiTahunan') calculateCutiTahunan(e, hariBulan);
+                    else if (templateId === 'cutiSakit') calculateCutiSakit(e, hariBulan);
+                    
                 } finally {
                     activeCardContext = tempContext;
                 }
