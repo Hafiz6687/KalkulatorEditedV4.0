@@ -2690,3 +2690,26 @@ window.tambahKalkulator18ACustom = function(templateId) {
         }
     }, 50);
 };
+// =========================================================
+// ENJIN MENU FLYOUT AKTA KERJA (BAHAGIAN XII & XIIA) - ISOLATED
+// =========================================================
+
+// Fungsi khas untuk buka/tutup Flyout Menu Akta Kerja tanpa ganggu fungsi lain
+function toggleFlyoutAktaKerja(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    let flyout = document.getElementById('flyoutMenuAktaKerja');
+    if (flyout) {
+        flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+// Tutup flyout jika klik luar dari kawasan menu
+document.addEventListener('click', function(e) {
+    let flyout = document.getElementById('flyoutMenuAktaKerja');
+    if (flyout && flyout.style.display === 'block') {
+        if (!e.target.closest('#flyoutMenuAktaKerja') && !e.target.closest('button[onclick*="toggleFlyoutAktaKerja"]')) {
+            flyout.style.display = 'none';
+        }
+    }
+});
