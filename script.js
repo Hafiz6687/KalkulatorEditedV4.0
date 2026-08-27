@@ -2603,46 +2603,72 @@ function fungsiBaruRumusan(e) {
     if (e) e.preventDefault();
 }
 // =========================================================
-// 9. ENJIN KHAS SEKSYEN 18A (MOD BULAN SEMASA)
+// 9. ENJIN KHAS SEKSYEN 18A & FLYOUT MENU
 // =========================================================
 
-// Fungsi untuk buka/tutup Flyout Menu
+// Simpan fungsi asal untuk dipanggil kemudian
+const asal_tambahKalkulator = window.tambahKalkulator;
+
+// Pemintas (Interceptor) untuk navigasi Senarai Rekod
+window.tambahKalkulator = function(templateId) {
+    if (templateId === 'maklumatGaji') {
+        urusPertukaranMenu('REKOD', function() {
+            asal_tambahKalkulator(templateId);
+        });
+    } else {
+        asal_tambahKalkulator(templateId);
+    }
+};
+
 function toggleFlyout18A(e) {
     e.preventDefault();
     e.stopPropagation();
-    let flyout = document.getElementById('flyoutMenu18ACustom');
-    if (flyout) flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
+    urusPertukaranMenu('18A', function() {
+        let flyoutAkta = document.getElementById('flyoutMenuAktaKerja');
+        if (flyoutAkta) flyoutAkta.style.display = 'none';
+        let flyout = document.getElementById('flyoutMenu18ACustom');
+        if (flyout) flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
+    });
+}
+
+function toggleFlyoutAktaKerja(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    urusPertukaranMenu('AKTA', function() {
+        let flyout18A = document.getElementById('flyoutMenu18ACustom');
+        if (flyout18A) flyout18A.style.display = 'none';
+        let flyout = document.getElementById('flyoutMenuAktaKerja');
+        if (flyout) flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
+    });
 }
 
 // Tutup flyout jika klik di tempat lain
 document.addEventListener('click', function(e) {
-    let flyout = document.getElementById('flyoutMenu18ACustom');
-    if (flyout && flyout.style.display === 'block' && !e.target.closest('#flyoutMenu18ACustom') && !e.target.closest('button[onclick*="toggleFlyout18A"]')) {
-        flyout.style.display = 'none';
+    let flyout18A = document.getElementById('flyoutMenu18ACustom');
+    if (flyout18A && flyout18A.style.display === 'block' && !e.target.closest('#flyoutMenu18ACustom') && !e.target.closest('button[onclick*="toggleFlyout18A"]')) {
+        flyout18A.style.display = 'none';
+    }
+    let flyoutAkta = document.getElementById('flyoutMenuAktaKerja');
+    if (flyoutAkta && flyoutAkta.style.display === 'block' && !e.target.closest('#flyoutMenuAktaKerja') && !e.target.closest('button[onclick*="toggleFlyoutAktaKerja"]')) {
+        flyoutAkta.style.display = 'none';
     }
 });
 
 // Enjin Mengklon kalkulator dan tukar Mod Formula
 window.tambahKalkulator18ACustom = function(templateId) {
-    // Tutup flyout menu
     document.getElementById('flyoutMenu18ACustom').style.display = 'none';
-    
-    // Panggil fungsi asal untuk salin UI
-    window.tambahKalkulator(templateId);
-    
+    asal_tambahKalkulator(templateId);
     setTimeout(() => {
         let semuaKad = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
         let newCard = semuaKad[semuaKad.length - 1]; 
         if (!newCard) return;
 
-        // Ubah UI menjadi Merah untuk tandakan Mod 18A
         newCard.style.borderTop = "5px solid #d9534f";
         let h2 = newCard.querySelector('h2');
         if(h2) {
             h2.innerHTML = h2.innerHTML + ` <br><span style="font-size:12px; color:#d9534f; background:#ffe8e8; padding:3px 8px; border-radius:4px; display:inline-block; margin-top:5px;">Mod Seksyen 18A (Bahagi Hari Dalam Bulan)</span>`;
         }
 
-        // Tambah Input "Hari Dalam Bulan"
         let formGroups = newCard.querySelectorAll('.form-group');
         if (formGroups.length > 0) {
             let divHari = document.createElement('div');
@@ -2653,7 +2679,6 @@ window.tambahKalkulator18ACustom = function(templateId) {
             formGroups[0].parentNode.insertBefore(divHari, formGroups[0]);
         }
 
-        // Rampas butang 'Kira' dan letak formula bahagi 'hari semasa'
         let btnKira = newCard.querySelector('button[data-action-func*="calculate"], button[onclick*="calculate"]');
         if (btnKira) {
             let newBtnKira = btnKira.cloneNode(true);
@@ -2670,8 +2695,6 @@ window.tambahKalkulator18ACustom = function(templateId) {
                 try {
                     let hariBulanInput = newCard.querySelector('.hari-bulan-18a');
                     let hariBulan = hariBulanInput ? (Number(hariBulanInput.value) || 26) : 26; 
-
-                    // Panggil fungsi asal dengan menghantar hariBulan sebagai parameter kedua
                     if (templateId === 'orp') calculateORP(e, hariBulan);
                     else if (templateId === 'otBiasa') calculateOTBiasa(e, hariBulan);
                     else if (templateId === 'lewat') calculateLewat(e, hariBulan);
@@ -2682,7 +2705,6 @@ window.tambahKalkulator18ACustom = function(templateId) {
                     else if (templateId === 'kelepasan') calculatePH(e, hariBulan);
                     else if (templateId === 'cutiTahunan') calculateCutiTahunan(e, hariBulan);
                     else if (templateId === 'cutiSakit') calculateCutiSakit(e, hariBulan);
-                    
                 } finally {
                     activeCardContext = tempContext;
                 }
@@ -2690,26 +2712,218 @@ window.tambahKalkulator18ACustom = function(templateId) {
         }
     }, 50);
 };
+
 // =========================================================
-// ENJIN MENU FLYOUT AKTA KERJA (BAHAGIAN XII & XIIA) - ISOLATED
+// 10. ENJIN DRAF & KAWALAN PERTUKARAN MENU (NEW)
 // =========================================================
 
-// Fungsi khas untuk buka/tutup Flyout Menu Akta Kerja tanpa ganggu fungsi lain
-function toggleFlyoutAktaKerja(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    let flyout = document.getElementById('flyoutMenuAktaKerja');
-    if (flyout) {
-        flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
+// Semak mode aplikasi semasa
+function dapatkanModSemasa() {
+    let kadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card):not(#active-maklumatGaji)');
+    if (kadAktif.length === 0) {
+        let kadSembunyi = document.querySelectorAll('.sementara-sembunyi');
+        if(kadSembunyi.length > 0) {
+            let is18A = false;
+            kadSembunyi.forEach(k => { if(k.querySelector('.hari-bulan-18a')) is18A = true; });
+            return is18A ? '18A' : 'AKTA';
+        }
+        return 'NONE';
     }
+    let is18A = false;
+    kadAktif.forEach(k => { if(k.querySelector('.hari-bulan-18a')) is18A = true; });
+    return is18A ? '18A' : 'AKTA';
 }
 
-// Tutup flyout jika klik luar dari kawasan menu
-document.addEventListener('click', function(e) {
-    let flyout = document.getElementById('flyoutMenuAktaKerja');
-    if (flyout && flyout.style.display === 'block') {
-        if (!e.target.closest('#flyoutMenuAktaKerja') && !e.target.closest('button[onclick*="toggleFlyoutAktaKerja"]')) {
-            flyout.style.display = 'none';
+// Pintasan sekiranya user tukar mode sebelum memadam/menyimpan
+function urusPertukaranMenu(modDestinasi, fungsiCallback) {
+    let modSemasa = dapatkanModSemasa();
+    
+    // Jika tiada aktiviti atau destinasi adalah sama dengan aktiviti semasa
+    if (modSemasa === 'NONE' || modSemasa === modDestinasi) {
+        return fungsiCallback(); 
+    }
+
+    // Jika user dah ada dalam menu Rekod, biarkan
+    if (modDestinasi === 'REKOD' && document.getElementById('active-maklumatGaji')) {
+        return fungsiCallback();
+    }
+
+    let paparanMod = modSemasa === '18A' ? 'KALKULATOR SEKSYEN 18A' : 'KALKULATOR AKTA KERJA';
+    
+    let boxHtml = `
+    <div id="modalAmaranPertukaran" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px);">
+        <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; border-top: 6px solid #f39c12;">
+            <div style="font-size: 45px; margin-bottom: 10px; line-height: 1;">⚠️</div>
+            <h3 style="margin-top: 0; color: #1f4e79; font-size: 20px; font-weight: 800;">Simpan Draf Aktiviti?</h3>
+            <p style="font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 25px;">
+                Anda mempunyai aktiviti pengiraan di<br><b>${paparanMod}</b> yang belum disimpan.<br><br>Adakah anda ingin <b>Menyimpan</b> maklumat ini ke Senarai Rekod sebelum beralih ke menu lain?
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="btnSimpanDraf" style="background: #198754; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(25,135,84,0.2);">💾 Ya, Simpan ke Senarai Rekod</button>
+                <button id="btnHapusDraf" style="background: #dc3545; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(220,53,69,0.2);">🗑️ Tidak, Hapus Maklumat</button>
+                <button id="btnBatalTukar" style="background: #6c757d; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; margin-top: 5px;">Batal (Kekal di sini)</button>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', boxHtml);
+
+    document.getElementById('btnSimpanDraf').onclick = function() {
+        document.getElementById('modalAmaranPertukaran').remove();
+        simpanKeDrafDOM(modSemasa);
+        fungsiCallback();
+    };
+
+    document.getElementById('btnHapusDraf').onclick = function() {
+        document.getElementById('modalAmaranPertukaran').remove();
+        document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card):not(#active-maklumatGaji)').forEach(k => k.remove());
+        if(typeof resetRumusan === 'function') resetRumusan();
+        senaraiElaunGlobal = [];
+        let rc = document.querySelector('.rumusan-card'); if(rc) rc.style.display = 'none';
+        fungsiCallback();
+    };
+
+    document.getElementById('btnBatalTukar').onclick = function() {
+        document.getElementById('modalAmaranPertukaran').remove();
+    };
+}
+
+// Logik Ekstrak dan Simpan Draf DOM ke "Senarai Rekod"
+window.simpanKeDrafDOM = function(modSemasa) {
+    let drafContainer = document.getElementById('drafStorageContainer');
+    if(!drafContainer) {
+        drafContainer = document.createElement('div');
+        drafContainer.id = 'drafStorageContainer';
+        drafContainer.style.display = 'none';
+        document.body.appendChild(drafContainer);
+    }
+
+    let drafId = 'draf_' + Date.now();
+    let wrapper = document.createElement('div');
+    wrapper.id = 'wrapper_' + drafId;
+
+    let kadContainer = document.createElement('div');
+    kadContainer.className = 'draf-kad-container';
+    document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card):not(#active-maklumatGaji)').forEach(kad => {
+        kad.classList.remove('sementara-sembunyi');
+        kad.style.display = ''; 
+        kadContainer.appendChild(kad); 
+    });
+    wrapper.appendChild(kadContainer);
+
+    let rumusanContainer = document.createElement('tbody');
+    rumusanContainer.className = 'draf-rumusan-container';
+    document.querySelectorAll('#badanJadualRumusan tr').forEach(tr => {
+        rumusanContainer.appendChild(tr); 
+    });
+    wrapper.appendChild(rumusanContainer);
+
+    wrapper.setAttribute('data-elaun', JSON.stringify(typeof senaraiElaunGlobal !== 'undefined' ? senaraiElaunGlobal : []));
+    drafContainer.appendChild(wrapper);
+
+    if(typeof kiraJumlahKeseluruhanRumusan === 'function') kiraJumlahKeseluruhanRumusan();
+
+    let labelMode = modSemasa === '18A' ? 'Seksyen 18A' : 'Akta Kerja 1955';
+    let tarikh = new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    
+    let trHtml = `
+        <td style="padding: 15px; font-size: 13px; font-weight: bold; color: #d97706; vertical-align: middle;">
+            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+                <span style="background: #fef3c7; padding: 4px 8px; border-radius: 4px; border: 1px solid #fde68a;">⏳ DRAF PENGIRAAN</span>
+            </div>
+        </td>
+        <td style="padding: 15px; font-size: 13px; vertical-align: middle;"><strong style="color: #333;">${labelMode}</strong></td>
+        <td style="padding: 15px; font-size: 13px; vertical-align: middle;"><strong style="color: #666;">-</strong></td>
+        <td style="padding: 15px; text-align: center; font-size: 13px; color: #444; vertical-align: middle;">${tarikh}</td>
+        <td style="padding: 15px; text-align: center; vertical-align: middle;">
+            <button data-draf-id="${drafId}" onclick="bukaDraf(event)" style="background: #ffc107; color: #000; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📂 Sambung</button>
+            <button data-draf-id="${drafId}" onclick="hapusDraf(event)" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🗑️ Hapus</button>
+        </td>
+    `;
+
+    // Selit pada hidden template Maklumat Gaji agar kekal wujud jika Maklumat Gaji dibuka kemudian
+    let tbodyTemplate = document.querySelector('#card-maklumatGaji tbody');
+    if (tbodyTemplate) {
+        let trTemplate = document.createElement('tr');
+        trTemplate.style.borderBottom = "1px solid #eee";
+        trTemplate.setAttribute('data-draf', drafId);
+        trTemplate.innerHTML = trHtml;
+        let firstRow = tbodyTemplate.querySelector('tr');
+        if (firstRow && firstRow.innerHTML.includes('KBR/10103')) firstRow.remove();
+        tbodyTemplate.appendChild(trTemplate);
+    }
+
+    // Terus tunjukkan pada list yang aktif jika user bertukar ke Maklumat Gaji
+    let activeMg = document.getElementById('active-maklumatGaji');
+    if(activeMg) {
+        let activeTbody = activeMg.querySelector('tbody');
+        if(activeTbody) {
+            let trActive = document.createElement('tr');
+            trActive.style.borderBottom = "1px solid #eee";
+            trActive.setAttribute('data-draf', drafId);
+            trActive.innerHTML = trHtml;
+            let firstRowAct = activeTbody.querySelector('tr');
+            if (firstRowAct && firstRowAct.innerHTML.includes('KBR/10103')) firstRowAct.remove();
+            activeTbody.appendChild(trActive);
         }
     }
-});
+};
+
+// Logik untuk pulihkan Draf dan overwrite skrin sekarang
+window.bukaDraf = function(e) {
+    let btn = e.currentTarget;
+    let drafId = btn.getAttribute('data-draf-id');
+    let wrapper = document.getElementById('wrapper_' + drafId);
+    
+    if(!wrapper) {
+        alert("Maaf, draf tidak dijumpai.");
+        return;
+    }
+
+    document.querySelectorAll('.calculator-card:not(.hidden-template):not(#active-maklumatGaji):not(.rumusan-card)').forEach(k => k.remove());
+    document.getElementById('badanJadualRumusan').innerHTML = ''; 
+
+    let activeMg = document.getElementById('active-maklumatGaji');
+    if (activeMg) activeMg.remove();
+
+    let grid = document.getElementById('active-calculators-grid');
+    let rumusanCard = document.querySelector('.rumusan-card');
+    
+    let kadContainer = wrapper.querySelector('.draf-kad-container');
+    while(kadContainer.firstChild) {
+        if(rumusanCard) grid.insertBefore(kadContainer.firstChild, rumusanCard);
+        else grid.appendChild(kadContainer.firstChild);
+    }
+
+    let rumusanTbodyTarget = document.getElementById('badanJadualRumusan');
+    let rumusanContainer = wrapper.querySelector('.draf-rumusan-container');
+    while(rumusanContainer.firstChild) {
+        rumusanTbodyTarget.appendChild(rumusanContainer.firstChild);
+    }
+
+    try { senaraiElaunGlobal = JSON.parse(wrapper.getAttribute('data-elaun')); } catch(err) { senaraiElaunGlobal = []; }
+
+    wrapper.remove();
+    document.querySelectorAll(`tr[data-draf="${drafId}"]`).forEach(tr => tr.remove());
+
+    if(rumusanCard) rumusanCard.style.display = 'block';
+    let warningBox = document.querySelector('.warning-box');
+    if(warningBox) warningBox.style.display = 'block';
+    
+    if(typeof kiraJumlahKeseluruhanRumusan === 'function') kiraJumlahKeseluruhanRumusan();
+    setTimeout(() => { if (typeof window.semakDanTukarElaun === 'function') window.semakDanTukarElaun(); }, 50);
+    
+    alert("Draf telah berjaya disambung semula.");
+};
+
+// Logik untuk menghapuskan barisan draf di table dan simpanannya
+window.hapusDraf = function(e) {
+    let btn = e.currentTarget;
+    let drafId = btn.getAttribute('data-draf-id');
+    let sah = confirm("Adakah anda pasti mahu memadam draf ini?");
+    if(sah) {
+        let wrapper = document.getElementById('wrapper_' + drafId);
+        if(wrapper) wrapper.remove();
+        document.querySelectorAll(`tr[data-draf="${drafId}"]`).forEach(tr => tr.remove());
+    }
+};
