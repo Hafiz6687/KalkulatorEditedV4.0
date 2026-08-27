@@ -2695,7 +2695,9 @@ window.tambahKalkulator18ACustom = function(templateId) {
                 try {
                     let hariBulanInput = newCard.querySelector('.hari-bulan-18a');
                     let hariBulan = hariBulanInput ? (Number(hariBulanInput.value) || 26) : 26; 
+                    
                     if (templateId === 'orp') calculateORP(e, hariBulan);
+                    else if (templateId === 'baki') calculateBakiUpah(e); // DITAMBAH UNTUK MOD 18A
                     else if (templateId === 'otBiasa') calculateOTBiasa(e, hariBulan);
                     else if (templateId === 'lewat') calculateLewat(e, hariBulan);
                     else if (templateId === 'otRehat') calculateOTRH(e, hariBulan);
@@ -2705,6 +2707,7 @@ window.tambahKalkulator18ACustom = function(templateId) {
                     else if (templateId === 'kelepasan') calculatePH(e, hariBulan);
                     else if (templateId === 'cutiTahunan') calculateCutiTahunan(e, hariBulan);
                     else if (templateId === 'cutiSakit') calculateCutiSakit(e, hariBulan);
+                    else if (templateId === 'sec18A') calculate18ANew(e); // DITAMBAH UNTUK MOD 18A
                 } finally {
                     activeCardContext = tempContext;
                 }
@@ -2712,7 +2715,6 @@ window.tambahKalkulator18ACustom = function(templateId) {
         }
     }, 50);
 };
-
 // =========================================================
 // 10. ENJIN DRAF & KAWALAN PERTUKARAN MENU (NEW)
 // =========================================================
