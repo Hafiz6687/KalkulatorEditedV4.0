@@ -840,11 +840,72 @@ function semakKalkulatorTakLengkap() {
 }
 
 function janaLaporanPenuh() { 
-    let takLengkap = semakKalkulatorTakLengkap();
-    if (takLengkap) {
-        alert("Kalkulator (" + takLengkap + ") tidak lengkap. Sila lengkapkan atau padam kalkulator tersebut.");
+    // 1. SEMAKAN ADA DATA ATAU TIDAK
+    let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card):not(#active-maklumatGaji)');
+    let adaDataKira = false;
+
+    // Semak jika ada sekurang-kurangnya 1 kad yang telah dikira (Data Keputusan dipaparkan)
+    semuaKadAktif.forEach(kad => {
+        let dataDivs = kad.querySelectorAll('[id$="Data"], [data-original-id$="Data"], [id^="ggnRes"]:not(#ggnResPending)');
+        dataDivs.forEach(div => {
+            if (window.getComputedStyle(div).display !== 'none') {
+                adaDataKira = true;
+            }
+        });
+    });
+
+    // Semak juga jadual rumusan (jika pengguna masukkan data secara manual di situ)
+    let rumusanTbody = document.getElementById('badanJadualRumusan');
+    if (rumusanTbody && rumusanTbody.children.length > 0) {
+        adaDataKira = true;
+    }
+
+    if (!adaDataKira) {
+        // PAPARKAN AMARAN POP-UP JIKA TIADA DATA
+        let existingAmaran = document.getElementById('modalTiadaData');
+        if (existingAmaran) existingAmaran.remove();
+
+        let amaranTiadaDataHtml = `
+        <div id="modalTiadaData" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px);">
+            <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; border-top: 6px solid #f39c12; animation: floatUp 0.3s ease-out;">
+                <div style="font-size: 45px; margin-bottom: 10px; line-height: 1;">⚠️</div>
+                <h3 style="margin-top: 0; color: #1f4e79; font-size: 20px; font-weight: 800;">Tiada Rekod Pengiraan</h3>
+                <p style="font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 25px;">
+                    Sila pilih mana-mana kalkulator dan buat sekurang-kurangnya <b>satu pengiraan (Klik Kira)</b> sebelum menjana laporan.
+                </p>
+                <button onclick="document.getElementById('modalTiadaData').remove()" style="background: #1f4e79; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; transition: 0.2s; box-shadow: 0 4px 6px rgba(31,78,121,0.2);">OK, SAYA FAHAM</button>
+            </div>
+        </div>
+        <style>@keyframes floatUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }</style>
+        `;
+        document.body.insertAdjacentHTML('beforeend', amaranTiadaDataHtml);
         return;
     }
+
+    // 2. SEMAKAN KALKULATOR TAK LENGKAP
+    let takLengkap = semakKalkulatorTakLengkap();
+    if (takLengkap) {
+        // Guna Pop-up yang cantik (sama seperti fungsi Jana Penyata Gaji)
+        let existingTakLengkap = document.getElementById('modalTakLengkap');
+        if (existingTakLengkap) existingTakLengkap.remove();
+
+        let amaranTakLengkapHtml = `
+        <div id="modalTakLengkap" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px);">
+            <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; border-top: 6px solid #dc3545; animation: floatUp 0.3s ease-out;">
+                <div style="font-size: 45px; margin-bottom: 10px; line-height: 1;">⚠️</div>
+                <h3 style="margin-top: 0; color: #dc3545; font-size: 20px; font-weight: 800;">Tidak Lengkap</h3>
+                <p style="font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 25px;">
+                    Kalkulator <b>(${takLengkap})</b> tidak lengkap.<br>Sila lengkapkan pengiraan atau padam kalkulator tersebut terlebih dahulu.
+                </p>
+                <button onclick="document.getElementById('modalTakLengkap').remove()" style="background: #dc3545; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; transition: 0.2s; box-shadow: 0 4px 6px rgba(220,53,69,0.2);">OK, SAYA FAHAM</button>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', amaranTakLengkapHtml);
+        return;
+    }
+    
+    // 3. JIKA LULUS SEMUA SYARAT, BUKA MODAL MAKLUMAT PEKERJA
     paparModalLaporan('penuh'); 
 }
 
