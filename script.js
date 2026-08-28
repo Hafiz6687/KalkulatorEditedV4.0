@@ -851,7 +851,22 @@ function janaLaporanPenuh() {
 function janaPenyataGaji() { 
     let takLengkap = semakKalkulatorTakLengkap();
     if (takLengkap) {
-        alert("Kalkulator (" + takLengkap + ") tidak lengkap. Sila lengkapkan atau padam kalkulator tersebut.");
+        let existingTakLengkap = document.getElementById('modalTakLengkap');
+        if (existingTakLengkap) existingTakLengkap.remove();
+
+        let amaranTakLengkapHtml = `
+        <div id="modalTakLengkap" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px);">
+            <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; border-top: 6px solid #dc3545;">
+                <div style="font-size: 45px; margin-bottom: 10px; line-height: 1;">⚠️</div>
+                <h3 style="margin-top: 0; color: #dc3545; font-size: 20px; font-weight: 800;">Tidak Lengkap</h3>
+                <p style="font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 25px;">
+                    Kalkulator <b>(${takLengkap})</b> tidak lengkap.<br>Sila lengkapkan pengiraan atau padam kalkulator tersebut terlebih dahulu.
+                </p>
+                <button onclick="document.getElementById('modalTakLengkap').remove()" style="background: #dc3545; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; transition: 0.2s; box-shadow: 0 4px 6px rgba(220,53,69,0.2);">OK, SAYA FAHAM</button>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', amaranTakLengkapHtml);
         return;
     }
 
@@ -870,17 +885,51 @@ function janaPenyataGaji() {
     });
 
     if (!orpCardLengkap) {
-        alert("Peringatan: Sila lengkapkan Kalkulator Kadar Upah Biasa (ORP) terlebih dahulu untuk menjana Penyata Gaji.");
+        let existingModalORP = document.getElementById('modalAmaranORP');
+        if (existingModalORP) existingModalORP.remove();
+
+        let amaranORPHtml = `
+        <div id="modalAmaranORP" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px);">
+            <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; border-top: 6px solid #f39c12;">
+                <div style="font-size: 45px; margin-bottom: 10px; line-height: 1;">⚠️</div>
+                <h3 style="margin-top: 0; color: #1f4e79; font-size: 20px; font-weight: 800;">Peringatan</h3>
+                <p style="font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 25px;">
+                    Sila lengkapkan Kalkulator <b>Kadar Upah Biasa (ORP)</b> terlebih dahulu untuk menjana Penyata Gaji.
+                </p>
+                <button id="btnOKModalORP" style="background: #1f4e79; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; transition: 0.2s; box-shadow: 0 4px 6px rgba(31,78,121,0.2);">OK, SAYA FAHAM</button>
+            </div>
+        </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', amaranORPHtml);
+
         if (!orpCardWujud) {
+            window.tangguhTourElaunSeketika = true; // TAHAN TOUR DARI MUNCUL DAHULU
             if (typeof window.tambahKalkulator === 'function') {
                 window.tambahKalkulator('orp');
-                let cards = document.querySelectorAll('.calculator-card:not(.hidden-template)');
+                let cards = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
                 orpCardWujud = cards[cards.length - 1];
             }
-        } else {
-            orpCardWujud.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        } 
         
+        document.getElementById('btnOKModalORP').onclick = function() {
+            document.getElementById('modalAmaranORP').remove();
+            if (orpCardWujud) {
+                orpCardWujud.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // LEPASKAN TOUR SELEPAS PENGGUNA KLIK 'OK'
+                if (window.tangguhTourElaunSeketika) {
+                    window.tangguhTourElaunSeketika = false;
+                    if (!elaunTourDitunjuk) {
+                        elaunTourDitunjuk = true;
+                        let containerElaun = orpCardWujud.querySelector('.dynamic-allowance-wrapper');
+                        if (containerElaun) {
+                            setTimeout(() => tunjukTourElaun(containerElaun), 500);
+                        }
+                    }
+                }
+            }
+        };
+
         if (orpCardWujud) {
             let kiraBtn = orpCardWujud.querySelector('button[data-action-func*="calculateORP"]');
             if (!kiraBtn) kiraBtn = orpCardWujud.querySelector('button[onclick*="calculateORP"]');
@@ -900,6 +949,7 @@ function janaPenyataGaji() {
         }
         return;
     }
+    
     paparModalLaporan('penyata'); 
 }
 
@@ -2433,7 +2483,8 @@ function transformAllowanceField(allowInput) {
     
     if (senaraiElaunGlobal.length > 0) { updateGlobalElaunSum(container); }
 
-    if (!elaunTourDitunjuk) {
+    // SEMAKAN PENTING: Tahan Popup Tour jika diarahkan
+    if (!elaunTourDitunjuk && !window.tangguhTourElaunSeketika) {
         elaunTourDitunjuk = true;
         setTimeout(() => tunjukTourElaun(container), 400);
     }
@@ -2602,6 +2653,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function fungsiBaruRumusan(e) {
     if (e) e.preventDefault();
 }
+
 // =========================================================
 // 9. ENJIN KHAS SEKSYEN 18A & FLYOUT MENU
 // =========================================================
@@ -2620,14 +2672,41 @@ window.tambahKalkulator = function(templateId) {
     }
 };
 
+// TAMBAHAN BARU: Fungsi Pintar untuk elak Flyout terpotong
+function autoBetulkanPosisiFlyout(flyoutId) {
+    let flyout = document.getElementById(flyoutId);
+    if (!flyout) return;
+    
+    // Reset style ke asal untuk kiraan tepat
+    flyout.style.top = '0px';
+    flyout.style.bottom = 'auto';
+    
+    let rect = flyout.getBoundingClientRect();
+    let windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    
+    // Jika bahagian bawah flyout terkeluar / terpotong dari pandangan skrin
+    if (rect.bottom > windowHeight) {
+        let lebihan = rect.bottom - windowHeight;
+        // Tolak flyout ke atas berserta margin lega (+20px)
+        flyout.style.top = '-' + (lebihan + 20) + 'px';
+    }
+}
+
 function toggleFlyout18A(e) {
     e.preventDefault();
     e.stopPropagation();
     urusPertukaranMenu('18A', function() {
         let flyoutAkta = document.getElementById('flyoutMenuAktaKerja');
         if (flyoutAkta) flyoutAkta.style.display = 'none';
+        
         let flyout = document.getElementById('flyoutMenu18ACustom');
-        if (flyout) flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
+        if (flyout) {
+            flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
+            // Jalankan pelarasan auto selepas flyout dibuka
+            if (flyout.style.display === 'block') {
+                setTimeout(() => autoBetulkanPosisiFlyout('flyoutMenu18ACustom'), 10);
+            }
+        }
     });
 }
 
@@ -2637,8 +2716,15 @@ function toggleFlyoutAktaKerja(e) {
     urusPertukaranMenu('AKTA', function() {
         let flyout18A = document.getElementById('flyoutMenu18ACustom');
         if (flyout18A) flyout18A.style.display = 'none';
+        
         let flyout = document.getElementById('flyoutMenuAktaKerja');
-        if (flyout) flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
+        if (flyout) {
+            flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
+            // Jalankan pelarasan auto selepas flyout dibuka
+            if (flyout.style.display === 'block') {
+                setTimeout(() => autoBetulkanPosisiFlyout('flyoutMenuAktaKerja'), 10);
+            }
+        }
     });
 }
 
@@ -2697,7 +2783,7 @@ window.tambahKalkulator18ACustom = function(templateId) {
                     let hariBulan = hariBulanInput ? (Number(hariBulanInput.value) || 26) : 26; 
                     
                     if (templateId === 'orp') calculateORP(e, hariBulan);
-                    else if (templateId === 'baki') calculateBakiUpah(e); // DITAMBAH UNTUK MOD 18A
+                    else if (templateId === 'baki') calculateBakiUpah(e);
                     else if (templateId === 'otBiasa') calculateOTBiasa(e, hariBulan);
                     else if (templateId === 'lewat') calculateLewat(e, hariBulan);
                     else if (templateId === 'otRehat') calculateOTRH(e, hariBulan);
@@ -2707,7 +2793,7 @@ window.tambahKalkulator18ACustom = function(templateId) {
                     else if (templateId === 'kelepasan') calculatePH(e, hariBulan);
                     else if (templateId === 'cutiTahunan') calculateCutiTahunan(e, hariBulan);
                     else if (templateId === 'cutiSakit') calculateCutiSakit(e, hariBulan);
-                    else if (templateId === 'sec18A') calculate18ANew(e); // DITAMBAH UNTUK MOD 18A
+                    else if (templateId === 'sec18A') calculate18ANew(e);
                 } finally {
                     activeCardContext = tempContext;
                 }
@@ -2715,6 +2801,7 @@ window.tambahKalkulator18ACustom = function(templateId) {
         }
     }, 50);
 };
+
 // =========================================================
 // 10. ENJIN DRAF & KAWALAN PERTUKARAN MENU (NEW)
 // =========================================================
