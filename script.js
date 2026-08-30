@@ -839,12 +839,15 @@ function semakKalkulatorTakLengkap() {
     return null;
 }
 
+// =====================================================
+// 5. LAPORAN PENUH & PENYATA GAJI (PDF)
+// =====================================================
+
 function janaLaporanPenuh() { 
     // 1. SEMAKAN ADA DATA ATAU TIDAK
     let semuaKadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card):not(#active-maklumatGaji)');
     let adaDataKira = false;
 
-    // Semak jika ada sekurang-kurangnya 1 kad yang telah dikira (Data Keputusan dipaparkan)
     semuaKadAktif.forEach(kad => {
         let dataDivs = kad.querySelectorAll('[id$="Data"], [data-original-id$="Data"], [id^="ggnRes"]:not(#ggnResPending)');
         dataDivs.forEach(div => {
@@ -854,14 +857,12 @@ function janaLaporanPenuh() {
         });
     });
 
-    // Semak juga jadual rumusan (jika pengguna masukkan data secara manual di situ)
     let rumusanTbody = document.getElementById('badanJadualRumusan');
     if (rumusanTbody && rumusanTbody.children.length > 0) {
         adaDataKira = true;
     }
 
     if (!adaDataKira) {
-        // PAPARKAN AMARAN POP-UP JIKA TIADA DATA
         let existingAmaran = document.getElementById('modalTiadaData');
         if (existingAmaran) existingAmaran.remove();
 
@@ -876,7 +877,6 @@ function janaLaporanPenuh() {
                 <button onclick="document.getElementById('modalTiadaData').remove()" style="background: #1f4e79; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; transition: 0.2s; box-shadow: 0 4px 6px rgba(31,78,121,0.2);">OK, SAYA FAHAM</button>
             </div>
         </div>
-        <style>@keyframes floatUp { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }</style>
         `;
         document.body.insertAdjacentHTML('beforeend', amaranTiadaDataHtml);
         return;
@@ -885,7 +885,6 @@ function janaLaporanPenuh() {
     // 2. SEMAKAN KALKULATOR TAK LENGKAP
     let takLengkap = semakKalkulatorTakLengkap();
     if (takLengkap) {
-        // Guna Pop-up yang cantik (sama seperti fungsi Jana Penyata Gaji)
         let existingTakLengkap = document.getElementById('modalTakLengkap');
         if (existingTakLengkap) existingTakLengkap.remove();
 
@@ -964,7 +963,7 @@ function janaPenyataGaji() {
         document.body.insertAdjacentHTML('beforeend', amaranORPHtml);
 
         if (!orpCardWujud) {
-            window.tangguhTourElaunSeketika = true; // TAHAN TOUR DARI MUNCUL DAHULU
+            window.tangguhTourElaunSeketika = true; 
             if (typeof window.tambahKalkulator === 'function') {
                 window.tambahKalkulator('orp');
                 let cards = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
@@ -977,7 +976,6 @@ function janaPenyataGaji() {
             if (orpCardWujud) {
                 orpCardWujud.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 
-                // LEPASKAN TOUR SELEPAS PENGGUNA KLIK 'OK'
                 if (window.tangguhTourElaunSeketika) {
                     window.tangguhTourElaunSeketika = false;
                     if (!elaunTourDitunjuk) {
@@ -991,29 +989,12 @@ function janaPenyataGaji() {
             }
         };
 
-        if (orpCardWujud) {
-            let kiraBtn = orpCardWujud.querySelector('button[data-action-func*="calculateORP"]');
-            if (!kiraBtn) kiraBtn = orpCardWujud.querySelector('button[onclick*="calculateORP"]');
-            
-            if (kiraBtn) {
-                const autoPopup = function() {
-                    setTimeout(() => {
-                        let dataEl = orpCardWujud.querySelector('[id="orpData"], [data-original-id="orpData"]');
-                        if (dataEl && window.getComputedStyle(dataEl).display !== "none") {
-                            paparModalLaporan('penyata');
-                            kiraBtn.removeEventListener('click', autoPopup); 
-                        }
-                    }, 500);
-                };
-                kiraBtn.addEventListener('click', autoPopup);
-            }
-        }
+        // BAHAGIAN YANG DIBUANG: Auto-popup event listener pada kiraBtn telah dikeluarkan di sini
         return;
     }
     
     paparModalLaporan('penyata'); 
 }
-
 function tambahBarisElaunModal() {
     let div = document.createElement('div');
     div.style.cssText = "display: flex; gap: 10px; margin-bottom: 10px;";
@@ -2790,40 +2771,47 @@ function fungsiBaruRumusan(e) {
 // 9. ENJIN KHAS SEKSYEN 18A & FLYOUT MENU
 // =========================================================
 
-// Simpan fungsi asal untuk dipanggil kemudian
-const asal_tambahKalkulator = window.tambahKalkulator;
+// Simpan salinan fungsi asal tambahKalkulator
+if (!window.asal_tambahKalkulator) {
+    window.asal_tambahKalkulator = window.tambahKalkulator;
+}
 
-// Pemintas (Interceptor) untuk navigasi Senarai Rekod
+// Pemintas Navigasi Utama (Sidebar & Flyout)
 window.tambahKalkulator = function(templateId) {
     if (templateId === 'maklumatGaji') {
         urusPertukaranMenu('REKOD', function() {
-            asal_tambahKalkulator(templateId);
+            window.asal_tambahKalkulator(templateId);
         });
     } else {
-        asal_tambahKalkulator(templateId);
+        let modSemasa = dapatkanModSemasa();
+        if (modSemasa !== 'NONE') {
+            urusPertukaranMenu(modSemasa, function() {
+                window.asal_tambahKalkulator(templateId);
+            });
+        } else {
+            window.asal_tambahKalkulator(templateId);
+        }
     }
 };
 
-// TAMBAHAN BARU: Fungsi Pintar untuk elak Flyout terpotong
+// Fungsi Pelarasan Kedudukan Menu Flyout
 function autoBetulkanPosisiFlyout(flyoutId) {
     let flyout = document.getElementById(flyoutId);
     if (!flyout) return;
     
-    // Reset style ke asal untuk kiraan tepat
     flyout.style.top = '0px';
     flyout.style.bottom = 'auto';
     
     let rect = flyout.getBoundingClientRect();
     let windowHeight = window.innerHeight || document.documentElement.clientHeight;
     
-    // Jika bahagian bawah flyout terkeluar / terpotong dari pandangan skrin
     if (rect.bottom > windowHeight) {
         let lebihan = rect.bottom - windowHeight;
-        // Tolak flyout ke atas berserta margin lega (+20px)
         flyout.style.top = '-' + (lebihan + 20) + 'px';
     }
 }
 
+// Kawalan Butang Seksyen 18A
 function toggleFlyout18A(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -2834,7 +2822,6 @@ function toggleFlyout18A(e) {
         let flyout = document.getElementById('flyoutMenu18ACustom');
         if (flyout) {
             flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
-            // Jalankan pelarasan auto selepas flyout dibuka
             if (flyout.style.display === 'block') {
                 setTimeout(() => autoBetulkanPosisiFlyout('flyoutMenu18ACustom'), 10);
             }
@@ -2842,6 +2829,7 @@ function toggleFlyout18A(e) {
     });
 }
 
+// Kawalan Butang Akta Kerja
 function toggleFlyoutAktaKerja(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -2852,7 +2840,6 @@ function toggleFlyoutAktaKerja(e) {
         let flyout = document.getElementById('flyoutMenuAktaKerja');
         if (flyout) {
             flyout.style.display = flyout.style.display === 'none' ? 'block' : 'none';
-            // Jalankan pelarasan auto selepas flyout dibuka
             if (flyout.style.display === 'block') {
                 setTimeout(() => autoBetulkanPosisiFlyout('flyoutMenuAktaKerja'), 10);
             }
@@ -2860,7 +2847,7 @@ function toggleFlyoutAktaKerja(e) {
     });
 }
 
-// Tutup flyout jika klik di tempat lain
+// Tutup Flyout Jika Klik Di Luar
 document.addEventListener('click', function(e) {
     let flyout18A = document.getElementById('flyoutMenu18ACustom');
     if (flyout18A && flyout18A.style.display === 'block' && !e.target.closest('#flyoutMenu18ACustom') && !e.target.closest('button[onclick*="toggleFlyout18A"]')) {
@@ -2872,10 +2859,10 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Enjin Mengklon kalkulator dan tukar Mod Formula
+// Mengklon Kalkulator Untuk Mod Seksyen 18A
 window.tambahKalkulator18ACustom = function(templateId) {
     document.getElementById('flyoutMenu18ACustom').style.display = 'none';
-    asal_tambahKalkulator(templateId);
+    window.asal_tambahKalkulator(templateId);
     setTimeout(() => {
         let semuaKad = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
         let newCard = semuaKad[semuaKad.length - 1]; 
@@ -2935,10 +2922,10 @@ window.tambahKalkulator18ACustom = function(templateId) {
 };
 
 // =========================================================
-// 10. ENJIN DRAF & KAWALAN PERTUKARAN MENU (NEW)
+// 10. ENJIN DRAF & KAWALAN PERTUKARAN MENU
 // =========================================================
 
-// Semak mode aplikasi semasa
+// Semak Mod Semasa Aplikasi
 function dapatkanModSemasa() {
     let kadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card):not(#active-maklumatGaji)');
     if (kadAktif.length === 0) {
@@ -2955,46 +2942,58 @@ function dapatkanModSemasa() {
     return is18A ? '18A' : 'AKTA';
 }
 
-// Pintasan sekiranya user tukar mode sebelum memadam/menyimpan
+// Pintasan Amaran Pertukaran Mod / Navigasi Sidebar
 function urusPertukaranMenu(modDestinasi, fungsiCallback) {
     let modSemasa = dapatkanModSemasa();
     
-    // Jika tiada aktiviti atau destinasi adalah sama dengan aktiviti semasa
+    // Jika tiada aktiviti pengiraan, teruskan navigasi
     if (modSemasa === 'NONE' || modSemasa === modDestinasi) {
         return fungsiCallback(); 
     }
 
-    // Jika user dah ada dalam menu Rekod, biarkan
+    // Jika user sudah berada dalam menu Rekod
     if (modDestinasi === 'REKOD' && document.getElementById('active-maklumatGaji')) {
         return fungsiCallback();
     }
 
     let paparanMod = modSemasa === '18A' ? 'KALKULATOR SEKSYEN 18A' : 'KALKULATOR AKTA KERJA';
     
+    let existingModal = document.getElementById('modalAmaranPertukaran');
+    if (existingModal) existingModal.remove();
+
     let boxHtml = `
-    <div id="modalAmaranPertukaran" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px);">
-        <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; border-top: 6px solid #f39c12;">
+    <div id="modalAmaranPertukaran" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px);">
+        <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; border-top: 6px solid #f39c12; box-sizing: border-box;">
             <div style="font-size: 45px; margin-bottom: 10px; line-height: 1;">⚠️</div>
-            <h3 style="margin-top: 0; color: #1f4e79; font-size: 20px; font-weight: 800;">Simpan Draf Aktiviti?</h3>
+            <h3 style="margin-top: 0; color: #1f4e79; font-size: 20px; font-weight: 800;">Aktiviti Pengiraan Dikesan</h3>
             <p style="font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 25px;">
-                Anda mempunyai aktiviti pengiraan di<br><b>${paparanMod}</b> yang belum disimpan.<br><br>Adakah anda ingin <b>Menyimpan</b> maklumat ini ke Senarai Rekod sebelum beralih ke menu lain?
+                Anda mempunyai aktiviti pengiraan di<br><b>${paparanMod}</b>.<br><br>Sila pilih tindakan anda sebelum beralih:
             </p>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button id="btnSimpanDraf" style="background: #198754; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(25,135,84,0.2);">💾 Ya, Simpan ke Senarai Rekod</button>
-                <button id="btnHapusDraf" style="background: #dc3545; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(220,53,69,0.2);">🗑️ Tidak, Hapus Maklumat</button>
-                <button id="btnBatalTukar" style="background: #6c757d; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; margin-top: 5px;">Batal (Kekal di sini)</button>
+                <button id="btnSimpanDraf" style="background: #198754; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(25,135,84,0.2);">💾 Simpan (Ke Senarai Rekod)</button>
+                <button id="btnBatalTukar" style="background: #6c757d; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s;">🛑 Batal (Kekal Di Paparan Sekarang)</button>
+                <button id="btnHapusDraf" style="background: #dc3545; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(220,53,69,0.2);">🗑️ Hapus (Padam Aktiviti)</button>
             </div>
         </div>
     </div>
     `;
     document.body.insertAdjacentHTML('beforeend', boxHtml);
 
+    // 1. SIMPAN: Simpan aktiviti semasa ke draf dan bawa pengguna ke SENARAI REKOD
     document.getElementById('btnSimpanDraf').onclick = function() {
         document.getElementById('modalAmaranPertukaran').remove();
         simpanKeDrafDOM(modSemasa);
-        fungsiCallback();
+        if (typeof window.asal_tambahKalkulator === 'function') {
+            window.asal_tambahKalkulator('maklumatGaji');
+        }
     };
 
+    // 2. BATAL: Tutup pop-up amaran dan KEKAL di paparan kalkulator semasa
+    document.getElementById('btnBatalTukar').onclick = function() {
+        document.getElementById('modalAmaranPertukaran').remove();
+    };
+
+    // 3. HAPUS: Padam aktiviti semasa dan teruskan membuka menu/kalkulator pilihan
     document.getElementById('btnHapusDraf').onclick = function() {
         document.getElementById('modalAmaranPertukaran').remove();
         document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card):not(#active-maklumatGaji)').forEach(k => k.remove());
@@ -3002,10 +3001,6 @@ function urusPertukaranMenu(modDestinasi, fungsiCallback) {
         senaraiElaunGlobal = [];
         let rc = document.querySelector('.rumusan-card'); if(rc) rc.style.display = 'none';
         fungsiCallback();
-    };
-
-    document.getElementById('btnBatalTukar').onclick = function() {
-        document.getElementById('modalAmaranPertukaran').remove();
     };
 }
 
@@ -3062,7 +3057,6 @@ window.simpanKeDrafDOM = function(modSemasa) {
         </td>
     `;
 
-    // Selit pada hidden template Maklumat Gaji agar kekal wujud jika Maklumat Gaji dibuka kemudian
     let tbodyTemplate = document.querySelector('#card-maklumatGaji tbody');
     if (tbodyTemplate) {
         let trTemplate = document.createElement('tr');
@@ -3074,7 +3068,6 @@ window.simpanKeDrafDOM = function(modSemasa) {
         tbodyTemplate.appendChild(trTemplate);
     }
 
-    // Terus tunjukkan pada list yang aktif jika user bertukar ke Maklumat Gaji
     let activeMg = document.getElementById('active-maklumatGaji');
     if(activeMg) {
         let activeTbody = activeMg.querySelector('tbody');
@@ -3090,7 +3083,7 @@ window.simpanKeDrafDOM = function(modSemasa) {
     }
 };
 
-// Logik untuk pulihkan Draf dan overwrite skrin sekarang
+// Logik Buka Draf
 window.bukaDraf = function(e) {
     let btn = e.currentTarget;
     let drafId = btn.getAttribute('data-draf-id');
@@ -3101,43 +3094,68 @@ window.bukaDraf = function(e) {
         return;
     }
 
-    document.querySelectorAll('.calculator-card:not(.hidden-template):not(#active-maklumatGaji):not(.rumusan-card)').forEach(k => k.remove());
-    document.getElementById('badanJadualRumusan').innerHTML = ''; 
-
+    // 1. Padamkan sebarang kad aktif/panel Senarai Rekod yang sedang terbuka
+    document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)').forEach(k => k.remove());
     let activeMg = document.getElementById('active-maklumatGaji');
     if (activeMg) activeMg.remove();
+
+    // 2. Kosongkan jadual rumusan semasa
+    let rumusanTbodyTarget = document.getElementById('badanJadualRumusan');
+    if (rumusanTbodyTarget) rumusanTbodyTarget.innerHTML = ''; 
 
     let grid = document.getElementById('active-calculators-grid');
     let rumusanCard = document.querySelector('.rumusan-card');
     
+    // 3. Kembalikan kad-kad kalkulator asal dari draf ke grid utama
     let kadContainer = wrapper.querySelector('.draf-kad-container');
-    while(kadContainer.firstChild) {
-        if(rumusanCard) grid.insertBefore(kadContainer.firstChild, rumusanCard);
-        else grid.appendChild(kadContainer.firstChild);
+    if (kadContainer) {
+        while(kadContainer.firstChild) {
+            let kad = kadContainer.firstChild;
+            kad.style.display = '';
+            kad.classList.remove('sementara-sembunyi');
+            if(rumusanCard) grid.insertBefore(kad, rumusanCard);
+            else grid.appendChild(kad);
+        }
     }
 
-    let rumusanTbodyTarget = document.getElementById('badanJadualRumusan');
+    // 4. Kembalikan data baris jadual rumusan
     let rumusanContainer = wrapper.querySelector('.draf-rumusan-container');
-    while(rumusanContainer.firstChild) {
-        rumusanTbodyTarget.appendChild(rumusanContainer.firstChild);
+    if (rumusanContainer && rumusanTbodyTarget) {
+        while(rumusanContainer.firstChild) {
+            rumusanTbodyTarget.appendChild(rumusanContainer.firstChild);
+        }
     }
 
-    try { senaraiElaunGlobal = JSON.parse(wrapper.getAttribute('data-elaun')); } catch(err) { senaraiElaunGlobal = []; }
+    // 5. Pulihkan senarai elaun global
+    try { 
+        senaraiElaunGlobal = JSON.parse(wrapper.getAttribute('data-elaun')) || []; 
+    } catch(err) { 
+        senaraiElaunGlobal = []; 
+    }
 
+    // 6. Hapus bekas simpanan draf & baris rekod draf dari Jadual Rekod
     wrapper.remove();
     document.querySelectorAll(`tr[data-draf="${drafId}"]`).forEach(tr => tr.remove());
 
+    // 7. Paparkan semula Kad Rumusan dan Kotak Amaran
     if(rumusanCard) rumusanCard.style.display = 'block';
     let warningBox = document.querySelector('.warning-box');
     if(warningBox) warningBox.style.display = 'block';
     
+    // 8. Kemaskini semula pengiraan rumusan & pelarasan elaun dinamik
     if(typeof kiraJumlahKeseluruhanRumusan === 'function') kiraJumlahKeseluruhanRumusan();
-    setTimeout(() => { if (typeof window.semakDanTukarElaun === 'function') window.semakDanTukarElaun(); }, 50);
-    
-    alert("Draf telah berjaya disambung semula.");
+    setTimeout(() => { 
+        if (typeof window.semakDanTukarElaun === 'function') window.semakDanTukarElaun(); 
+    }, 50);
+
+    // 9. Skrol secara lancar ke kalkulator pertama yang disambung
+    let kadTelahDipulih = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
+    if (kadTelahDipulih.length > 0) {
+        kadTelahDipulih[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 };
 
-// Logik untuk menghapuskan barisan draf di table dan simpanannya
+// Logik Hapus Draf
 window.hapusDraf = function(e) {
     let btn = e.currentTarget;
     let drafId = btn.getAttribute('data-draf-id');
@@ -3148,3 +3166,15 @@ window.hapusDraf = function(e) {
         document.querySelectorAll(`tr[data-draf="${drafId}"]`).forEach(tr => tr.remove());
     }
 };
+// =====================================================
+// PEMBERSIHAN DUMMY AUTOMATIK PADA INITIALIZATION
+// =====================================================
+document.addEventListener("DOMContentLoaded", function() {
+    let tbody = document.querySelector('#card-maklumatGaji tbody');
+    if (tbody) {
+        let firstRow = tbody.querySelector('tr');
+        if (firstRow && firstRow.innerHTML.includes('KBR/10103')) {
+            firstRow.remove();
+        }
+    }
+});
