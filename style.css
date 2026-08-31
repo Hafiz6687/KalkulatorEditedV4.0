@@ -244,6 +244,23 @@ grid-auto-flow: dense; /* Tambah kod ini */
     box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2); 
 }
 
+/* Butang Simpan Draf (Emerald Green) */
+.simpan-draf-baru {
+    bottom: 85px; /* Diletakkan 85px dari bawah supaya ia terapung di atas butang Reset Semua */
+    right: 30px;
+    background: #10b981; 
+    color: white; 
+    padding: 12px 25px; 
+    font-size: 15px; 
+    border-radius: 30px; 
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    border: 1.5px solid #059669;
+}
+.simpan-draf-baru:hover {
+    background: #059669; 
+    transform: translateY(-3px); 
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
 /* --- 9. TABLE SEKSYEN 18A & RUMUSAN --- */
 .section18a-header { display: flex; background: #1e293b; color: white; font-weight: bold; padding: 12px; border-radius: 6px 6px 0 0; }
 .section18a-row { display: flex; background: white; border-bottom: 1px solid #e2e8f0; padding: 12px; }
@@ -266,7 +283,7 @@ grid-auto-flow: dense; /* Tambah kod ini */
     .main-content { overflow-y: visible; padding: 15px; }
     body { overflow: auto; }
     .calculator-card { flex: 1 1 100%; max-width: 100%; padding: 20px; }
-    .btn-floating.log-keluar, .btn-floating.reset-semua-baru { position: absolute; }
+    .btn-floating.log-keluar, .btn-floating.reset-semua-baru, .btn-floating.simpan-draf-baru { position: absolute; }
 }
 
 /* Memastikan cetakan PDF kekal kemas */
