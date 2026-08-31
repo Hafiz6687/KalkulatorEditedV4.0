@@ -1096,7 +1096,25 @@ function paparModalLaporan(jenis) {
     
     if(existingModal) {
         let isPenyata = existingModal.querySelector('#inputTempohUpah') !== null;
+        
+        // PENAMBAHBAIKAN: Ekstrak maklumat ke memori global sebelum popup dibuang atau dipapar semula
+        let getOldVal = (id) => existingModal.querySelector('#'+id) ? existingModal.querySelector('#'+id).value : '';
+        if (existingModal.querySelector('#inputNamaMajikan')) window.globalNamaMajikan = getOldVal('inputNamaMajikan');
+        if (existingModal.querySelector('#inputNoDaftarMajikan')) window.globalNoDaftarMajikan = getOldVal('inputNoDaftarMajikan');
+        if (existingModal.querySelector('#inputTempohUpah')) window.globalTempohUpah = getOldVal('inputTempohUpah');
+        if (existingModal.querySelector('#inputNamaLaporan')) window.globalNamaPekerja = getOldVal('inputNamaLaporan');
+        if (existingModal.querySelector('#inputICLaporan')) window.globalIcPekerja = getOldVal('inputICLaporan');
+        if (existingModal.querySelector('#inputNoPekerjaLaporan')) window.globalNoPekerja = getOldVal('inputNoPekerjaLaporan');
+
         if ((jenis === 'penyata' && isPenyata) || (jenis === 'penuh' && !isPenyata)) {
+            // Kemaskini input dengan nilai global semasa popup digunakan semula
+            if(existingModal.querySelector('#inputNamaMajikan') && window.globalNamaMajikan) existingModal.querySelector('#inputNamaMajikan').value = window.globalNamaMajikan;
+            if(existingModal.querySelector('#inputNoDaftarMajikan') && window.globalNoDaftarMajikan) existingModal.querySelector('#inputNoDaftarMajikan').value = window.globalNoDaftarMajikan;
+            if(existingModal.querySelector('#inputTempohUpah') && window.globalTempohUpah) existingModal.querySelector('#inputTempohUpah').value = window.globalTempohUpah;
+            if(existingModal.querySelector('#inputNamaLaporan') && window.globalNamaPekerja) existingModal.querySelector('#inputNamaLaporan').value = window.globalNamaPekerja;
+            if(existingModal.querySelector('#inputICLaporan') && window.globalIcPekerja) existingModal.querySelector('#inputICLaporan').value = window.globalIcPekerja;
+            if(existingModal.querySelector('#inputNoPekerjaLaporan') && window.globalNoPekerja) existingModal.querySelector('#inputNoPekerjaLaporan').value = window.globalNoPekerja;
+
             existingModal.style.display = 'flex';
             if (jenis === 'penyata') {
                 autoKiraPotonganBerkanun();
@@ -1108,6 +1126,14 @@ function paparModalLaporan(jenis) {
             existingModal.remove(); 
         }
     }
+    
+    // Tarik data dari memori global untuk dipaparkan secara automatik
+    let vNamaMajikan = window.globalNamaMajikan || "";
+    let vNoDaftar = window.globalNoDaftarMajikan || "";
+    let vTempoh = window.globalTempohUpah || "";
+    let vNamaPekerja = window.globalNamaPekerja || "";
+    let vIc = window.globalIcPekerja || "";
+    let vNoPekerja = window.globalNoPekerja || "";
     
     if (jenis === 'penyata') {
         
@@ -1213,15 +1239,15 @@ function paparModalLaporan(jenis) {
                         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Majikan / Syarikat</h3>
                         <div style="margin-bottom: 15px; margin-top: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Majikan/Syarikat/Organisasi:</label>
-                            <input type="text" id="inputNamaMajikan" placeholder="Contoh: SYARIKAT ABC SDN BHD" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
+                            <input type="text" id="inputNamaMajikan" placeholder="Contoh: SYARIKAT ABC SDN BHD" value="${vNamaMajikan}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Pendaftaran:</label>
-                            <input type="text" id="inputNoDaftarMajikan" placeholder="Contoh: 202301234567" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
+                            <input type="text" id="inputNoDaftarMajikan" placeholder="Contoh: 202301234567" value="${vNoDaftar}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                         </div>
                         <div style="margin-bottom: 25px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Tempoh Upah:</label>
-                            <input type="text" id="inputTempohUpah" placeholder="Contoh: Mei 2026 / 1 Mei - 31 Mei 2026" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
+                            <input type="text" id="inputTempohUpah" placeholder="Contoh: Mei 2026 / 1 Mei - 31 Mei 2026" value="${vTempoh}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
                         </div>
 
                         <div id="tourTargetElaunPopup" style="border-radius: 6px; position: relative;">
@@ -1289,15 +1315,15 @@ function paparModalLaporan(jenis) {
                         <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pekerja</h3>
                         <div style="margin-bottom: 15px; margin-top: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Pekerja:</label>
-                            <input type="text" id="inputNamaLaporan" placeholder="Contoh: Ahmad Bin Abu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
+                            <input type="text" id="inputNamaLaporan" placeholder="Contoh: Ahmad Bin Abu" value="${vNamaPekerja}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
                         </div>
                         <div style="margin-bottom: 15px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Kad Pengenalan / No. Passport:</label>
-                            <input type="text" id="inputICLaporan" placeholder="Contoh: 900101-01-1234 atau A1234567" maxlength="14" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
+                            <input type="text" id="inputICLaporan" placeholder="Contoh: 900101-01-1234 atau A1234567" maxlength="14" value="${vIc}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
                         </div>
                         <div style="margin-bottom: 25px;">
                             <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Pekerja:</label>
-                            <input type="text" id="inputNoPekerjaLaporan" placeholder="Contoh: EMP001" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
+                            <input type="text" id="inputNoPekerjaLaporan" placeholder="Contoh: EMP001" value="${vNoPekerja}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                         </div>
 
                         <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Potongan</h3>
@@ -1337,7 +1363,6 @@ function paparModalLaporan(jenis) {
                             ${potonganModalHtml}
                         </div>
 
-                        <!-- TAMBAHAN BARU: Rekod Cuti Bulan Semasa -->
                         <h3 style="margin-top: 25px; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Rekod Cuti Bulan Semasa</h3>
                         <p style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 15px; background: #e8f0fe; padding: 8px; border-radius: 4px;">Cuti yang dimasukkan di sini akan ditambah secara automatik ke ruangan 'Guna' di Jadual Maklumat Perkhidmatan.</p>
                         
@@ -1379,7 +1404,6 @@ function paparModalLaporan(jenis) {
         setTimeout(() => tunjukTourElaunPopup(), 400);
         
     } else {
-        // [Kod Laporan Penuh di sini kekal sama - abaikan ubah yang tidak berkaitan]
         let modalHtml = `
         <div id="modalLaporanPenuh" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px);">
             <div style="background: white; padding: 25px 30px; border-radius: 10px; width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; border-top: 5px solid #1f4e79;">
@@ -1387,15 +1411,15 @@ function paparModalLaporan(jenis) {
                 <h3 style="margin-top: 0; color: #1f4e79; border-bottom: 1px dashed #ccc; padding-bottom: 10px; font-size: 16px;">Maklumat Pekerja & Syarikat</h3>
                 <div style="margin-bottom: 15px; margin-top: 15px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Pekerja:</label>
-                    <input type="text" id="inputNamaLaporan" placeholder="Contoh: Ahmad Bin Abu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
+                    <input type="text" id="inputNamaLaporan" placeholder="Contoh: Ahmad Bin Abu" value="${vNamaPekerja}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatTitleCase(this.value)">
                 </div>
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">No. Kad Pengenalan / No. Passport:</label>
-                    <input type="text" id="inputICLaporan" placeholder="Contoh: 900101-01-1234 atau A1234567" maxlength="14" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
+                    <input type="text" id="inputICLaporan" placeholder="Contoh: 900101-01-1234 atau A1234567" maxlength="14" value="${vIc}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = formatIC(this.value)">
                 </div>
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #333;">Nama Majikan/Syarikat/Organisasi:</label>
-                    <input type="text" id="inputNamaMajikan" placeholder="Contoh: SYARIKAT ABC SDN BHD" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
+                    <input type="text" id="inputNamaMajikan" placeholder="Contoh: SYARIKAT ABC SDN BHD" value="${vNamaMajikan}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px;" oninput="this.value = this.value.toUpperCase()">
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
                     <button onclick="document.getElementById('modalLaporanPenuh').style.display='none'" style="background: #6c757d; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px;">Batal</button>
@@ -1408,13 +1432,22 @@ function paparModalLaporan(jenis) {
 }
 
 function teruskanJanaLaporan(jenis) {
+    let getV = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : "";
+    
+    // PENAMBAHBAIKAN: Simpan ke memori global setiap kali cetakan dijana
+    window.globalNamaMajikan = getV('inputNamaMajikan');
+    window.globalNoDaftarMajikan = getV('inputNoDaftarMajikan');
+    window.globalTempohUpah = getV('inputTempohUpah');
+    window.globalNamaPekerja = getV('inputNamaLaporan');
+    window.globalIcPekerja = getV('inputICLaporan');
+    window.globalNoPekerja = getV('inputNoPekerjaLaporan');
+
     let noDaftarMajikan = ""; let tempohUpah = "";
     let kwspP="", kwspN="", perkesoP="", perkesoN="", sipP="", sipN="", pendahuluanN="", absentH="", absentN=""; 
     let senaraiElaun = []; let senaraiPotongan = [];
     let svcData = {};
 
-    let getV = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : "";
-    let namaMajikan = getV('inputNamaMajikan');
+    let namaMajikan = window.globalNamaMajikan;
 
     if (jenis === 'penyata') {
         
@@ -1433,15 +1466,15 @@ function teruskanJanaLaporan(jenis) {
             return; // Hentikan janaan
         }
 
-        noDaftarMajikan = getV('inputNoDaftarMajikan');
-        tempohUpah = getV('inputTempohUpah');
+        noDaftarMajikan = window.globalNoDaftarMajikan;
+        tempohUpah = window.globalTempohUpah;
         kwspP = getV('inputKWSPPeratus'); kwspN = getV('inputKWSPNilai');
         perkesoP = getV('inputPERKESOPeratus'); perkesoN = getV('inputPERKESONilai');
         sipP = getV('inputSIPPeratus'); sipN = getV('inputSIPNilai');
         pendahuluanN = getV('inputPendahuluanNilai');
         absentH = getV('inputAbsentHari'); absentN = getV('inputAbsentNilai');
 
-svcData = {
+        svcData = {
             phL: getV('modPHLayak'), phG: getV('modPHGuna'), phB: getV('modPHBaki'), phS: getV('inputPHSemasa'),
             alL: getV('modALLayak'), alG: getV('modALGuna'), alB: getV('modALBaki'), alS: getV('inputALSemasa'),
             mcL: getV('modMCLayak'), mcG: getV('modMCGuna'), mcB: getV('modMCBaki'), mcS: getV('inputMCSemasa'),
@@ -1471,9 +1504,9 @@ svcData = {
         });
     }
 
-let namaPekerja = getV('inputNamaLaporan');
-    let icPekerja = getV('inputICLaporan');
-    let noPekerja = getV('inputNoPekerjaLaporan');
+    let namaPekerja = window.globalNamaPekerja;
+    let icPekerja = window.globalIcPekerja;
+    let noPekerja = window.globalNoPekerja;
 
     // JANA ID UNIK UNTUK REKOD INI
     let unikId = 'rekod_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -1483,11 +1516,12 @@ let namaPekerja = getV('inputNamaLaporan');
     // KEKALKAN DATA MODAL (Hanya hide, jangan remove)
     document.getElementById('modalLaporanPenuh').style.display = 'none'; 
     
-// TAMBAH unikId DI HUJUNG PARAMETER
+    // TAMBAH unikId DI HUJUNG PARAMETER
     prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenis, { 
         senaraiElaun, senaraiPotongan, kwspP, kwspN, perkesoP, perkesoN, sipP, sipN, pendahuluanN, absentH, absentN, svcData 
     }, unikId);
 }
+
 window.simpananHTMLGlobal = window.simpananHTMLGlobal || {};
 
 window.bukaRekodSimpanan = function(e) {
