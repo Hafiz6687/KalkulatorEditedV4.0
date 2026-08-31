@@ -2961,6 +2961,7 @@ function urusPertukaranMenu(modDestinasi, fungsiCallback) {
     let existingModal = document.getElementById('modalAmaranPertukaran');
     if (existingModal) existingModal.remove();
 
+    // HTML Pop-up Dikemaskini (Buang butang Simpan & Ikon Batal/Hapus)
     let boxHtml = `
     <div id="modalAmaranPertukaran" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px);">
         <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; border-top: 6px solid #f39c12; box-sizing: border-box;">
@@ -2970,30 +2971,22 @@ function urusPertukaranMenu(modDestinasi, fungsiCallback) {
                 Anda mempunyai aktiviti pengiraan di<br><b>${paparanMod}</b>.<br><br>Sila pilih tindakan anda sebelum beralih:
             </p>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button id="btnSimpanDraf" style="background: #198754; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(25,135,84,0.2);">💾 Simpan (Ke Senarai Rekod)</button>
-                <button id="btnBatalTukar" style="background: #6c757d; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s;">🛑 Batal (Kekal Di Paparan Sekarang)</button>
-                <button id="btnHapusDraf" style="background: #dc3545; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(220,53,69,0.2);">🗑️ Hapus (Padam Aktiviti)</button>
+                <button id="btnBatalTukar" style="background: #6c757d; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s;">Batal (Kekal Di Paparan Sekarang)</button>
+                <button id="btnHapusDraf" style="background: #dc3545; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(220,53,69,0.2);">Hapus (Padam Aktiviti)</button>
             </div>
         </div>
     </div>
     `;
     document.body.insertAdjacentHTML('beforeend', boxHtml);
 
-    // 1. SIMPAN: Simpan aktiviti semasa ke draf dan bawa pengguna ke SENARAI REKOD
-    document.getElementById('btnSimpanDraf').onclick = function() {
-        document.getElementById('modalAmaranPertukaran').remove();
-        simpanKeDrafDOM(modSemasa);
-        if (typeof window.asal_tambahKalkulator === 'function') {
-            window.asal_tambahKalkulator('maklumatGaji');
-        }
-    };
+    // KOD LOGIK SIMPAN TELAH DIBUANG
 
-    // 2. BATAL: Tutup pop-up amaran dan KEKAL di paparan kalkulator semasa
+    // 1. BATAL: Tutup pop-up amaran dan KEKAL di paparan kalkulator semasa
     document.getElementById('btnBatalTukar').onclick = function() {
         document.getElementById('modalAmaranPertukaran').remove();
     };
 
-    // 3. HAPUS: Padam aktiviti semasa dan teruskan membuka menu/kalkulator pilihan
+    // 2. HAPUS: Padam aktiviti semasa dan teruskan membuka menu/kalkulator pilihan
     document.getElementById('btnHapusDraf').onclick = function() {
         document.getElementById('modalAmaranPertukaran').remove();
         document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card):not(#active-maklumatGaji)').forEach(k => k.remove());
