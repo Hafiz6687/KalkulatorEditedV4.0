@@ -1582,6 +1582,7 @@ window.kembaliKeKalkulator = function() {
         if (warningBox) warningBox.style.display = "block";
     }
 };
+
 function tambahRekodKeMaklumatGaji(jenis, namaPekerja, majikan, tempoh, unikId) {
     let tbody = document.querySelector('#card-maklumatGaji tbody');
     if (!tbody) return;
@@ -1635,6 +1636,7 @@ function tambahRekodKeMaklumatGaji(jenis, namaPekerja, majikan, tempoh, unikId) 
     tr.setAttribute('data-pekerja', safeNama);
     tr.setAttribute('data-majikan', safeMajikan);
     
+    // PENAMBAHBAIKAN: Penambahan butang 'Sambung' dan white-space: nowrap supaya butang tidak berterabur
     tr.innerHTML = `
         <td style="padding: 15px; font-size: 13px; font-weight: bold; color: ${warnaTeks}; vertical-align: middle;">
             <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
@@ -1645,8 +1647,9 @@ function tambahRekodKeMaklumatGaji(jenis, namaPekerja, majikan, tempoh, unikId) 
         <td style="padding: 15px; font-size: 13px; vertical-align: middle;"><strong style="color: #333;">${safeNama}</strong></td>
         <td style="padding: 15px; font-size: 13px; vertical-align: middle;"><strong style="color: #333;">${safeMajikan}</strong></td>
         <td style="padding: 15px; text-align: center; font-size: 13px; color: #444; vertical-align: middle;">${tempoh || '-'}</td>
-        <td style="padding: 15px; text-align: center; vertical-align: middle;">
+        <td style="padding: 15px; text-align: center; vertical-align: middle; white-space: nowrap;">
             <button data-id="${unikId}" onclick="bukaRekodSimpanan(event)" style="background: #0d6efd; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📂 Buka</button>
+            <button onclick="kembaliKeKalkulator()" style="background: #ffc107; color: #000; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">✏️ Sambung</button>
             <button data-id="${unikId}" onclick="hapusRekodSimpanan(event)" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🗑️ Hapus</button>
         </td>
     `;
@@ -2801,6 +2804,17 @@ const observerKalkulator = new MutationObserver((mutations) => {
     });
     if (perluSemak) {
         setTimeout(() => window.semakDanTukarElaun(), 50);
+        
+        // PENAMBAHBAIKAN: Papar/Sembunyi butang Simpan Draf secara automatik
+        let kadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card):not(#active-maklumatGaji)');
+        let btnSimpan = document.getElementById('butangSimpanDraf');
+        if (btnSimpan) {
+            if (kadAktif.length > 0) {
+                btnSimpan.style.display = 'block';
+            } else {
+                btnSimpan.style.display = 'none';
+            }
+        }
     }
 });
 
@@ -3094,7 +3108,12 @@ window.simpanKeDrafDOM = function(modSemasa) {
     kadContainer.className = 'draf-kad-container';
     document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card):not(#active-maklumatGaji)').forEach(kad => {
         kad.classList.remove('sementara-sembunyi');
-        kad.style.display = ''; 
+        
+        // FIX PENTING: Tambah 'hidden-template' supaya kad draf ini kebal 
+        // daripada dipadam tanpa sengaja oleh querySelectorAll global
+        kad.classList.add('hidden-template'); 
+        
+        kad.style.display = 'none'; 
         kadContainer.appendChild(kad); 
     });
     wrapper.appendChild(kadContainer);
@@ -3185,6 +3204,10 @@ window.bukaDraf = function(e) {
             let kad = kadContainer.firstChild;
             kad.style.display = '';
             kad.classList.remove('sementara-sembunyi');
+            
+            // FIX PENTING: Buang class hidden-template supaya ia aktif berfungsi semula
+            kad.classList.remove('hidden-template'); 
+            
             if(rumusanCard) grid.insertBefore(kad, rumusanCard);
             else grid.appendChild(kad);
         }
@@ -3238,6 +3261,73 @@ window.hapusDraf = function(e) {
         document.querySelectorAll(`tr[data-draf="${drafId}"]`).forEach(tr => tr.remove());
     }
 };
+
+// =========================================================
+// 11. ENJIN BUTANG SIMPAN DRAF MANUAL (FAB)
+// =========================================================
+
+window.simpanDrafManual = function() {
+    // 1. Semak jika ada kalkulator aktif
+    let kadAktif = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card):not(#active-maklumatGaji)');
+    
+    if (kadAktif.length === 0) {
+        // Pop-up Profesional: Tiada Pengiraan
+        let existingWarn = document.getElementById('modalWarnDraf');
+        if (existingWarn) existingWarn.remove();
+        let warnHtml = `
+        <div id="modalWarnDraf" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 9999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px);">
+            <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); text-align: center; border-top: 6px solid #f39c12; animation: floatUp 0.3s ease-out;">
+                <div style="font-size: 50px; margin-bottom: 10px; line-height: 1;">⚠️</div>
+                <h3 style="margin-top: 0; color: #1f4e79; font-size: 20px; font-weight: 800;">Tiada Pengiraan</h3>
+                <p style="font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 25px;">
+                    Sila buka sekurang-kurangnya satu kalkulator dan buat pengiraan sebelum menyimpan draf.
+                </p>
+                <button onclick="document.getElementById('modalWarnDraf').remove()" style="background: #1f4e79; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; transition: 0.2s; box-shadow: 0 4px 6px rgba(31,78,121,0.2);">OK, SAYA FAHAM</button>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', warnHtml);
+        return;
+    }
+
+    let modSemasa = dapatkanModSemasa();
+    
+    // 2. Laksanakan penyimpanan ke DOM menggunakan enjin sedia ada
+    simpanKeDrafDOM(modSemasa);
+    
+    // 3. Pop-up Profesional: Draf Berjaya Disimpan (Tengah Skrin)
+    let existingModal = document.getElementById('modalSuccessDraf');
+    if (existingModal) existingModal.remove();
+
+    let modalHtml = `
+    <div id="modalSuccessDraf" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 9999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px);">
+        <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); text-align: center; border-top: 6px solid #10b981; animation: floatUp 0.3s ease-out;">
+            <div style="font-size: 50px; margin-bottom: 10px; line-height: 1;">✅</div>
+            <h3 style="margin-top: 0; color: #1f4e79; font-size: 20px; font-weight: 800;">Berjaya Disimpan!</h3>
+            <p style="font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 25px;">
+                Draf pengiraan anda telah berjaya disimpan ke dalam <b>Senarai Rekod</b>.
+            </p>
+            <button id="btnOkSuccessDraf" style="background: #10b981; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; width: 100%; transition: 0.2s; box-shadow: 0 4px 6px rgba(16,185,129,0.3);">TUTUP & TERUSKAN</button>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // 4. Proses membersihkan skrin DITANGGUHKAN sehingga pengguna menekan butang TUTUP
+    document.getElementById('btnOkSuccessDraf').onclick = function() {
+        document.getElementById('modalSuccessDraf').remove();
+        
+        // BUG FIX: Baris pemadaman kadAktif.forEach(k => k.remove()); TELAH DIBUANG sepenuhnya
+        
+        if(typeof resetRumusan === 'function') resetRumusan();
+        senaraiElaunGlobal = [];
+        let rc = document.querySelector('.rumusan-card'); 
+        if(rc) rc.style.display = 'none';
+        
+        // Buka menu Senarai Rekod menggunakan "Bypass skipWarning" (true)
+        window.tambahKalkulator('maklumatGaji', true);
+    };
+};
+
 // =====================================================
 // PEMBERSIHAN DUMMY AUTOMATIK PADA INITIALIZATION
 // =====================================================
