@@ -2036,8 +2036,7 @@ let maklumatSyarikatPekerjaHTML = "";
 
     let cssBaru = `.floating-action-bar { position: fixed; top: 25px; right: 25px; display: flex; z-index: 9999; align-items: center; } .kebab-btn { background: #0d6efd; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 24px; cursor: pointer; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: 0.2s; display: flex; justify-content: center; align-items: center; line-height: 1; padding-bottom: 5px; } .kebab-btn:hover { background: #0b5ed7; transform: scale(1.05); } .kebab-dropdown { display: none; position: absolute; right: 0; top: 115%; background-color: white; min-width: 170px; box-shadow: 0px 4px 15px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; border: 1px solid #ddd; text-align: left; } .kebab-dropdown a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; font-weight: bold; transition: 0.2s; } .kebab-dropdown a:hover { background-color: #f4f6f9; } .kebab-dropdown a:first-child { border-bottom: 1px solid #eee; } @media print { .floating-action-bar, .print-btn-container { display: none !important; } }`;
     
-let cetakHTML = `<!DOCTYPE html><html lang="ms"><head><meta charset="UTF-8"><title>Laporan Pengiraan Akta Kerja 1955</title><style>* { font-family: 'Segoe UI', Arial, sans-serif; box-sizing: border-box; } body { color: #111; line-height: 1.35; padding: 20px; font-size: 11px; background: #fdfdfd; margin-bottom: 80px; } .main-title { text-align: center; margin-bottom: 2px; font-size: 18px; font-weight: bold; border-bottom: 2px solid #222; padding-bottom: 6px; text-transform: uppercase; color: #000; letter-spacing: 1px; } .subtitle { text-align: center; color: #555; margin-top: 5px; margin-bottom: 25px; font-size: 11px; } .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; align-items: start; } .report-box { border: 1px solid #aaa; padding: 12px; border-radius: 6px; page-break-inside: avoid; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); } .report-header { font-size: 13px; font-weight: 800; text-align: center; background: #e8eaed; padding: 8px; border-bottom: 1px solid #aaa; margin: -12px -12px 12px -12px; border-radius: 6px 6px 0 0; text-transform: uppercase; color: #1a1a1a; letter-spacing: 0.5px; } .report-section-title { font-size: 10px; font-weight: bold; color: #1f4e79; letter-spacing: 0.5px; border-bottom: 1px dashed #ccc; padding-bottom: 3px; margin-bottom: 6px; text-transform: uppercase; } .param-table { width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 12px; } .param-label { padding: 3px 0; color: #444; width: 55%; } .param-value { padding: 3px 0; text-align: right; font-weight: 700; color: #000; } .formula-box { background-color: #f4f6f9; border-left: 3px solid #1f4e79; padding: 10px 12px; margin: 12px 0; font-size: 11px; color: #222; border-radius: 0 4px 4px 0; } .formula-title { font-weight: bold; font-size: 10px; color: #1f4e79; margin-bottom: 6px; letter-spacing: 0.5px; } .compact-result .result-row { display: flex; justify-content: space-between; margin-bottom: 5px; align-items: center; flex-wrap: wrap; } .compact-result .result-row span { font-size: 11px; color: #333; } .compact-result .result-row strong, #orpBakiAmount { font-size: 12px; color: #000; white-space: nowrap; } .compact-result hr { display: none !important; } .clean-table { width: 100%; border-collapse: collapse; font-size: 11px; border: none; margin-bottom: 5px; } .clean-table td { padding: 4px 2px; border: none; color: #222; } .highlight-row, .result-row[style*="background"] { background: transparent !important; border: 1.5px solid #1f4e79; padding: 8px !important; border-radius: 4px; margin-top: 10px; } .highlight-row span, .result-row[style*="background"] span { color: #1f4e79 !important; font-weight: bold; } .highlight-row strong, .result-row[style*="background"] strong { color: #1f4e79 !important; font-size: 14px !important; } @media print { body { padding: 0; background: #fff; margin-bottom: 0; } .report-box { border: 1px solid #aaa; box-shadow: none; } .report-header, .formula-box, .highlight-row, .result-row[style*="background"] { -webkit-print-color-adjust: exact; print-color-adjust: exact; } } ${cssBaru} </style></head><body><div class="floating-action-bar"><div style="position: relative;"><button class="kebab-btn" onclick="var d = document.getElementById('kebabDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block';">&#8942;</button><div id="kebabDropdown" class="kebab-dropdown"><a href="#" onclick="window.close(); return false;">✏️ Kemaskini</a><a href="#" onclick="window.print(); return false;">🖨️ Cetak Laporan</a><a href="#" onclick="if(window.opener){window.opener.tambahKalkulator('maklumatGaji');} window.close(); return false;">💾 Simpan</a></div></div></div>${tajukHeaderHTML}<div class="grid-container">${maklumatSyarikatPekerjaHTML}${contentSeterusnya}</div><div class="print-btn-container" style="text-align: center; margin-top: 30px; grid-column: 1 / -1;"><p style="font-size: 11px; color:#666; font-style: italic;">*Untuk simpan dalam peranti, sila pilih <b>'Save as PDF'</b> pada tetingkap pencetak (Destination).</p></div></body></html>`;
-    
+let cetakHTML = `<!DOCTYPE html><html lang="ms"><head><meta charset="UTF-8"><title>Laporan Pengiraan Akta Kerja 1955</title><style>* { font-family: 'Segoe UI', Arial, sans-serif; box-sizing: border-box; } body { color: #111; line-height: 1.35; padding: 20px; font-size: 11px; background: #fdfdfd; margin-bottom: 80px; } .main-title { text-align: center; margin-bottom: 2px; font-size: 18px; font-weight: bold; border-bottom: 2px solid #222; padding-bottom: 6px; text-transform: uppercase; color: #000; letter-spacing: 1px; } .subtitle { text-align: center; color: #555; margin-top: 5px; margin-bottom: 25px; font-size: 11px; } .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; align-items: start; } .report-box { border: 1px solid #aaa; padding: 12px; border-radius: 6px; page-break-inside: avoid; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); } .report-header { font-size: 13px; font-weight: 800; text-align: center; background: #e8eaed; padding: 8px; border-bottom: 1px solid #aaa; margin: -12px -12px 12px -12px; border-radius: 6px 6px 0 0; text-transform: uppercase; color: #1a1a1a; letter-spacing: 0.5px; } .report-section-title { font-size: 10px; font-weight: bold; color: #1f4e79; letter-spacing: 0.5px; border-bottom: 1px dashed #ccc; padding-bottom: 3px; margin-bottom: 6px; text-transform: uppercase; } .param-table { width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 12px; } .param-label { padding: 3px 0; color: #444; width: 55%; } .param-value { padding: 3px 0; text-align: right; font-weight: 700; color: #000; } .formula-box { background-color: #f4f6f9; border-left: 3px solid #1f4e79; padding: 10px 12px; margin: 12px 0; font-size: 11px; color: #222; border-radius: 0 4px 4px 0; } .formula-title { font-weight: bold; font-size: 10px; color: #1f4e79; margin-bottom: 6px; letter-spacing: 0.5px; } .compact-result .result-row { display: flex; justify-content: space-between; margin-bottom: 5px; align-items: center; flex-wrap: wrap; } .compact-result .result-row span { font-size: 11px; color: #333; } .compact-result .result-row strong, #orpBakiAmount { font-size: 12px; color: #000; white-space: nowrap; } .compact-result hr { display: none !important; } .clean-table { width: 100%; border-collapse: collapse; font-size: 11px; border: none; margin-bottom: 5px; } .clean-table td { padding: 4px 2px; border: none; color: #222; } .highlight-row, .result-row[style*="background"] { background: transparent !important; border: 1.5px solid #1f4e79; padding: 8px !important; border-radius: 4px; margin-top: 10px; } .highlight-row span, .result-row[style*="background"] span { color: #1f4e79 !important; font-weight: bold; } .highlight-row strong, .result-row[style*="background"] strong { color: #1f4e79 !important; font-size: 14px !important; } @media print { body { padding: 0; background: #fff; margin-bottom: 0; } .report-box { border: 1px solid #aaa; box-shadow: none; } .report-header, .formula-box, .highlight-row, .result-row[style*="background"] { -webkit-print-color-adjust: exact; print-color-adjust: exact; } } ${cssBaru} </style></head><body><div class="floating-action-bar"><div style="position: relative;"><button class="kebab-btn" onclick="var d = document.getElementById('kebabDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block';">&#8942;</button><div id="kebabDropdown" class="kebab-dropdown"><a href="#" onclick="window.close(); return false;">✏️ Kemaskini</a><a href="#" onclick="window.print(); return false;">🖨️ Cetak Laporan</a><a href="#" onclick="if(window.opener){window.opener.tambahKalkulator('maklumatGaji', true);} window.close(); return false;">💾 Simpan</a></div></div></div>${tajukHeaderHTML}<div class="grid-container">${maklumatSyarikatPekerjaHTML}${contentSeterusnya}</div><div class="print-btn-container" style="text-align: center; margin-top: 30px; grid-column: 1 / -1;"><p style="font-size: 11px; color:#666; font-style: italic;">*Untuk simpan dalam peranti, sila pilih <b>'Save as PDF'</b> pada tetingkap pencetak (Destination).</p></div></body></html>`;
     // ++ KOD SIMPANAN DATA UNTUK FUNGSI BUKA ++
     if (unikId) {
         window.simpananHTMLGlobal = window.simpananHTMLGlobal || {};
@@ -2777,17 +2776,27 @@ if (!window.asal_tambahKalkulator) {
 }
 
 // Pemintas Navigasi Utama (Sidebar & Flyout)
-window.tambahKalkulator = function(templateId) {
+window.tambahKalkulator = function(templateId, skipWarning = false) {
     if (templateId === 'maklumatGaji') {
-        urusPertukaranMenu('REKOD', function() {
+        if (skipWarning) {
+            // Bypass pop-up amaran jika flow "Simpan" dari laporan digunakan
             window.asal_tambahKalkulator(templateId);
-        });
+        } else {
+            // Flow biasa dari klik Sidebar
+            urusPertukaranMenu('REKOD', function() {
+                window.asal_tambahKalkulator(templateId);
+            });
+        }
     } else {
         let modSemasa = dapatkanModSemasa();
         if (modSemasa !== 'NONE') {
-            urusPertukaranMenu(modSemasa, function() {
+            if (skipWarning) {
                 window.asal_tambahKalkulator(templateId);
-            });
+            } else {
+                urusPertukaranMenu(modSemasa, function() {
+                    window.asal_tambahKalkulator(templateId);
+                });
+            }
         } else {
             window.asal_tambahKalkulator(templateId);
         }
@@ -2858,11 +2867,28 @@ document.addEventListener('click', function(e) {
         flyoutAkta.style.display = 'none';
     }
 });
+// =========================================================
+// ENJIN SSOT: BILANGAN HARI DALAM BULAN (SEKSYEN 18A)
+// =========================================================
+window.globalHariBulan18A = 30; // Nilai lalai (default)
+
+window.updateGlobalHariBulan18A = function(element) {
+    let nilaiBaru = element.value;
+    window.globalHariBulan18A = nilaiBaru;
+    
+    // Sync (Selaraskan) kepada semua input 'Bilangan Hari Dalam Bulan' di kad 18A yang lain
+    document.querySelectorAll('.hari-bulan-18a').forEach(input => {
+        if (input !== element && input.value !== nilaiBaru) {
+            input.value = nilaiBaru;
+        }
+    });
+};
 
 // Mengklon Kalkulator Untuk Mod Seksyen 18A
 window.tambahKalkulator18ACustom = function(templateId) {
     document.getElementById('flyoutMenu18ACustom').style.display = 'none';
     window.asal_tambahKalkulator(templateId);
+    
     setTimeout(() => {
         let semuaKad = document.querySelectorAll('.calculator-card:not(.hidden-template):not(.rumusan-card)');
         let newCard = semuaKad[semuaKad.length - 1]; 
@@ -2880,7 +2906,10 @@ window.tambahKalkulator18ACustom = function(templateId) {
             divHari.className = "form-group";
             divHari.style.width = "100%";
             divHari.style.marginBottom = "15px";
-            divHari.innerHTML = `<label style="color:#d9534f; font-weight:bold; display:block; margin-bottom:5px;">Bilangan Hari Dalam Bulan</label><input type="number" class="hari-bulan-18a" placeholder="Contoh: 28, 30, 31" value="30" style="border: 2px solid #d9534f; border-radius: 4px; padding: 10px; width: 100%; box-sizing: border-box; background: #fffaf9; font-size:14px; font-weight:bold;">`;
+            
+            // PENAMBAHBAIKAN: Nilai ditarik dari globalHariBulan18A & fungsi updateGlobalHariBulan18A diletakkan pada oninput
+            divHari.innerHTML = `<label style="color:#d9534f; font-weight:bold; display:block; margin-bottom:5px;">Bilangan Hari Dalam Bulan</label><input type="number" class="hari-bulan-18a" placeholder="Contoh: 28, 30, 31" value="${window.globalHariBulan18A}" style="border: 2px solid #d9534f; border-radius: 4px; padding: 10px; width: 100%; box-sizing: border-box; background: #fffaf9; font-size:14px; font-weight:bold;" oninput="updateGlobalHariBulan18A(this)">`;
+            
             formGroups[0].parentNode.insertBefore(divHari, formGroups[0]);
         }
 
@@ -2899,7 +2928,8 @@ window.tambahKalkulator18ACustom = function(templateId) {
                 activeCardContext = newCard;
                 try {
                     let hariBulanInput = newCard.querySelector('.hari-bulan-18a');
-                    let hariBulan = hariBulanInput ? (Number(hariBulanInput.value) || 26) : 26; 
+                    // Mengambil data dari input tempatan yang sentiasa sync dengan global
+                    let hariBulan = hariBulanInput ? (Number(hariBulanInput.value) || 26) : (Number(window.globalHariBulan18A) || 26); 
                     
                     if (templateId === 'orp') calculateORP(e, hariBulan);
                     else if (templateId === 'baki') calculateBakiUpah(e);
