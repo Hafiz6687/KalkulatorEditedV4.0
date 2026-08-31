@@ -1453,6 +1453,18 @@ function teruskanJanaLaporan(jenis) {
     let namaMajikan = window.globalNamaMajikan;
 
     if (jenis === 'penyata') {
+        
+        // --- LETAKKAN KOD PEMINTAS UPL DI SINI ---
+        let inputUPL = document.getElementById('inputUPLSemasa');
+        let nilaiUPL = inputUPL ? (parseFloat(inputUPL.value) || 0) : 0; 
+
+        if (nilaiUPL > 0 && !window.statusUPLDisahkan) {
+            document.getElementById('modalAmaranUPL').style.display = 'flex';
+            return; // Hentikan kod dari berjalan, tunggu user klik Teruskan
+        }
+        window.statusUPLDisahkan = false; // Reset semula status
+        // --- TAMAT KOD PEMINTAS ---
+
         let msLayak = ['modPHLayak', 'modALLayak', 'modMCLayak', 'modWDLayak'];
         let msGuna = ['modPHGuna', 'modALGuna', 'modMCGuna', 'modWDGuna'];
         let isIncomplete = false;
@@ -3340,3 +3352,33 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 });
+// ==========================================
+// FUNGSI POP-UP AMARAN UPL (PENYATA GAJI)
+// Tiada fungsi asal yang diganggu.
+// ==========================================
+
+// Variable global untuk semak jika pengguna sudah klik "Teruskan Jana"
+window.statusUPLDisahkan = false; 
+
+function batalAmaranUPL() {
+    // 1. Tutup popup amaran UPL
+    document.getElementById('modalAmaranUPL').style.display = 'none';
+    window.statusUPLDisahkan = false;
+    
+    // 2. Tutup modal Laporan Penuh (Penyata Gaji)
+    let modalPenyata = document.getElementById('modalLaporanPenuh');
+    if(modalPenyata) {
+        modalPenyata.style.display = 'none'; 
+    }
+}
+
+function teruskanJanaUPL() {
+    // 1. Tutup popup amaran UPL
+    document.getElementById('modalAmaranUPL').style.display = 'none';
+    
+    // 2. Setkan status pengesahan kepada true
+    window.statusUPLDisahkan = true;
+    
+    // 3. Panggil semula fungsi cetakan penyata gaji anda
+    teruskanJanaLaporan('penyata'); 
+}
