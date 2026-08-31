@@ -1232,5 +1232,21 @@
 </div>
 
 <script src="script.js"></script>
+<!-- ========================================== -->
+<!-- POP-UP AMARAN UPL (Khas Untuk Penyata Gaji) -->
+<!-- ========================================== -->
+<div id="modalAmaranUPL" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 30px; border-radius: 12px; text-align: center; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border-top: 5px solid #d9534f;">
+        <h3 style="color: #d9534f; margin-top: 0; font-size: 20px;">Peringatan Penting</h3>
+        <p style="color: #475569; font-size: 14px; margin-bottom: 25px; line-height: 1.5;">
+            Anda merekodkan <strong>Cuti Tanpa Gaji (UPL)</strong>. Untuk pengiraan penolakan gaji yang lebih tepat, anda sepatutnya menggunakan kalkulator <strong>Seksyen 18A (Bulan Tidak Lengkap)</strong>.
+        </p>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <button onclick="batalAmaranUPL()" style="background: #f1f5f9; color: #475569; padding: 10px 20px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s;">Hapus</button>
+            <button onclick="teruskanJanaUPL()" style="background: #1f4e79; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s;">Teruskan Jana</button>
+        </div>
+    </div>
+</div>
+  
 </body>
 </html>
