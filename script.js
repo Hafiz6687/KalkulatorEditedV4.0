@@ -1648,7 +1648,7 @@ function tambahRekodKeMaklumatGaji(jenis, namaPekerja, majikan, tempoh, unikId) 
     tr.setAttribute('data-pekerja', safeNama);
     tr.setAttribute('data-majikan', safeMajikan);
     
-    // PENAMBAHBAIKAN: Penambahan butang 'Sambung' dan white-space: nowrap supaya butang tidak berterabur
+// PENAMBAHBAIKAN: Penyingkiran butang 'Sambung' yang bertindih fungsi dengan butang Kemaskini dalam 'Buka'
     tr.innerHTML = `
         <td style="padding: 15px; font-size: 13px; font-weight: bold; color: ${warnaTeks}; vertical-align: middle;">
             <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
@@ -1661,7 +1661,6 @@ function tambahRekodKeMaklumatGaji(jenis, namaPekerja, majikan, tempoh, unikId) 
         <td style="padding: 15px; text-align: center; font-size: 13px; color: #444; vertical-align: middle;">${tempoh || '-'}</td>
         <td style="padding: 15px; text-align: center; vertical-align: middle; white-space: nowrap;">
             <button data-id="${unikId}" onclick="bukaRekodSimpanan(event)" style="background: #0d6efd; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📂 Buka</button>
-            <button onclick="kembaliKeKalkulator()" style="background: #ffc107; color: #000; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">✏️ Sambung</button>
             <button data-id="${unikId}" onclick="hapusRekodSimpanan(event)" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🗑️ Hapus</button>
         </td>
     `;
@@ -2646,86 +2645,93 @@ function tunjukTourElaunPopup() {
     let existingBox = document.getElementById('tourElaunPopupBox');
     if (existingBox) existingBox.remove();
 
-    let targetContainer = document.getElementById('containerElaunModal');
-    if (!targetContainer) return;
+    // Sasar keseluruhan kotak Elaun di dalam pop-up
+    let targetContainer = document.getElementById('tourTargetElaunPopup');
+    if (!targetContainer) targetContainer = document.getElementById('containerElaunModal');
+    let whiteBox = document.getElementById('modalPenyataWhiteBox');
+    
+    if (!targetContainer || !whiteBox) return;
 
-    let rect = targetContainer.getBoundingClientRect();
-    let isMobile = window.innerWidth <= 768;
+    targetContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
+    // 1. Cipta overlay GELAP (Screen Dim) TEPAT di dalam pop-up putih
     let overlay = document.createElement('div');
     overlay.id = 'tourElaunPopupOverlay';
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.65); z-index: 999998; backdrop-filter: blur(2px);';
+    overlay.style.cssText = `position: absolute; top: 0; left: 0; width: 100%; height: ${whiteBox.scrollHeight}px; background: rgba(0, 0, 0, 0.75); z-index: 100; border-radius: 10px; transition: opacity 0.3s;`;
+    whiteBox.appendChild(overlay);
 
+    // 2. Simpan CSS asal target sebelum ditukar
     let origPos = targetContainer.style.position;
     let origZIndex = targetContainer.style.zIndex;
     let origBg = targetContainer.style.background;
     let origShadow = targetContainer.style.boxShadow;
+    let origPadding = targetContainer.style.padding;
 
+    // 3. Serlahkan target (Spotlight) ke atas dari overlay
     targetContainer.style.position = 'relative';
-    targetContainer.style.zIndex = '999999';
+    targetContainer.style.zIndex = '101';
     targetContainer.style.background = '#ffffff';
-    targetContainer.style.boxShadow = '0 0 0 4px #ffffff, 0 0 0 6px #d9534f';
+    targetContainer.style.padding = '15px';
+    targetContainer.style.borderRadius = '8px';
+    targetContainer.style.boxShadow = '0 0 0 4px #ffffff, 0 0 0 6px #d9534f, 0 15px 35px rgba(0,0,0,0.5)';
 
-    let boxWidth = isMobile ? Math.min(360, window.innerWidth - 30) : 380;
-    let boxLeft, boxTop, arrowStyleHtml;
-
-    if (isMobile || (rect.right + boxWidth + 20 > window.innerWidth)) {
-        boxLeft = Math.max(15, Math.min(rect.left + (rect.width / 2) - (boxWidth / 2), window.innerWidth - boxWidth - 15));
-        boxTop = rect.bottom + 12;
-        let arrowLeft = Math.max(20, Math.min(rect.left + (rect.width / 2) - boxLeft - 10, boxWidth - 30));
-        arrowStyleHtml = `
-            <div style="position: absolute; bottom: 100%; left: ${arrowLeft}px; border-width: 10px; border-style: solid; border-color: transparent transparent #d9534f transparent; z-index: 1000001;"></div>
-            <div style="position: absolute; bottom: calc(100% - 3px); left: ${arrowLeft}px; border-width: 10px; border-style: solid; border-color: transparent transparent #fff transparent; z-index: 1000002;"></div>
-        `;
-    } else {
-        boxLeft = rect.right + 15;
-        boxTop = Math.max(15, rect.top);
-        let arrowTop = Math.max(20, Math.min(rect.top + 20 - boxTop, 150));
-        arrowStyleHtml = `
-            <div style="position: absolute; right: 100%; top: ${arrowTop}px; border-width: 10px; border-style: solid; border-color: transparent #d9534f transparent transparent; z-index: 1000001;"></div>
-            <div style="position: absolute; right: calc(100% - 3px); top: ${arrowTop}px; border-width: 10px; border-style: solid; border-color: transparent #fff transparent transparent; z-index: 1000002;"></div>
-        `;
-    }
-
-    let popoverWrapper = document.createElement('div');
-    popoverWrapper.id = 'tourElaunPopupBox';
-    popoverWrapper.style.cssText = `position: fixed; top: ${boxTop}px; left: ${boxLeft}px; width: ${boxWidth}px; z-index: 1000000; animation: floatRightTour 0.3s ease-out;`;
-
-    popoverWrapper.innerHTML = `
-        ${arrowStyleHtml}
-        <div style="background: white; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 18px 20px; border-top: 4px solid #d9534f; color: #333; font-family: sans-serif; text-align: left; box-sizing: border-box; max-height: 80vh; overflow-y: auto;">
-            <h4 style="margin: 0 0 8px 0; color: #1f4e79; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                <span style="background: #1f4e79; color: white; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;">💡</span>
+    // 4. Cipta kotak maklumat (Popover)
+    let popover = document.createElement('div');
+    popover.id = 'tourElaunPopupBox';
+    
+    // PENAMBAHBAIKAN: Posisi popover di SEBELAH KANAN (left: calc(100% + 15px)) & Anak Panah ke KIRI
+    popover.innerHTML = `
+        <div class="tour-popover-box" style="position: absolute; top: 0; left: calc(100% + 15px); background: white; border-radius: 8px; width: 100%; min-width: 320px; max-width: 380px; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 20px; border-top: 6px solid #d9534f; color: #333; font-family: sans-serif; cursor: default; animation: floatRight 0.4s ease-out; z-index: 102; text-align: left;">
+            
+            <!-- Anak Panah Menunjuk Ke Kiri -->
+            <div style="position: absolute; right: 100%; top: 25px; border-width: 10px; border-style: solid; border-color: transparent #d9534f transparent transparent;"></div>
+            <div style="position: absolute; right: calc(100% - 3px); top: 25px; border-width: 10px; border-style: solid; border-color: transparent #fff transparent transparent;"></div>
+            
+            <h4 style="margin: 0 0 10px 0; color: #1f4e79; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <span style="background: #1f4e79; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px;">💡</span>
                 Panduan Senarai Elaun
             </h4>
             
-            <p style="margin: 0 0 12px 0; font-size: 11.5px; font-weight: bold; color: #1f4e79; background: #e8eaed; padding: 10px; border-radius: 6px; line-height: 1.45;">
+            <p style="margin: 0 0 15px 0; font-size: 11.5px; font-weight: bold; color: #1f4e79; background: #e8eaed; padding: 10px; border-radius: 4px; line-height: 1.5;">
                 CATATAN: Klik + Tambah. Masukkan semua ELAUN selain yang telah dinyatakan di dalam Bahagian Kalkulator (Sama ada dibayar di dalam waktu kerja normal atau di luar waktu kerja normal).
             </p>
             
-            <button id="btnTutupTourPopup" style="width: 100%; background: #1f4e79; color: white; border: none; padding: 9px; border-radius: 5px; font-weight: bold; font-size: 12.5px; cursor: pointer; transition: 0.2s;">OK, SAYA FAHAM</button>
+            <button id="btnTutupTourPopup" style="width: 100%; background: #1f4e79; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s;">OK, SAYA FAHAM</button>
         </div>
         <style>
-            @keyframes floatRightTour { 
-                0% { opacity: 0; transform: translateX(-10px); } 
-                100% { opacity: 1; transform: translateX(0); } 
-            }
+            @keyframes floatRight { 0% { opacity: 0; transform: translateX(-20px); } 100% { opacity: 1; transform: translateX(0); } }
             #btnTutupTourPopup:hover { background: #153859 !important; }
+            
+            /* Fallback Responsive: Jika skrin terlampau sempit (Mobile), bawa ia ke bawah */
+            @media (max-width: 768px) {
+                .tour-popover-box {
+                    left: 0 !important;
+                    top: calc(100% + 15px) !important;
+                    animation: floatDown 0.4s ease-out !important;
+                }
+                .tour-popover-box > div:nth-child(1) { bottom: 100%; left: 30px; top: auto; right: auto; border-color: transparent transparent #d9534f transparent !important; }
+                .tour-popover-box > div:nth-child(2) { bottom: calc(100% - 6px); left: 30px; top: auto; right: auto; border-color: transparent transparent #fff transparent !important; }
+            }
+            @keyframes floatDown { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
         </style>
     `;
+    
+    // Masukkan popover ke dalam target
+    targetContainer.appendChild(popover);
 
-    document.body.appendChild(overlay);
-    document.body.appendChild(popoverWrapper);
-
+    // Fungsi pembersihan setelah ditutup
     const tutupTourPopup = () => {
-        overlay.remove();
-        popoverWrapper.remove();
+        if(overlay) overlay.remove();
+        if(popover) popover.remove();
+        
         targetContainer.style.position = origPos;
         targetContainer.style.zIndex = origZIndex;
         targetContainer.style.background = origBg;
         targetContainer.style.boxShadow = origShadow;
+        targetContainer.style.padding = origPadding;
     };
 
+    // Tutup apabila pengguna klik pada overlay gelap atau butang 'OK'
     overlay.addEventListener('click', tutupTourPopup);
     document.getElementById('btnTutupTourPopup').addEventListener('click', tutupTourPopup);
 }
@@ -3382,3 +3388,170 @@ function teruskanJanaUPL() {
     // 3. Panggil semula fungsi cetakan penyata gaji anda
     teruskanJanaLaporan('penyata'); 
 }
+// =========================================================
+// 12. ENJIN PENYIMPANAN KEKAL (LOCALSTORAGE) - MACAM APP (SaaS)
+// =========================================================
+
+window.simpananHTMLGlobal = window.simpananHTMLGlobal || {};
+
+// 1. FUNGSI UNTUK MEMUAT (LOAD) DATA APABILA SISTEM DIBUKA
+window.muatDataKekal = function() {
+    // A) Muat Kembali Data Fail Laporan/Penyata Gaji
+    let simpananLama = localStorage.getItem('appData_HTMLGlobal');
+    if (simpananLama) { 
+        window.simpananHTMLGlobal = JSON.parse(simpananLama); 
+    }
+
+    // B) Muat Kembali Senarai Jadual Maklumat Gaji (Rekod)
+    let jadualLama = localStorage.getItem('appData_JadualGaji');
+    let tbodyMaklumatGaji = document.querySelector('#card-maklumatGaji tbody');
+    if (jadualLama && tbodyMaklumatGaji) { 
+        tbodyMaklumatGaji.innerHTML = jadualLama; 
+    }
+
+    // C) Muat Kembali Draf Pengiraan
+    let drafLama = localStorage.getItem('appData_Draf');
+    if (drafLama) {
+        let drafContainer = document.getElementById('drafStorageContainer');
+        if (!drafContainer) {
+            drafContainer = document.createElement('div');
+            drafContainer.id = 'drafStorageContainer';
+            drafContainer.style.display = 'none';
+            document.body.appendChild(drafContainer);
+        }
+        drafContainer.innerHTML = drafLama;
+    }
+};
+
+// 2. FUNGSI UNTUK MENYIMPAN (SAVE) DATA SECARA SENYAP (BACKGROUND)
+window.simpanDataKekal = function() {
+    localStorage.setItem('appData_HTMLGlobal', JSON.stringify(window.simpananHTMLGlobal || {}));
+    
+    let tbodyMaklumatGaji = document.querySelector('#card-maklumatGaji tbody');
+    if (tbodyMaklumatGaji) {
+        localStorage.setItem('appData_JadualGaji', tbodyMaklumatGaji.innerHTML);
+    }
+    
+    let drafContainer = document.getElementById('drafStorageContainer');
+    if (drafContainer) {
+        localStorage.setItem('appData_Draf', drafContainer.innerHTML);
+    }
+};
+
+// 3. SISTEM AUTOPILOT (PEMERHATI TANPA GANGGU FUNGSI ASAL)
+function pasangEnjinKekal() {
+    // Muat data lama sebaik sahaja web sedia
+    muatDataKekal();
+    
+    // Gunakan MutationObserver (Menyimpan secara automatik bila ada rekod ditambah/dibuang)
+    const pemerhatiAutoSave = new MutationObserver(() => {
+        simpanDataKekal();
+    });
+
+    let tbodyMaklumatGaji = document.querySelector('#card-maklumatGaji tbody');
+    if (tbodyMaklumatGaji) {
+        pemerhatiAutoSave.observe(tbodyMaklumatGaji, { childList: true, subtree: true });
+    }
+    
+    let drafContainer = document.getElementById('drafStorageContainer');
+    if (!drafContainer) {
+        drafContainer = document.createElement('div');
+        drafContainer.id = 'drafStorageContainer';
+        drafContainer.style.display = 'none';
+        document.body.appendChild(drafContainer);
+    }
+    pemerhatiAutoSave.observe(drafContainer, { childList: true, subtree: true });
+}
+
+// Pastikan skrip berjalan walaupun diletakkan di bawah
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', pasangEnjinKekal);
+} else {
+    pasangEnjinKekal();
+}
+
+// 4. PEMBETULAN KECIL (BUG FIX) UNTUK BUTANG HAPUS REKOD LAMA
+// (Memastikan rekod terhapus sepenuhnya dari memori apabila ditekan)
+if (typeof window.hapusRekodSimpanan === "function") {
+    let fungsiHapusAsal = window.hapusRekodSimpanan;
+    window.hapusRekodSimpanan = function(e) {
+        let btn = e.currentTarget || (e.target && e.target.closest ? e.target.closest('button') : null);
+        let id = btn ? btn.getAttribute('data-id') : null;
+        
+        // Panggil fungsi asal (untuk popup confirm & padam di skrin)
+        fungsiHapusAsal(e);
+        
+        // Padam terus dari senarai Master supaya tak kembali bila direfresh
+        if (id) {
+            let barisMaster = document.querySelector(`#card-maklumatGaji tbody button[data-id="${id}"]`);
+            if (barisMaster && barisMaster.closest('tr')) {
+                barisMaster.closest('tr').remove();
+            }
+            simpanDataKekal(); // Auto-save pemadaman
+        }
+    };
+}
+// =========================================================
+// UPGRADE KOSMETIK: POP-UP CUSTOM UNTUK HAPUS REKOD
+// (Selamat: Overwrite fungsi asal tanpa menjejaskan auto-save)
+// =========================================================
+window.hapusRekodSimpanan = function(e) {
+    let btn = e.currentTarget || (e.target && e.target.closest ? e.target.closest('button') : null);
+    if (!btn) return;
+    
+    let id = btn.getAttribute('data-id');
+    
+    // Buang pop-up lama jika ia kebetulan wujud
+    let existingModal = document.getElementById('modalConfirmHapus');
+    if (existingModal) existingModal.remove();
+
+    // Bina Pop-up Custom Moden
+    let modalHtml = `
+    <div id="modalConfirmHapus" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(3px);">
+        <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center; border-top: 6px solid #dc3545; animation: floatUp 0.3s ease-out; box-sizing: border-box;">
+            <div style="font-size: 45px; margin-bottom: 10px; line-height: 1;">🗑️</div>
+            <h3 style="margin-top: 0; color: #dc3545; font-size: 20px; font-weight: 800;">Pengesahan Padam</h3>
+            <p style="font-size: 14px; color: #444; line-height: 1.6; margin-bottom: 25px;">
+                Adakah anda pasti mahu memadam rekod ini?<br>Tindakan ini <b>tidak boleh diundur</b>.
+            </p>
+            <div style="display: flex; gap: 10px;">
+                <button id="btnBatalHapus" style="flex: 1; background: #6c757d; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s;">Batal</button>
+                <button id="btnSahkanHapus" style="flex: 1; background: #dc3545; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(220,53,69,0.2);">Ya, Padam</button>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Tindakan 1: Jika user klik "Batal"
+    document.getElementById('btnBatalHapus').onclick = function() {
+        document.getElementById('modalConfirmHapus').remove();
+    };
+
+    // Tindakan 2: Jika user klik "Ya, Padam"
+    document.getElementById('btnSahkanHapus').onclick = function() {
+        document.getElementById('modalConfirmHapus').remove(); // Tutup Pop-up
+
+        // 1. Padam fail PDF dari memori global
+        if (id && window.simpananHTMLGlobal && window.simpananHTMLGlobal[id]) {
+            delete window.simpananHTMLGlobal[id];
+        }
+
+        // 2. Padam baris dari UI yang sedang dilihat sekarang
+        let barisTerkini = btn.closest('tr');
+        if (barisTerkini) barisTerkini.remove();
+
+        // 3. Padam dari jadual Master (di sebalik skrin) supaya tidak muncul semula
+        if (id) {
+            let barisMaster = document.querySelector(`#card-maklumatGaji tbody button[data-id="${id}"]`);
+            if (barisMaster && barisMaster.closest('tr')) {
+                barisMaster.closest('tr').remove();
+            }
+        }
+
+        // 4. Update data pemadaman ini ke LocalStorage (Autopilot Trigger)
+        if (typeof window.simpanDataKekal === "function") {
+            window.simpanDataKekal();
+        }
+    };
+};
