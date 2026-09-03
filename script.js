@@ -129,7 +129,7 @@ document.addEventListener("change", function(e) {
     if (!isMathInput) return;
     try {
         let nilai = e.target.value.trim();
-        if (/^\d{1,4}-\d{1,2}-\d{1,4}$/.test(nilai) || /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(nilai)) return; 
+        if (/^\d{1,4}-\d{1,2}-\d{1,4}$/.test(nilai) || /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(nilai)) return;
         if (/[+\-*/()]/.test(nilai) && !nilai.includes("RM")) {
             let hasil = evaluateSmartMath(nilai);
             if (hasil !== undefined && !isNaN(hasil)) { e.target.value = hasil; e.target.dispatchEvent(new Event('input', { bubbles: true })); }
@@ -989,7 +989,6 @@ function janaPenyataGaji() {
             }
         };
 
-        // BAHAGIAN YANG DIBUANG: Auto-popup event listener pada kiraBtn telah dikeluarkan di sini
         return;
     }
     
@@ -1522,13 +1521,38 @@ function teruskanJanaLaporan(jenis) {
     let icPekerja = window.globalIcPekerja;
     let noPekerja = window.globalNoPekerja;
 
-    let unikId = 'rekod_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    // Guna id yang telah dibuka jika ia wujud (overwrite record)
+    let unikId = window.rekodSedangDikemaskini || ('rekod_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));
+    
+    if (window.rekodSedangDikemaskini) {
+        // Padam rekod baris lama supaya yang baru masuk di bahagian bawah/overwrite
+        let tbody = document.querySelector('#card-maklumatGaji tbody');
+        if (tbody) {
+            let oldBtn = tbody.querySelector(`button[data-id="${window.rekodSedangDikemaskini}"]`);
+            if (oldBtn) {
+                let oldRow = oldBtn.closest('tr');
+                if (oldRow) oldRow.remove();
+            }
+        }
+        if (window.simpananHTMLGlobal && window.simpananHTMLGlobal[window.rekodSedangDikemaskini]) {
+            delete window.simpananHTMLGlobal[window.rekodSedangDikemaskini];
+        }
+    }
+
     tambahRekodKeMaklumatGaji(jenis, namaPekerja, namaMajikan, tempohUpah, unikId);
     document.getElementById('modalLaporanPenuh').style.display = 'none'; 
     
     prosesJanaLaporanPenuh(namaMajikan, noDaftarMajikan, tempohUpah, namaPekerja, icPekerja, noPekerja, jenis, { 
         senaraiElaun, senaraiPotongan, kwspP, kwspN, perkesoP, perkesoN, sipP, sipN, pendahuluanN, absentH, absentN, svcData 
     }, unikId);
+    
+    // Reset rekod kemaskini setelah selesai
+    window.rekodSedangDikemaskini = null;
+    
+    // Auto-save jika function wujud
+    if (typeof window.simpanDataKekal === "function") {
+        window.simpanDataKekal();
+    }
 }
 
 window.simpananHTMLGlobal = window.simpananHTMLGlobal || {};
@@ -1544,14 +1568,15 @@ window.bukaRekodSimpanan = function(e) {
         // PENAMBAHBAIKAN 1: Buang butang "Simpan" secara dinamik untuk paparan peringkat ini sahaja
         htmlContent = htmlContent.replace(/<a[^>]*>💾 Simpan<\/a>/gi, '');
 
-        // PENAMBAHBAIKAN 2: Ubah fungsi Kemaskini supaya memanggil pengembali state kalkulator asal
+        // PENAMBAHBAIKAN 2: Ubah fungsi Kemaskini supaya memanggil pengembali state kalkulator asal sambil membawa 'id' rekod
         htmlContent = htmlContent.replace(
             /<a href="#" onclick="window\.close\(\); return false;">✏️ Kemaskini<\/a>/gi,
-            '<a href="#" onclick="if(window.opener && typeof window.opener.kembaliKeKalkulator === \'function\') { window.opener.kembaliKeKalkulator(); } window.close(); return false;">✏️ Kemaskini</a>'
+            `<a href="#" onclick="if(window.opener && typeof window.opener.kembaliKeKalkulator === 'function') { window.opener.kembaliKeKalkulator('${id}'); } window.close(); return false;">✏️ Kemaskini</a>`
         );
 
         let tetingkapCetak = window.open('', '_blank'); 
         if (!tetingkapCetak) { alert("Pop-up disekat oleh pelayar web (browser) anda."); return; }
+        
         tetingkapCetak.document.write(htmlContent); 
         tetingkapCetak.document.close(); 
         tetingkapCetak.focus();
@@ -1560,21 +1585,7 @@ window.bukaRekodSimpanan = function(e) {
     }
 };
 
-window.hapusRekodSimpanan = function(e) {
-    // Tangkap butang yang ditekan dan tarik ID yang disorokkan (data-id)
-    let btn = e.currentTarget || (e.target && e.target.closest ? e.target.closest('button') : null);
-    if (!btn) return;
-    
-    let id = btn.getAttribute('data-id');
-    let sah = confirm("Adakah anda pasti mahu memadam rekod ini?");
-    
-    if(sah) {
-        if(window.simpananHTMLGlobal[id]) delete window.simpananHTMLGlobal[id];
-        btn.closest('tr').remove();
-    }
-};
-
-window.kembaliKeKalkulator = function() {
+window.kembaliKeKalkulator = function(idRekod) {
     // 1. Buang panel jadual Maklumat Gaji yang sedang dipapar
     let activeMg = document.getElementById('active-maklumatGaji');
     if (activeMg) activeMg.remove();
@@ -1592,6 +1603,12 @@ window.kembaliKeKalkulator = function() {
         if (rumusanCard) rumusanCard.style.display = "block";
         let warningBox = document.querySelector('.warning-box');
         if (warningBox) warningBox.style.display = "block";
+    }
+
+    // PENAMBAHBAIKAN 3: Daftarkan rekod ini sebagai sedang dikemaskini.
+    // Ini membenarkan sistem (overwrite) menyambung proses tanpa memaparkan pop-up Draf Peringatan.
+    if (idRekod) {
+        window.rekodSedangDikemaskini = idRekod;
     }
 };
 
